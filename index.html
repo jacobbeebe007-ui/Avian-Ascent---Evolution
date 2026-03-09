@@ -36,6 +36,7 @@
 <header>
 <h1>⚔ AVIAN ASCENT ⚔</h1>
 <p>A Roguelike of Feathers &amp; Fortune</p>
+<div style="text-align:center;margin-top:8px;"><button class="menu-btn" onclick="openSettingsModal()">⚙ Settings</button></div>
 </header>
 <!-- SELECT -->
 <!-- SELECT -->
@@ -84,15 +85,13 @@
 <!-- VIEW TOGGLE -->
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
 <div class="view-toggle" id="view-toggle">
+<button class="view-toggle-btn" onclick="setSelView('all',this)">All</button>
 <button class="view-toggle-btn active" onclick="setSelView('size',this)">By Size</button>
 <button class="view-toggle-btn" onclick="setSelView('class',this)">By Class</button>
 </div>
 <span id="bird-count-label" style="font-size:.7rem;color:var(--text-dim);font-style:italic;"></span>
 </div>
-<div class="class-filter-wrap">
-<button class="class-filter-btn" id="class-filter-btn" onclick="toggleClassMenu()">Choose Class: All ▾</button>
-<div class="class-filter-menu" id="class-filter-menu"></div>
-</div>
+<div class="class-filter-tabs" id="class-filter-tabs"></div>
 <div id="bird-grid"></div>
 </div>
 <div class="sel-right">
@@ -111,6 +110,7 @@
 <div class="battle-layout">
 <div class="menu-row">
 <button class="menu-btn" onclick="goMainMenu()">🏠 Menu</button>
+<button class="menu-btn" onclick="openSettingsModal()">⚙ Settings</button>
 <button class="nest-btn" onclick="openNest()">🪺 Nest</button>
 <button class="menu-btn" onclick="openAbandonModal()" style="color:var(--red-light);border-color:rgba(201,76,76,.4)">⛔ Abandon</button>
 </div>
@@ -281,6 +281,39 @@
 <p>This will end your current run. Any unlocks you've earned <strong style="color:var(--text)">will be saved</strong>, but your progress will be lost.</p>
 <button class="abandon-confirm-btn" onclick="confirmAbandon()">Yes, Abandon</button>
 <button class="abandon-cancel-btn" onclick="closeAbandonModal()">Cancel</button>
+</div>
+</div>
+<!-- SETTINGS MODAL -->
+<div class="abandon-modal" id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
+<div class="abandon-inner" style="max-width:560px;text-align:left;">
+<h3>⚙ Accessibility &amp; Settings</h3>
+<div style="display:grid;gap:12px;margin-top:10px;">
+<label style="display:flex;justify-content:space-between;align-items:center;gap:12px;">Font Size
+<select id="setting-font-size" onchange="updateAccessibilitySettings()">
+<option value="90">Small (90%)</option>
+<option value="100">Default (100%)</option>
+<option value="115">Large (115%)</option>
+<option value="130">Extra Large (130%)</option>
+</select>
+</label>
+<label style="display:flex;justify-content:space-between;align-items:center;gap:12px;">Color Blind Mode
+<select id="setting-color-blind" onchange="updateAccessibilitySettings()">
+<option value="off">Off</option>
+<option value="protanopia">Protanopia-friendly</option>
+<option value="deuteranopia">Deuteranopia-friendly</option>
+<option value="tritanopia">Tritanopia-friendly</option>
+</select>
+</label>
+<label style="display:flex;justify-content:space-between;align-items:center;gap:12px;">Reduce Motion
+<input id="setting-reduce-motion" onchange="updateAccessibilitySettings()" type="checkbox"/>
+</label>
+<label style="display:flex;justify-content:space-between;align-items:center;gap:12px;">High Contrast UI
+<input id="setting-high-contrast" onchange="updateAccessibilitySettings()" type="checkbox"/>
+</label>
+</div>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+<button class="abandon-cancel-btn" onclick="closeSettingsModal()">Close</button>
+</div>
 </div>
 </div>
 <!-- UNLOCK TOAST -->
