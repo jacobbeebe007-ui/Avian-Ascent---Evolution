@@ -1198,13 +1198,13 @@ function rollRarity(){
 const UPGRADE_CARDS_REWORK = [
   {id:'g_quill1',tier:'grey',icon:'🪶',name:'Quill Stitch',desc:'+6 Max HP. First hit each battle -10%.',tags:['sustain'],apply:p=>{p.stats.maxHp+=6;p.firstHitReduce=Math.max(p.firstHitReduce||0,0.10);}},
   {id:'g_talon1',tier:'grey',icon:'🗡️',name:'Talon Hone',desc:'+1 ATK. +3 damage vs Bleeding.',tags:['offense'],apply:p=>{p.stats.atk+=1;p.vsBleedBonus=(p.vsBleedBonus||0)+3;}},
-  {id:'g_shell1',tier:'grey',icon:'🛡️',name:'Down Padding',desc:'+1 DEF. Gain 2 block after you defend.',tags:['defense'],apply:p=>{p.stats.def+=1;p.blockAfterDefend=(p.blockAfterDefend||0)+2;}},
+  {id:'g_shell1',tier:'grey',icon:'🛡️',name:'Down Padding',desc:'+1 DEF.',tags:['defense'],apply:p=>{p.stats.def+=1;}},
   {id:'g_focus1',tier:'grey',icon:'🎯',name:'Steady Eye',desc:'+4% hit chance on your next attack each turn.',tags:['utility'],apply:p=>{p.nextAttackAccBonus=4;}},
   {id:'gr_hp',tier:'green',icon:'❤️',name:'Stronger Heart',desc:'+12 Max HP. Heal +6 after battle.',tags:['sustain'],apply:p=>{p.stats.maxHp+=12;p.postBattleFlatHeal=(p.postBattleFlatHeal||0)+6;}},
   {id:'gr_pierce',tier:'green',icon:'🪓',name:'Split-Feather',desc:'+2 ATK. Attacks pierce +10% DEF.',tags:['offense'],apply:p=>{p.stats.atk+=2;p.pierceBonus=(p.pierceBonus||0)+0.10;}},
   {id:'gr_spell',tier:'green',icon:'🔮',name:'Runic Throat',desc:'+2 MATK. Every 3 spells: apply Poison(1).',tags:['offense'],apply:p=>{p.stats.matk=(p.stats.matk||0)+2;p.spellProcPoison=3;}},
   {id:'gr_speed',tier:'green',icon:'💨',name:'Wind-Set',desc:'+1 SPD. First attack each battle +30%.',tags:['utility'],apply:p=>{p.stats.spd=(p.stats.spd||0)+1;p.firstAttackBonusPct=Math.max(p.firstAttackBonusPct||0,0.30);}},
-  {id:'b_guard',tier:'blue',icon:'🧱',name:'Quill Armor',desc:'+3 DEF. Start battle with 10 block.',tags:['defense'],apply:p=>{p.stats.def+=3;p.openingBlock=(p.openingBlock||0)+10;}},
+  {id:'b_guard',tier:'blue',icon:'🧱',name:'Quill Armor',desc:'+3 DEF.',tags:['defense'],apply:p=>{p.stats.def+=3;}},
   {id:'b_bleed',tier:'blue',icon:'🩸',name:'Ripper Beak',desc:'+3 ATK. Crits apply Bleed(1).',stackable:false,tags:['offense'],apply:p=>{p.stats.atk+=3;p.critBleed=(p.critBleed||0)+1;}},
   {id:'b_energy',tier:'blue',icon:'🔋',name:'Hot Blood',desc:'Start battle with +1 energy (non-stacking).',stackable:false,tags:['utility'],apply:p=>{p.startEnergyBonus=Math.max(p.startEnergyBonus||0,1);}},
   {id:'b_hex',tier:'blue',icon:'🕯️',name:'Dread Choir',desc:'+2 MATK. First spell each battle inflicts Fear(1).',tags:['offense'],apply:p=>{p.stats.matk=(p.stats.matk||0)+2;p.openingFearOnSpell=1;}},
@@ -1909,14 +1909,16 @@ function enforceAbilityBalanceSpec(){
     if(!tmpl.balanceSpec){
       tmpl.balanceSpec={primary:tmpl.type||'utility',secondary:[],ailment:null,subaction:null};
     }
-    tmpl.levels.forEach(lv=>{
+    const baseAilCount=Math.max(0,[tmpl.levels[0]?.newAilment,tmpl.levels[0]?.newAilment2,tmpl.levels[0]?.newAilment3].filter(Boolean).length);
+    tmpl.levels.forEach((lv,idx)=>{
       if(!lv||typeof lv!=='object') return;
       delete lv.raisePoisonCap; // remove infinite cap growth loops
       const ails=[lv.newAilment,lv.newAilment2,lv.newAilment3].filter(Boolean);
+      const maxAllowed=baseAilCount + (idx>=3?1:0);
       let kept=[];
       let hardUsed=false;
       for(const a of ails){
-        if(kept.length>=2) break; // at most 2 minor ailments
+        if(kept.length>=maxAllowed) break;
         if(HARD_CC.has(a)){
           if(hardUsed) continue;
           hardUsed=true;
@@ -2428,28 +2430,6 @@ function telemetryPushRun(run){
   data.runs = data.runs.slice(0, 120);
   saveTelemetry(data);
 }
-function exportCombatTelemetry(){
-  const data = loadTelemetry();
-  if(!Array.isArray(data.runs) || data.runs.length===0){
-    logMsg('📊 No telemetry runs yet. Finish a run first.', 'system');
-    return;
-  }
-  const payload = {
-    exportedAt: Date.now(),
-    summary: getTelemetrySummary(),
-    runs: data.runs,
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `avian-ascent-telemetry-${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  logMsg('📊 Telemetry exported.', 'system');
-}
 function getTelemetrySummary(){
   const runs = loadTelemetry().runs||[];
   if(!runs.length) return {runs:0, avgStage:0, topDeaths:[], winRateByBird:[]};
@@ -2471,8 +2451,54 @@ function getTelemetrySummary(){
     winRateByBird:[...birds.values()].map(x=>({...x, winRate:+((x.wins/Math.max(1,x.runs))*100).toFixed(1)})).sort((a,b)=>b.winRate-a.winRate)
   };
 }
-globalThis.exportCombatTelemetry = exportCombatTelemetry;
 globalThis.getTelemetrySummary = getTelemetrySummary;
+
+const HIGHSCORE_KEY='avian_highscores_v1';
+function getRunSnapshot(){
+  const p=G.player||{};
+  return {
+    birdKey:p.birdKey||'unknown',
+    birdName:p.name||'Unknown',
+    stage:G.endlessMode && G.stage>20 ? `Endless ${G.endlessBattle||Math.max(1,G.stage-20)}` : `Stage ${G.stage||1}`,
+    stageNumber:Number(G.stage||1),
+    endless:!!G.endlessMode,
+    stats:{...(p.stats||{})},
+    abilities:(p.abilities||[]).map(a=>{
+      const t=ABILITY_TEMPLATES[a.id];
+      return `${t?.name||a.id} Lv${a.level||1}`;
+    }),
+    upgrades:(G.collectedRewards||[]).map(r=>r.name),
+    ts:Date.now()
+  };
+}
+function saveHighscoreEntry(won=false){
+  const snap=getRunSnapshot();
+  const entry={...snap, won:!!won};
+  try{
+    const rows=JSON.parse(localStorage.getItem(HIGHSCORE_KEY)||'[]');
+    rows.push(entry);
+    rows.sort((a,b)=> (b.stageNumber||0)-(a.stageNumber||0) || Number(!!b.won)-Number(!!a.won));
+    localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(rows.slice(0,20)));
+  }catch(_){ }
+}
+function renderHighscoreBoard(){
+  const grid=document.getElementById('highscore-grid');
+  if(!grid) return;
+  let rows=[];
+  try{ rows=JSON.parse(localStorage.getItem(HIGHSCORE_KEY)||'[]'); }catch(_){ rows=[]; }
+  if(!rows.length){
+    grid.innerHTML='<div class="run-card"><div class="run-stage">No highscores yet</div><div class="run-meta">Finish a run to log your best attempts.</div></div>';
+    return;
+  }
+  grid.innerHTML=rows.slice(0,8).map((r,i)=>`
+    <div class="run-card">
+      <div class="run-stage">#${i+1} · ${r.stage}${r.won?' · 👑 Win':''}</div>
+      <div class="run-bird">${r.birdName||r.birdKey}</div>
+      <div class="run-meta">HP ${r.stats?.hp||0}/${r.stats?.maxHp||0} · ATK ${r.stats?.atk||0} · DEF ${r.stats?.def||0} · SPD ${r.stats?.spd||0}</div>
+      <div class="run-meta">${(r.abilities||[]).slice(0,3).join(' · ')}</div>
+      <div class="run-meta">Upgrades: ${((r.upgrades||[]).slice(0,2).join(' · '))||'—'}</div>
+    </div>`).join('');
+}
 
 registerGameModule({
   id:'telemetry-persistence',
@@ -2800,6 +2826,7 @@ function selectClassFilter(id){
   G_classFilter=id||'all';
   buildClassFilterMenu();
   buildBirdGrid(G_selView);
+  renderHighscoreBoard();
 }
 
 
@@ -3316,7 +3343,7 @@ function loadStage() {
         const pool=BIRD_ENEMIES.filter(e=>e.tier.includes(tier));
         if(pool.length>0){
           const src=pool[Math.floor(Math.random()*pool.length)];
-          ed={name:src.name,emoji:src.emoji,hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
+          ed={name:src.name,emoji:src.emoji,birdKey:src.birdKey,portraitKey:src.birdKey,hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
             acc:src.acc,dodge:src.dodge,size:src.size,aiStyle:src.aiStyle,isBoss:false,bossTitle:'',
             abilities:src.abilities,stats:{hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
             acc:src.acc,dodge:src.dodge,mdef:8,matk:6}};
@@ -3395,6 +3422,11 @@ function loadStage() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if(id==='screen-stork-shop' || id==='screen-grove'){
+    const el=document.getElementById(id);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){ window.scrollTo(0,0); }
+  }
   const evt={id};
   AvianEvents.emit('screen:change', evt);
   runModuleHook('onScreenChange', evt);
@@ -7905,35 +7937,90 @@ function buildSkillGrid() {
   }
 }
 
-function confirmSkillUpgrade() {
+function countLevelAilments(lv){
+  return [lv?.newAilment, lv?.newAilment2, lv?.newAilment3].filter(Boolean).length;
+}
+function ailmentSlotsForLevel(tmpl, level){
+  const base=Math.max(0,countLevelAilments((tmpl?.levels||[])[0]||{}));
+  return base + (level>=4 ? 1 : 0);
+}
+function deriveAbilityAilments(ab, tmpl){
+  if(!tmpl) return [];
+  const contactAilments=['poison','paralyzed','burning','weaken'];
+  const isContactOnly=tmpl.type==='spell'||tmpl.type==='utility';
+  const ailIds=[];
+  for(let i=0;i<(ab.level||1);i++){
+    const d=tmpl.levels[i]||{};
+    [d.newAilment,d.newAilment2,d.newAilment3].forEach(a=>{
+      if(!a) return;
+      if(isContactOnly&&contactAilments.includes(a)) return;
+      if(!ailIds.includes(a)) ailIds.push(a);
+    });
+  }
+  const cap=ailmentSlotsForLevel(tmpl, ab.level||1);
+  let out=ailIds.slice(0,cap);
+  if((ab.level||1)>=4 && ab.modAilmentChoice && !out.includes(ab.modAilmentChoice) && out.length<cap){
+    out.push(ab.modAilmentChoice);
+  }
+  return out.slice(0,cap);
+}
+function openAbilityModificationChoice(ab, tmpl){
+  const pool=['poison','burning','weaken','paralyzed','feared','confused','slow','bleed'];
+  const existing=new Set(deriveAbilityAilments({...ab,modAilmentChoice:null}, tmpl));
+  const options=pool.filter(a=>!existing.has(a));
+  options.sort(()=>Math.random()-0.5);
+  const picks=options.slice(0,3);
+  if(!picks.length) return Promise.resolve(null);
+  const modal=document.getElementById('ability-mod-modal');
+  const sub=document.getElementById('ability-mod-sub');
+  const list=document.getElementById('ability-mod-options');
+  if(!modal||!list) return Promise.resolve(picks[0]);
+  if(sub) sub.textContent=`${ab.name} reached Lv.4 — choose 1 ailment to add.`;
+  return new Promise(resolve=>{
+    list.innerHTML='';
+    picks.forEach(id=>{
+      const btn=document.createElement('button');
+      btn.className='abandon-confirm-btn';
+      btn.style.width='100%';
+      btn.textContent=id.charAt(0).toUpperCase()+id.slice(1);
+      btn.onclick=()=>{ modal.classList.remove('open'); resolve(id); };
+      list.appendChild(btn);
+    });
+    globalThis._abilityModCancelResolver=()=>resolve(null);
+    modal.classList.add('open');
+  });
+}
+function closeAbilityModModal(){
+  const modal=document.getElementById('ability-mod-modal');
+  if(modal) modal.classList.remove('open');
+  if(typeof globalThis._abilityModCancelResolver==='function'){
+    globalThis._abilityModCancelResolver();
+    globalThis._abilityModCancelResolver=null;
+  }
+}
+function refreshPlayerAbilityAilments(){
+  (G.player?.abilities||[]).forEach(ab=>{
+    const tmpl=ABILITY_TEMPLATES[ab.id];
+    if(tmpl) ab.ailmentIds=deriveAbilityAilments(ab, tmpl);
+  });
+}
+
+async function confirmSkillUpgrade() {
   if(!_luSelectedSkillId){logMsg('Select a skill to upgrade first!','miss');return;}
   const ab=G.player.abilities.find(a=>a.id===_luSelectedSkillId);
   if(!ab){return;}
+  const prevLevel=ab.level||1;
   ab.level=Math.min(ab.level+1,4);
   const tmpl=ABILITY_TEMPLATES[_luSelectedSkillId];
   if(tmpl){
-    const contactAilments=['poison','paralyzed','burning','weaken'];
-    const isContactOnly=tmpl.type==='spell'||tmpl.type==='utility';
-    const ailIds=[];
-    for(let i=0;i<ab.level;i++){
-      const d=tmpl.levels[i];
-      if(d.newAilment){
-        // Spell/utility can only pass mental ailments (feared, confused), not contact ones
-        if(!isContactOnly||!contactAilments.includes(d.newAilment))
-          if(!ailIds.includes(d.newAilment))ailIds.push(d.newAilment);
-      }
-      if(d.newAilment2){
-        if(!isContactOnly||!contactAilments.includes(d.newAilment2))
-          if(!ailIds.includes(d.newAilment2))ailIds.push(d.newAilment2);
-      }
-      if(d.newAilment3){
-        if(!isContactOnly||!contactAilments.includes(d.newAilment3))
-          if(!ailIds.includes(d.newAilment3))ailIds.push(d.newAilment3);
-      }
+    if(prevLevel<4 && ab.level===4 && (tmpl.type==='physical'||tmpl.type==='ranged') && ailmentSlotsForLevel(tmpl,4)>ailmentSlotsForLevel(tmpl,3)){
+      const choice=await openAbilityModificationChoice(ab, tmpl);
+      if(choice) ab.modAilmentChoice=choice;
     }
-    ab.ailmentIds=ailIds;
+    ab.ailmentIds=deriveAbilityAilments(ab, tmpl);
   }
   logMsg(`🌟 ${ab.name} upgraded to Lv.${ab.level}!`,'exp-gain');
+  refreshPlayerAbilityAilments();
   normalizeAbilityCooldownsForPlayer(G.player);
   enforceAbilityCosts(G.player);
   _luSelectedSkillId=null;
@@ -8250,13 +8337,22 @@ function showVictory(){
   SFX.victory();
   checkRunUnlocks();
   saveRunHistory(true);
+  saveHighscoreEntry(true);
   G.phase='REWARD';
   document.getElementById('gameover-inner').className='gameover-inner win';
   document.getElementById('gameover-title').textContent='⚔ Ascended! ⚔';
   const endMsg=G.endlessMode
     ?`${G.player.name} conquered Stage 20 and flies into endless glory! The battle continues...`
     :`${G.player.name} conquered all 20 stages and ascended to legend! 🔓 New birds unlocked!`;
+  const abilityList=(G.player.abilities||[]).map(a=>`${ABILITY_TEMPLATES[a.id]?.name||a.id} Lv${a.level||1}`).join(' · ');
   document.getElementById('gameover-msg').textContent=endMsg;
+  const unlockIds=['unlock_hummingbird','unlock_shoebill','unlock_secretary','unlock_magpie','unlock_kookaburra','unlock_peregrine','unlock_harpy','unlock_ostrich','unlock_kiwi','unlock_lyrebird','unlock_toucan','unlock_penguin','unlock_emu','unlock_swan','unlock_flamingo','unlock_seagull','unlock_albatross','unlock_duke_blakiston'];
+  const unlockedNow=unlockIds.filter(id=>isUnlocked(id)).map(id=>id.replace('unlock_','').replace(/_/g,' '));
+  const runUnlocks=document.getElementById('run-unlocks');
+  if(runUnlocks){
+    runUnlocks.innerHTML=`<div style="margin:10px 0 6px;font-size:.82rem;color:var(--gold-light)">🏆 Achievement: Court Cleared</div>
+    <div style="font-size:.76rem;color:var(--text-dim);line-height:1.5">${G.player.name} · HP ${G.player.stats.hp}/${G.player.stats.maxHp} · ATK ${G.player.stats.atk} · DEF ${G.player.stats.def} · SPD ${G.player.stats.spd}<br/>Abilities: ${abilityList||'—'}<br/>Unlocked roster: ${unlockedNow.join(', ')||'None yet'}</div>`;
+  }
   showRunStats();
   if(G.endlessMode){
     G.endlessBattle=0;
@@ -8281,6 +8377,7 @@ function showDefeat(){
   SFX.defeat();
   checkRunUnlocks();
   saveRunHistory(false);
+  saveHighscoreEntry(false);
   document.getElementById('gameover-inner').className='gameover-inner lose';
   document.getElementById('gameover-title').textContent='💀 Fallen';
   const stageLabel=G.endlessMode&&G.stage>ENEMIES.length?`Endless Battle ${G.endlessBattle}`:`Stage ${G.stage}`;
@@ -8687,11 +8784,15 @@ function makeUtilityOffer(kind='regular'){
     {id:'shop_util_heal20',tier:'green',icon:'🍖',name:'Field Rations',desc:'Heal 20% HP',apply:p=>{const h=Math.max(1,Math.floor(p.stats.maxHp*0.20));p.stats.hp=Math.min(p.stats.hp+h,p.stats.maxHp);}},
     {id:'shop_util_cleanse',tier:'green',icon:'🧼',name:'Spring Cleanse',desc:'Cleanse active debuffs and restore 10% HP',apply:p=>{G.playerStatus={};const h=Math.max(1,Math.floor(p.stats.maxHp*0.10));p.stats.hp=Math.min(p.stats.hp+h,p.stats.maxHp);}},
     {id:'shop_util_refresh',tier:'blue',icon:'🪙',name:'Coupon Wing',desc:'Next shop refresh is free',apply:p=>{G._freeShopRefresh=(G._freeShopRefresh||0)+1;}},
+    {id:'shop_util_energy',tier:'green',icon:'🔋',name:'Spark Draft',desc:'Gain +1 max energy this run (max +3)',apply:p=>{p.energyBonus=Math.min(3,(p.energyBonus||0)+1);p.energyMax=Math.max(1,(p.energyMax||3)+1);}},
+    {id:'shop_util_focus',tier:'green',icon:'🎯',name:'Hunter Focus',desc:'ACC +5 and Crit +3%',apply:p=>{p.stats.acc=Math.min(100,(p.stats.acc||80)+5);p.stats.critChance=(p.stats.critChance||5)+3;}},
   ];
   const utilsBoss=[
     {id:'shop_util_heal40',tier:'blue',icon:'🩹',name:'Boss First Aid',desc:'Heal 40% HP and cleanse debuffs',apply:p=>{G.playerStatus={};const h=Math.max(1,Math.floor(p.stats.maxHp*0.40));p.stats.hp=Math.min(p.stats.hp+h,p.stats.maxHp);}},
     {id:'shop_util_discount',tier:'purple',icon:'🛍️',name:'Royal Voucher',desc:'Your next purchase costs 2 less shiny',apply:p=>{G._nextShopDiscount=Math.max(G._nextShopDiscount||0,2);}},
     {id:'shop_util_refresh2',tier:'blue',icon:'🎟️',name:'Double Refresh Pass',desc:'Gain 2 free shop refreshes',apply:p=>{G._freeShopRefresh=(G._freeShopRefresh||0)+2;}},
+    {id:'shop_util_bossward',tier:'purple',icon:'🛡️',name:'Boss Ward',desc:'MDEF +3 and cleanse one debuff now',apply:p=>{p.stats.mdef=(p.stats.mdef||0)+3;const bad=['weaken','paralyzed','slow','burning','poison','bleed','feared','lullabied'];const hit=bad.find(k=>G.playerStatus[k]);if(hit) delete G.playerStatus[hit];}},
+    {id:'shop_util_apex',tier:'purple',icon:'🦅',name:'Apex Talon Oil',desc:'ATK +3, MATK +3',apply:p=>{p.stats.atk+=3;p.stats.matk=(p.stats.matk||0)+3;}},
   ];
   const arr=kind==='boss'?utilsBoss:utilsRegular;
   const pick=arr[Math.floor(Math.random()*arr.length)];
@@ -8956,7 +9057,7 @@ function openShopSwapModal(newTmpl, onPick, onCancel){
   modal.style.display='flex';
 }
 
-function shopBuySelected() {
+async function shopBuySelected() {
   if(SHOP_STATE.purchaseMadeThisVisit){
     const log=document.getElementById('shop-purchase-log');
     if(log) log.textContent='🪶 You may only buy one item per shop visit.';
@@ -9000,6 +9101,7 @@ function shopBuySelected() {
 
           if(item.stackable===false){ if(!(G.runUpgradesPurchased instanceof Set)) G.runUpgradesPurchased=new Set(); G.runUpgradesPurchased.add(item.id); }
           _shopItems.splice(selected,1);
+          refreshPlayerAbilityAilments();
           enforceAbilityCosts(G.player);
           shopLockVisitState();
           saveRun();
@@ -9013,7 +9115,22 @@ function shopBuySelected() {
 
   G.shinyObjects-=cost;
   if(discount>0) G._nextShopDiscount=0;
-  item.apply(G.player);
+  if(item.id && item.id.startsWith('shop_ab_upgrade_')){
+    const abId=item.id.replace('shop_ab_upgrade_','');
+    const a=G.player.abilities.find(x=>x.id===abId);
+    if(a){
+      const prevLevel=a.level||1;
+      a.level=Math.min(4,(a.level||1)+1);
+      const tmpl=ABILITY_TEMPLATES[a.id];
+      if(tmpl && prevLevel<4 && a.level===4 && (tmpl.type==='physical'||tmpl.type==='ranged') && ailmentSlotsForLevel(tmpl,4)>ailmentSlotsForLevel(tmpl,3)){
+        const choice=await openAbilityModificationChoice(a, tmpl);
+        if(choice) a.modAilmentChoice=choice;
+      }
+    }
+  } else {
+    item.apply(G.player);
+  }
+  refreshPlayerAbilityAilments();
   enforceAbilityCosts(G.player);
 
   if(!G.collectedRewards) G.collectedRewards=[];
@@ -9169,7 +9286,7 @@ applyAccessibilitySettings();
      3 power/buff
    ============================================================ */
 (function(){
-  const SPRITE_KEYS = new Set(['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','magpie','kookaburra','kiwi','penguin','robin','flamingo','seagull','emu']);
+  const SPRITE_KEYS = new Set(['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','magpie','kookaburra','kiwi','penguin','robin','flamingo','seagull','emu','dukeblakiston']);
   const CASTERS = new Set(['mage','bard','summoner']);
 
   function normKey(k){ return String(k||'').toLowerCase().replace(/[^a-z]/g,''); } // secretaryBird -> secretarybird
@@ -9305,7 +9422,7 @@ applyAccessibilitySettings();
    - Forces all UI locations using PORTRAITS[...] to show sprites
    ============================================================ */
 (function(){
-  const SPRITE_KEYS = ['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','magpie','kookaburra','flamingo','seagull'];
+  const SPRITE_KEYS = ['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','magpie','kookaburra','flamingo','seagull','dukeblakiston'];
   function mk(k, small=true){
     const cls = small ? 'sprite4 small' : 'sprite4';
     return `<div class="${cls} sprite-${k} frame-0"></div>`;
@@ -9462,7 +9579,7 @@ SPRITE_KEYS_ALL.add('magpie');
    - Adds small idle flutter + clearer attack/run/crouch cues
    ============================================================ */
 (function(){
-  const SPRITE_KEYS = new Set(['sparrow','goose','blackbird','crow','macaw','robin','hummingbird','shoebill','secretarybird','magpie','kookaburra','flamingo','seagull','emu','penguin']);
+  const SPRITE_KEYS = new Set(['sparrow','goose','blackbird','crow','macaw','robin','hummingbird','shoebill','secretarybird','magpie','kookaburra','flamingo','seagull','emu','penguin','dukeblakiston']);
   const CASTERS = new Set(['mage','bard']);
 
   function normKey(k){ return String(k||'').toLowerCase().replace(/[^a-z]/g,''); }

@@ -104,6 +104,10 @@
 <div class="run-history-title">— RECENT RUNS —</div>
 <div class="run-history-grid" id="run-history-grid"></div>
 </div>
+<div class="run-history" id="highscore-board" style="display:block;max-width:1100px;margin:8px auto 12px;">
+<div class="run-history-title">— HIGHSCORES —</div>
+<div class="run-history-grid" id="highscore-grid"></div>
+</div>
 </div>
 <!-- BATTLE -->
 <div class="screen" id="screen-battle">
@@ -313,6 +317,17 @@
 </div>
 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
 <button class="abandon-cancel-btn" onclick="closeSettingsModal()">Close</button>
+</div>
+</div>
+</div>
+<!-- ABILITY MODIFICATION MODAL -->
+<div class="abandon-modal" id="ability-mod-modal" onclick="if(event.target===this)closeAbilityModModal()">
+<div class="abandon-inner" style="max-width:560px;text-align:left;">
+<h3>✨ Ability Modification</h3>
+<p id="ability-mod-sub" style="color:var(--text-dim);margin-bottom:10px;font-size:.9rem;">Choose one ailment to add at Lv.4.</p>
+<div id="ability-mod-options" style="display:grid;grid-template-columns:1fr;gap:8px;"></div>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+<button class="abandon-cancel-btn" onclick="closeAbilityModModal()">Cancel</button>
 </div>
 </div>
 </div>
