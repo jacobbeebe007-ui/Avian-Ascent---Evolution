@@ -2810,6 +2810,7 @@ function initSelection() {
   // Build bird grid
   buildClassFilterMenu();
   buildBirdGrid(G_selView);
+  renderHighscoreBoard();
 }
 
 function buildClassFilterMenu(){
