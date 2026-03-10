@@ -3052,6 +3052,24 @@ document.addEventListener('click', (e)=>{
   if(menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove('open');
 });
 
+
+function buildBirdExpandedContent(key, bird){
+  const cls = bird.class||'knight';
+  const sizeClass = getUISizeClass(bird, 'panel');
+  const tags = (bird.startAbilities||[]).map(id=>`<span class="ascent-ab-tag">${ABILITY_TEMPLATES[id]?ABILITY_TEMPLATES[id].name:id}</span>`).join('');
+  return `
+    <div class="bird-card-expanded">
+      <div class="ascent-panel-portrait">${renderBirdIconHTML(key, sizeClass, false)}</div>
+      <div class="ascent-panel-name">${bird.name}</div>
+      <div class="ascent-panel-tagline">${bird.tagline||''}</div>
+      <div class="ascent-panel-class"><span class="class-badge class-${cls}">${cls.toUpperCase()}</span> · ${SIZE_LABELS[bird.size||'medium']||bird.size}</div>
+      ${bird.passive?`<div class="ascent-panel-passive"><strong>★ ${bird.passive.name}:</strong> ${bird.passive.desc}</div>`:''}
+      <div class="ascent-abilities">${tags}</div>
+      <div style="text-align:left;font-size:.72rem;color:var(--text);background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px;margin:8px 0;"><strong>Full Stats:</strong> HP ${bird.stats.hp} · ATK ${bird.stats.atk} · DEF ${bird.stats.def} · SPD ${bird.stats.spd} · ACC ${bird.stats.acc}% · Dodge ${bird.stats.dodge}% · MATK ${bird.stats.matk||0} · MDEF ${bird.stats.mdef||0} · Crit ${bird.stats.critChance||0}%</div>
+      <button class="cta" onclick="event.stopPropagation();startGame()">🪽 Take Flight as ${bird.name}</button>
+    </div>`;
+}
+
 function buildBirdCard(key, bird, locked, globalMax) {
   const card = document.createElement('div');
   card.className = 'bird-card' + (locked ? ' bird-locked' : '') + (G.selected===key?' selected':'');
@@ -3090,6 +3108,7 @@ function buildBirdCard(key, bird, locked, globalMax) {
       <div class="bird-nm" style="color:#555;font-size:.8rem;">${bird.name}</div>
       <div class="lock-overlay"><span class="lock-icon" style="font-size:1rem;">🔒</span><div class="lock-label" style="font-size:.6rem;color:#555;line-height:1.3;">${unlockLabel}</div></div>`;
   } else {
+    const expanded = (G.selected===key) ? buildBirdExpandedContent(key,bird) : '';
     card.innerHTML = `
       <div class="bird-card-head">
         <span class="class-badge class-${cls}">${(cls).toUpperCase()}</span>
@@ -3097,7 +3116,8 @@ function buildBirdCard(key, bird, locked, globalMax) {
       </div>
       <div style="display:flex;justify-content:center;margin:2px auto 6px;">${renderBirdIconHTML(key,sizeClass,false)}</div>
       <div class="bird-nm">${bird.name}</div>
-      <div class="stat-bars">${bars}</div>`;
+      <div class="stat-bars">${bars}</div>
+      ${expanded}`;
   }
   return card;
 }
@@ -3106,13 +3126,8 @@ function selectBird(key, el) {
   G.selected = key;
   document.querySelectorAll('.bird-card').forEach(c=>c.classList.remove('selected'));
   if(el) el.classList.add('selected');
-  updateAscentPanel(key);
-
-  // Inline preview: bring the details panel into view on mobile
-  const ap=document.getElementById('ascent-panel');
-  if(ap && window.matchMedia && window.matchMedia('(max-width: 820px)').matches){
-    ap.scrollIntoView({behavior:'smooth', block:'start'});
-  }
+  // Re-render cards so the selected card expands inline (no side panel/auto-scroll).
+  initSelectionSafe();
 }
 
 
@@ -4041,6 +4056,7 @@ function renderActions() {
     if(_prevType!==null&&_prevType!==ab.btnType) btn.classList.add('type-sep');
     _prevType=ab.btnType;
     btn.setAttribute('data-ab-idx',idx);
+    btn.setAttribute('data-ab-id',ab.id||'');
     const energyCost=syncAbilityEnergyCost(ab);
     let btnCostText=`${energyCost} EN`;
     let cdisabled=false;
@@ -4082,10 +4098,11 @@ function renderActions() {
       ${ab.level>1?`<span class="ab-lv-badge">Lv${ab.level}</span>`:''}
       ${ailDots?`<div class="ailment-icons">${ailDots}</div>`:''}
       <span class="kb-hint">[${idx+1}]</span>`;
-    btn.onclick=()=>enqueueAction(()=>playerAction(ab,true));
+    const currentAb = ()=> (G?.player?.abilities||[]).find(x=>x.id===ab.id) || ab;
+    btn.onclick=()=>enqueueAction(()=>playerAction(currentAb(),true));
     // Tooltip - desktop hover + mobile tap toggle
     // Desktop: hover tooltips
-    btn.addEventListener('mouseenter',e=>{if(!window._isTouchDevice)showActionTooltip(e,ab);});
+    btn.addEventListener('mouseenter',e=>{if(!window._isTouchDevice)showActionTooltip(e,currentAb());});
     btn.addEventListener('mousemove',e=>{if(!window._isTouchDevice)moveTooltip(e);});
     btn.addEventListener('mouseleave',()=>{if(!window._isTouchDevice)hideTooltip();});
     // Mobile: long-press (500ms) shows tooltip; normal tap fires the action
@@ -4096,8 +4113,9 @@ function renderActions() {
       _longPressTimer=setTimeout(()=>{
         _longPressTimer=null;
         const touch=e.touches[0];
-        showActionTooltip({clientX:touch.clientX,clientY:touch.clientY},ab);
-        document.getElementById('action-tooltip')._currentAbId=ab.id;
+        const cur=currentAb();
+        showActionTooltip({clientX:touch.clientX,clientY:touch.clientY},cur);
+        document.getElementById('action-tooltip')._currentAbId=cur.id;
       },500);
     },{passive:true});
     btn.addEventListener('touchend',()=>{
@@ -4141,8 +4159,9 @@ function showActionTooltip(e,ab) {
   const tt=document.getElementById('action-tooltip');
   const tmpl=ABILITY_TEMPLATES[ab.id];
   if (!tmpl) return;
-  const lv=Math.min(ab.level,tmpl.levels.length);
-  const lvData=tmpl.levels[lv-1];
+  const levels = Array.isArray(tmpl.levels) ? tmpl.levels : [];
+  const lv=Math.max(1, Math.min(ab.level||1, levels.length||1));
+  const lvData=levels[lv-1] || {desc: (ab.desc||tmpl.desc||'')};
   const miss=tmpl.baseMissChance!==undefined?Math.max(0,tmpl.baseMissChance-5*(lv-1)):null;
   const hit=miss!==null?100-miss:null;
   const hitClass=hit===null?'':(hit>=80?'tt-hit-great':hit>=55?'tt-hit-good':'tt-hit-bad');
@@ -7869,12 +7888,22 @@ function ensureMainAttackAndLoadoutRules(){
 
   let mainAb=null;
   if(isMagic){
-    mainAb=G.player.abilities.find(a=>a.id==='mainAttack');
-    if(!mainAb){
-      mainAb={id:'mainAttack',name:'Peck',level:1,type:'physical',btnType:'physical'};
-      G.player.abilities.unshift(mainAb);
+    const isBlackbird = (G.player?.birdKey==='blackbird');
+    if(isBlackbird){
+      mainAb=G.player.abilities.find(a=>a.id==='blackPeck') || null;
+      G.player.abilities=G.player.abilities.filter(a=>a.id!=='mainAttack');
+      if(!mainAb){
+        mainAb={...(ABILITY_TEMPLATES.blackPeck||{}), id:'blackPeck', level:1};
+        G.player.abilities.unshift(mainAb);
+      }
+    }else{
+      mainAb=G.player.abilities.find(a=>a.id==='mainAttack');
+      if(!mainAb){
+        mainAb={id:'mainAttack',name:'Peck',level:1,type:'physical',btnType:'physical'};
+        G.player.abilities.unshift(mainAb);
+      }
+      mainAb.name='Peck';
     }
-    mainAb.name='Peck';
   } else {
     const preferred=bd.mainAttackId||(bd.startAbilities&&bd.startAbilities[0]);
     mainAb=G.player.abilities.find(a=>a.id===preferred)||G.player.abilities[0]||null;
@@ -8518,8 +8547,9 @@ document.addEventListener('keydown', e => {
   if(screen.id==='screen-battle') {
     if(!G.animLock && G.turn==='player' && G.player) {
       const idx=parseInt(e.key)-1;
-      if(idx>=0&&idx<=8&&G.player.abilities[idx]) {
-        const btn=document.querySelector(`[data-ab-idx="${idx}"]`);
+      if(idx>=0&&idx<=8){
+        const btns=[...document.querySelectorAll('#actions-grid .action-btn[data-ab-idx]')].filter(b=>!b.classList.contains('endturn-mini'));
+        const btn=btns[idx]||null;
         if(btn&&!btn.disabled) { btn.click(); return; }
       }
     }
@@ -9926,6 +9956,8 @@ SPRITE_KEYS_ALL.add('magpie');
     const isBoss = !!entity?.isBoss;
     if(isBoss && context==='battle') return 'boss';
     if(key === 'penguin') return 'xl';
+    if(key === 'robin') return 'small';
+    if(key === 'seagull') return 'medium';
     if(sz.includes('tiny')) return 'tiny';
     if(sz.includes('small')) return 'small';
     if(sz.includes('xlarge') || sz.includes('xl')) return 'xl';
@@ -9958,6 +9990,8 @@ SPRITE_KEYS_ALL.add('magpie');
     const sz = String(entity?.size || entity?.birdSize || '').toLowerCase();
     if(entity?.isBoss && context === 'battle') return 'boss';
     if(key === 'penguin') return 'xl';
+    if(key === 'robin') return 'small';
+    if(key === 'seagull') return 'medium';
     if(sz.includes('tiny')) return 'tiny';
     if(sz.includes('small')) return 'small';
     if(sz.includes('xlarge') || sz.includes('xl')) return 'xl';
@@ -9971,6 +10005,8 @@ SPRITE_KEYS_ALL.add('magpie');
     const entity = (sizeOrEntity && typeof sizeOrEntity === 'object') ? sizeOrEntity : { size: String(sizeOrEntity || 'medium') };
     let sizeClass = (typeof sizeOrEntity === 'string') ? sizeOrEntity : globalThis.getUISizeClass(entity, 'general');
     if(key === 'penguin') sizeClass = 'small';
+    if(key === 'robin') sizeClass = 'small';
+    if(key === 'seagull') sizeClass = 'medium';
     if(spriteBirds.has(key)){
       return '<div class="sprite4 ' + sizeClass + ' sprite-' + key + ' frame-0 ' + (locked ? 'locked' : '') + '"></div>';
     }
