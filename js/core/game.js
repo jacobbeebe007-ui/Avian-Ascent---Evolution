@@ -104,22 +104,26 @@ const AILMENTS = {
 
   poison:{
     id:'poison', name:'Poison', icon:'☣', color:'#4cb44c',
-    desc:'Damage over time. Stacks. 3 turns.',
+    desc:'Damage over time. Stacks. 3 turns. Deals 1 damage per stack each tick.',
     tick(who, stacks){ return stacks; }, // dmg per turn = stacks
+  },
+  bleed:{
+    id:'bleed', name:'Bleed', icon:'🩸', color:'#be384c',
+    desc:'Physical damage over time. Stacks. 3 turns. Deals ~1.5 damage per stack each tick.',
   },
   weaken:{
     id:'weaken', name:'Chicken Pox', icon:'🐔', color:'#c9a840',
-    desc:'Lowers dodge% and damage%. 3 turns.',
+    desc:'Reduces Dodge by 40% and damage by 25%. 3 turns.',
     dodgeMult: 0.6, dmgMult: 0.75,
   },
   paralyzed:{
     id:'paralyzed', name:'Paralysis', icon:'⚡', color:'#c8c840',
-    desc:'Chance to skip turn each round. 3 turns.',
+    desc:'20% chance to skip turn each round. 3 turns.',
     skipChance: 20,
   },
   burning:{
     id:'burning', name:'Feather Disease', icon:'🔥', color:'#dc641e',
-    desc:'+hit chance & crit chance on attacker. 3 turns.',
+    desc:'+20% hit chance and +20% crit chance on attacker. 3 turns.',
     hitBonus: 20, critBonus: 20,
   },
   delayed:{
@@ -840,7 +844,7 @@ const BIRDS = {
         ];
         const curses=[
           ()=>{G.enemyStatus.weaken=4;logMsg('☠ Omen Curse on enemy: Chicken Pox!','system');},
-          ()=>{G.enemyStatus.poison={stacks:3,turns:4};logMsg('☠ Omen Curse on enemy: Flu!','system');},
+          ()=>{G.enemyStatus.poison={stacks:3,turns:4};logMsg('☠ Omen Curse on enemy: Poison!','system');},
           ()=>{G.enemyStatus.confused={turns:2,skipChance:40};logMsg('☠ Omen Curse on enemy: Confused!','system');},
           ()=>{G.enemy.stats.atk=Math.max(1,Math.floor(G.enemy.stats.atk*.7));logMsg('☠ Omen Curse on enemy: ATK −30%!','system');},
         ];
@@ -1140,7 +1144,7 @@ function makeDukeBlakiston(){
 }
 const ENEMY_ABILITY_POOL = {
   // Enemy abilities are simplified versions
-  eVenom:   {name:'Venom Peck', desc:'Applies 2 Poison stacks (DoT).', dmg:'0 direct', dodgeable:true, fn(e,p,G){applyAilment('player','poison',2);logMsg(`☣ ${e.name} spreads Flu!`,'enemy-action');}},
+  eVenom:   {name:'Venom Peck', desc:'Applies 2 Poison stacks (DoT).', dmg:'0 direct', dodgeable:true, fn(e,p,G){applyAilment('player','poison',2);logMsg(`☣ ${e.name} spreads Poison!`,'enemy-action');}},
   eWeaken:  {name:'Screech', desc:'Applies Chicken Pox (reduced damage/dodge).', dmg:'0 direct', dodgeable:true, fn(e,p,G){
     const _bd=BIRDS[G.player.birdKey];if(_bd&&_bd.passive&&_bd.passive.immuneWeaken){spawnFloat('player','🛡 Immune!','fn-status');return;}
     G.playerStatus.weaken=Math.max(G.playerStatus.weaken||0,2+((G.biomeMod?.dread||0)>0?1:0));logMsg(`🐔 ${e.name} weakens you!`,'enemy-action');}},
@@ -1413,9 +1417,9 @@ const ABILITY_TEMPLATES_LEARNABLE = {
     desc:'Drop a rock on YOUR next turn — size-based damage, ignores shields.',
     levels:[
       {lv:1, desc:'XL: 3.0× ATK · Large: 2.3× · Medium: 1.8× · Small: 1.4× · Tiny: 1.1×. Ignores block. 1-turn delay.'},
-      {lv:2, desc:'+20% dmg, 10% Flu', newAilment:'poison', ailChance:10},
-      {lv:3, desc:'+40% dmg, 20% stun, 20% Flu', ailChance:20},
-      {lv:4, desc:'+60% dmg, 30% stun, 30% Flu', ailChance:30},
+      {lv:2, desc:'+20% dmg, 10% Poison', newAilment:'poison', ailChance:10},
+      {lv:3, desc:'+40% dmg, 20% stun, 20% Poison', ailChance:20},
+      {lv:4, desc:'+60% dmg, 30% stun, 30% Poison', ailChance:30},
     ]
   },
   hum:{
@@ -1435,7 +1439,7 @@ const ABILITY_TEMPLATES_LEARNABLE = {
       {desc:'Fling mud at the enemy. 20% miss. Applies Mud: SPD −2 for 2t. Chance to cause Chicken Pox.',newAilment:'weaken'},
       {desc:'Stickier mud. 15% miss. SPD −3 for 3t. 30% Chicken Pox chance.',newAilment:'weaken'},
       {desc:'Heavy clay. 10% miss. SPD −4 for 3t. 40% Chicken Pox. Small Avian Poison chance.',newAilment:'weaken',newAilment2:'poison'},
-      {desc:'Volcanic mud. 5% miss. SPD −5 for 4t. Guaranteed Chicken Pox. 30% Flu. 25% Paralysis.',newAilment:'weaken',newAilment2:'poison'},
+      {desc:'Volcanic mud. 5% miss. SPD −5 for 4t. Guaranteed Chicken Pox. 30% Poison. 25% Paralysis.',newAilment:'weaken',newAilment2:'poison'},
     ],
   },
   bowedWing:{
@@ -1583,7 +1587,7 @@ const ABILITY_TEMPLATES_EXTRA = {
       {lv:1, desc:'Remove 1 positive status/buff from enemy'},
       {lv:2, desc:'Remove 2 buffs, Weaken 30%', newAilment:'weaken', ailChance:30},
       {lv:3, desc:'Remove all ATK buffs + 2 other buffs, Weaken 40%', ailChance:40},
-      {lv:4, desc:'Strip all enemy buffs, apply Weaken + Flu', ailChance:50},
+      {lv:4, desc:'Strip all enemy buffs, apply Weaken + Poison', ailChance:50},
     ]
   },
   molt:{
@@ -2182,7 +2186,7 @@ const ABILITY_MAIN_ATTACK = {
   name:'Main Attack',
   type:'physical',
   btnType:'physical',
-  desc:'Reliable strike. For magic birds this is Peck (always 20% miss).',
+  desc:'Reliable strike. For magic birds this is Peck (always 20% miss). Peck: An average physical attack using a Beak.',
   levels:[{lv:1,desc:'100% ATK damage. Magic birds use Peck (20% fixed miss chance).'}],
 };
 ABILITY_TEMPLATES.mainAttack = ABILITY_MAIN_ATTACK;
@@ -3564,7 +3568,7 @@ function refreshBattleUI() {
   const _effSpd=(p.spd||0) + ((G.playerStatus?.slow?.spdPenalty)?-(G.playerStatus.slow.spdPenalty||0):0);
   const _effMatk=(p.matk||8);
   const _effMdef=(p.mdef||8);
-  const _trendTag = (diff) => diff>0 ? '<small class="stat-trend up">↑</small>' : (diff<0 ? '<small class="stat-trend down">↓</small>' : '');
+  const _trendTag = (diff) => diff>0 ? '<small class="stat-trend up">▲</small>' : (diff<0 ? '<small class="stat-trend down">▼</small>' : '');
   const _atkDiff = G.warcryActive ? Math.max(1,Math.floor((p.atk||0)*(G.warcryATK||0)/100)) : (G.playerStatus.weaken ? -1 : 0);
   const _atkColor=_atkDiff>0?'#6ab89a':_atkDiff<0?'var(--red-light)':'var(--silver)';
   const _effAtk=G.warcryActive?Math.floor(p.atk*(1+G.warcryATK/100)):p.atk;
@@ -3701,11 +3705,11 @@ function renderStatuses(id, statuses) {
     const b=document.createElement('span');
     b.className=`status-badge ${k}`;
     let tooltipSummary='';
-    if (k==='poison') { b.textContent=`☣ Flu×${v.stacks}/${poisonCap}(${v.turns}t)`; tooltipSummary='Inflicts poison damage over time.'; }
-    else if (k==='bleed') { b.className='status-badge bleed'; b.textContent=`🩸 Bleed×${v.stacks}(${v.turns}t)`; tooltipSummary='Physical damage over time that scales with stacks.'; }
-    else if (k==='weaken') { b.textContent=`🐔 Weaken(${v}t)`; }
-    else if (k==='paralyzed') { b.textContent=`⚡ Para(${v}t)`; }
-    else if (k==='burning') { b.textContent=`🔥 Burn(${v}t)`; }
+    if (k==='poison') { b.textContent=`☣ Poison×${v.stacks}/${poisonCap}(${v.turns}t, -${v.stacks} HP/tick)`; tooltipSummary='Inflicts poison damage over time.'; }
+    else if (k==='bleed') { b.className='status-badge bleed'; b.textContent=`🩸 Bleed×${v.stacks}(${v.turns}t, -${Math.max(1,Math.floor(v.stacks*1.5))} HP/tick)`; tooltipSummary='Physical damage over time that scales with stacks.'; }
+    else if (k==='weaken') { b.textContent=`🐔 Weaken(${v}t, -40% Dodge, -25% Dmg)`; }
+    else if (k==='paralyzed') { b.textContent=`⚡ Para(${v}t, 20% skip)`; }
+    else if (k==='burning') { b.textContent=`🔥 Burn(${v}t, +20% Hit/Crit)`; }
     else if (k==='delayed') { b.textContent=`🎵 Resonance(${v.dmg}dmg)`; }
     else if (k==='confused') { b.className='status-badge confused'; b.textContent=`🌀 Confused(${v.turns}t,${v.skipChance}%)`; }
     else if (k==='tookie') { b.className='status-badge stunned'; b.textContent=`🦜 Tookie(+${v.atkBonus}%atk,${v.turns}t)`; }
@@ -5238,7 +5242,7 @@ const ACTIONS = {
       await doAttack('player','enemy',r);
       setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
       landed++; total+=r.dmgDealt;
-      if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Flu!','fn-poison');}
+      if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Poison!','fn-poison');}
       if(lv>=4&&tryApplyAilment('enemy','burning',ab)){spawnFloat('enemy','🔥 Burn!','fn-burn');}
       if(r.isCrit)spawnFloat('enemy','💥 Crit!','fn-crit');
       if(G.battleOver)break;
@@ -5353,7 +5357,7 @@ const ACTIONS = {
     const r=dealDamage('enemy',pdmg(1+.1*(lv-1)));
     await doAttack('player','enemy',r);
     setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
-    if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Flu!','fn-poison');logMsg(`Poison!`,'poison-tick');}
+    if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Poison!','fn-poison');logMsg(`Poison!`,'poison-tick');}
     if(tryApplyAilment('enemy','weaken',ab)){spawnFloat('enemy','🐔 Weaken!','fn-status');}
     logMsg(`⚔ Strike: ${r.dmgDealt}.`,'player-action');
     if(G.crowDefendCooldown>0)G.crowDefendCooldown--;
@@ -5382,7 +5386,7 @@ const ACTIONS = {
         setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
         total+=r.dmgDealt;
         if(tryApplyAilment('enemy','burning',ab)){spawnFloat('enemy','🔥 Burn!','fn-burn');}
-        if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Flu!','fn-poison');}
+        if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Poison!','fn-poison');}
       }
     }
     logMsg(`🦅 Talon Rake: ${total} dmg.`,'player-action');
@@ -5577,7 +5581,7 @@ const ACTIONS = {
     const stacks=lv>=4?3:lv>=3?2:lv>=2?1:0;
     if(stacks>0)applyAilment('enemy','poison',stacks);
     if(lv>=4&&tryApplyAilment('enemy','weaken',ab))spawnFloat('enemy','🐔 Weaken!','fn-status');
-    logMsg(`👄 Shoebill Clamp! ${r.dmgDealt} dmg${stacks>0?' +'+stacks+' Flu':''}!`,'player-action');
+    logMsg(`👄 Shoebill Clamp! ${r.dmgDealt} dmg${stacks>0?' +'+stacks+' Poison':''}!`,'player-action');
   },
   async serpentCrusher(ab) {
     const lv=ab.level;
@@ -5608,7 +5612,7 @@ const ACTIONS = {
     if(lv>=2){const heal=Math.floor(r.dmgDealt*([.1,.1,.12,.15][lv-1]));G.player.stats.hp=Math.min(G.player.stats.hp+heal,G.player.stats.maxHp);setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);spawnFloat('player',`+${heal}`,'fn-heal');}
     if(lv>=4&&chance(20))applyAilment('enemy','confused',1);
     if(G.battleOver)return;
-    logMsg(`🦩 Mud Lash! ${r.dmgDealt} dmg (+${stacks} Flu)!`,'player-action');
+    logMsg(`🦩 Mud Lash! ${r.dmgDealt} dmg (+${stacks} Poison)!`,'player-action');
   },
   async fleshRipper(ab) {
     const lv=ab.level;
@@ -5797,7 +5801,7 @@ const ACTIONS = {
       if(G.battleOver)return;
       const stunC=lv>=3?20+10*(lv-3):0;
       if(stunC&&rollStunChance(stunC)){G.enemyStatus.stunned=(G.enemyStatus.stunned||0)+1;await doSpell('enemy','😵 Stunned!');renderStatuses('enemy-status',G.enemyStatus);}
-      if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Flu!','fn-poison');}
+      if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Poison!','fn-poison');}
       G.rockDropPending=false;
       delete G.playerStatus.rockDrop;
       logMsg(`🪨 Rock Drop! ${r.dmgDealt} dmg (ignores shield)!`,'player-action');
@@ -5855,7 +5859,7 @@ const ACTIONS = {
     await doAttack('player','enemy',r);
     setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
     if(G.battleOver)return;
-    if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Flu!','fn-poison');}
+    if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Poison!','fn-poison');}
     const accDrop=[10,12,15,20][lv-1];
     G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+accDrop;
     if(lv>=4) applyEnemySlow(2,10,2);
@@ -5980,7 +5984,7 @@ const ACTIONS = {
     G.enemyStatus.confused={turns,skipChance:skipC};
     G.enemyStatus.lullabied=(G.enemyStatus.lullabied||0)+turns; // lullabied doubles as weaken mult
     if(tryApplyAilment('enemy','paralyzed',ab)){spawnFloat('enemy','⚡ Para!','fn-status');}
-    if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Flu!','fn-poison');}
+    if(tryApplyAilment('enemy','poison',ab)){spawnFloat('enemy','☣ Poison!','fn-poison');}
     if(tryApplyAilment('enemy','burning',ab)){spawnFloat('enemy','🔥 Burn!','fn-burn');}
     await doSpell('enemy','🃏 JOKER!');
     renderStatuses('enemy-status',G.enemyStatus);
@@ -6143,9 +6147,9 @@ const ACTIONS = {
     setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
     if(G.battleOver)return;
     applyAilment('enemy','poison',fluStacks);
-    await doSpell('enemy',`☣ +${fluStacks} Flu!`);
+    await doSpell('enemy',`☣ +${fluStacks} Poison!`);
     renderStatuses('enemy-status',G.enemyStatus);
-    logMsg(`☣ Toxic Spit! ${r.dmgDealt} dmg (+${bonusDmg} per stack) + ${fluStacks} Flu!`,'poison-tick');
+    logMsg(`☣ Toxic Spit! ${r.dmgDealt} dmg (+${bonusDmg} per stack) + ${fluStacks} Poison!`,'poison-tick');
   },
   async cannonball(ab) {
     const lv=ab.level;
@@ -8725,7 +8729,7 @@ function renderRunHistory() {
 let _refActiveTab = 0;
 
 const ABILITIES_REFERENCE = {
-  peck:{desc:'A weak but noticeable beak jab.',effect:'Low physical damage.'},
+  peck:{desc:'An average physical attack using a Beak.',effect:'Steady physical damage.'},
   blackPeck:{desc:'A dark strike from the shadows.',effect:'Medium damage + chance to frighten.'},
   honkAttack:{desc:'A loud defensive call.',effect:'Minor damage and may weaken enemies.'},
   roost:{desc:'The bird rests on its perch.',effect:'Restore HP. Cooldown 2 turns.'},

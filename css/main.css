@@ -239,17 +239,14 @@ header p{color:var(--text-dim);font-style:italic;font-size:1rem;margin-top:4px;}
 .status-badge.delayed{background:rgba(200,80,200,.15);border-color:#c850c8;color:#e870e8;}
 .status-badge.mud{background:rgba(139,90,43,.2);border-color:#8b5a2b;color:#c8a060;}
 .status-badge.slow{background:rgba(120,170,220,.18);border-color:#78aee8;color:#9fd0ff;}
-.stats-mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;font-size:.8rem;margin-top:7px;}
-.stat-mini{color:var(--text-dim);}
-.stat-mini span{color:var(--silver);}
-.stat-trend{font-size:.62rem;margin-left:2px;font-weight:700;vertical-align:middle;}
+.stats-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;font-size:.78rem;margin-top:8px;}
+.stat-mini{color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border:1px solid rgba(201,168,76,.18);border-radius:6px;background:rgba(10,12,18,.35);}
+.stat-mini span{color:var(--silver);font-weight:600;}
+.stat-trend{font-size:.9rem;margin-left:4px;font-weight:900;line-height:1;vertical-align:middle;}
 .stat-trend.up{color:#6ab89a;}
 .stat-trend.down{color:var(--red-light);}
-.stat-trend{font-size:.62rem;margin-left:2px;font-weight:700;vertical-align:middle;}
-.stat-trend.up{color:#6ab89a;}
-.stat-trend.down{color:var(--red-light);}
-.enemy-stats-mini{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.76rem;margin-top:6px;padding-top:5px;border-top:1px solid var(--border);}
-.est{color:var(--text-dim);}.est span{color:var(--silver);}
+.enemy-stats-mini{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.76rem;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
+.est{color:var(--text-dim);display:inline-flex;gap:4px;align-items:center;padding:2px 6px;border-radius:999px;background:rgba(10,12,18,.28);border:1px solid rgba(201,168,76,.12);} .est span{color:var(--silver);}
 .enemy-abilities-list{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
 .enemy-ab-tag{background:rgba(201,76,76,.1);border:1px solid rgba(201,76,76,.3);border-radius:3px;padding:1px 6px;font-size:.69rem;color:var(--red-light);}
 .enemy-intent{background:linear-gradient(180deg,rgba(201,76,76,.12),rgba(255,255,255,.04));border:1px solid rgba(201,76,76,.28);border-radius:8px;padding:7px 9px;font-size:.78rem;color:var(--text);margin-top:7px;text-align:left;}
