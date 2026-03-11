@@ -1118,7 +1118,6 @@ function runPassiveIntegrityAudit(){
 }
 
 runPassiveIntegrityAudit();
-if(!BIRDS.blackbird.extraAbilities.includes('bleakBeak')) BIRDS.blackbird.extraAbilities.push('bleakBeak');
 
 // ============================================================
 //  ENEMIES — 20 stages (boss every 10)
@@ -3576,30 +3575,38 @@ function refreshBattleUI() {
   const _critMult = p.goldCritMult||1.8;
   const _statNote=(label,diff,srcUp='',srcDown='')=>`${label} ${diff>=0?'+':''}${diff}. ${diff>0?srcUp:(diff<0?srcDown:'No active modifier.')}`;
   const _atkNote=(G.warcryActive?`Warcry +${G.warcryATK}% ATK.`:'') + (G.playerStatus.weaken?' Weaken reducing output.':'');
-  document.getElementById('player-stats-mini').innerHTML =
-    `<div class="stat-mini stat-atk" title="${_statNote('ATK',_effAtk-(p.atk||0),_atkNote,'Debuffs reducing ATK effect.')}">ATK <span style="color:${_atkColor}">${_effAtk}${_trendTag(_effAtk-(p.atk||0))}</span></div>
-     <div class="stat-mini stat-def" title="${_statNote('DEF',_effDef-(p.def||0),'Battle Hymn increased DEF.','Debuffs reducing DEF.')}">DEF <span style="color:${_effDef>p.def?'#6ab89a':_effDef<p.def?'var(--red-light)':'var(--silver)'}">${_effDef}${_trendTag(_effDef-p.def)}</span></div>
-     <div class="stat-mini stat-spd" title="${_statNote('SPD',_effSpd-(p.spd||0),'Buff increased SPD.','Slow/clip effects reduced SPD.')}">SPD <span style="color:${_effSpd>p.spd?'#6ab89a':_effSpd<p.spd?'var(--red-light)':'var(--silver)'}">${_effSpd}${_trendTag(_effSpd-p.spd)}</span></div>
-     <div class="stat-mini stat-dodge" title="Physical Dodge. ${_statNote('Dodge',_effDodge-(p.dodge||0),'Evasion buffs active.','Debuffs reduced dodge.')}">Dodge <span style="color:${_effDodge>p.dodge?'#6ab89a':_effDodge<p.dodge?'var(--red-light)':'var(--silver)'}">${_effDodge}%${_trendTag(_effDodge-p.dodge)}</span></div>
-     <div class="stat-mini stat-magic" title="Magic Dodge — deflects enemy spells">✦Dodge <span style="color:${_effMDodge>getBaseMdodge(G.player)?'#6ab89a':'#6ae8e8'}">${_effMDodge}%${_trendTag(_effMDodge-getBaseMdodge(G.player))}</span></div>
-     <div class="stat-mini stat-acc" title="${_statNote('ACC',_effAcc-(p.acc||0),'Battle Hymn increased ACC.','Blind/ruffle reduced ACC.')}">ACC <span style="color:${_effAcc>p.acc?'#6ab89a':_effAcc<p.acc?'var(--red-light)':'var(--silver)'}">${_effAcc}%${_trendTag(_effAcc-p.acc)}</span></div>
-     <div class="stat-mini stat-crit" title="Crit Chance">🎯CC <span style="color:${_critChance>5?'#6ab89a':'var(--silver)'}">${_critChance}%${_trendTag(_critChance-5)}</span></div>
-     <div class="stat-mini stat-crit" title="Crit Damage">💥CD <span style="color:${_critMult>1.5?'#e8c96a':'var(--silver)'}">${_critMult.toFixed(1)}×</span></div>
-     <div class="stat-mini" title="Magic Attack — improves spell/ailment potency">✦ATK <span>${_effMatk}${_trendTag(_effMatk-(p.matk||8))}</span></div>
-     <div class="stat-mini" title="Magic Defence — resists enemy spells and ailments">✦DEF <span>${_effMdef}${_trendTag(_effMdef-(p.mdef||8))}</span></div>`;
+  const statCell=(klass,label,val,{suffix='',title='',trend=''}={})=>
+    `<div class="stat-mini ${klass}" title="${title}"><span class="stat-k">${label}</span><span class="stat-v">${val}${suffix}${trend}</span></div>`;
 
-  // Enemy stats display
+  document.getElementById('player-stats-mini').innerHTML =
+    `${statCell('stat-atk','ATK',_effAtk,{title:_statNote('ATK',_effAtk-(p.atk||0),_atkNote,'Debuffs reducing ATK effect.'),trend:_trendTag(_effAtk-(p.atk||0))})}
+     ${statCell('stat-matk','M.ATK',_effMatk,{title:'Magic Attack — improves spell/ailment potency',trend:_trendTag(_effMatk-(p.matk||8))})}
+     ${statCell('stat-def','DEF',_effDef,{title:_statNote('DEF',_effDef-(p.def||0),'Battle Hymn increased DEF.','Debuffs reducing DEF.'),trend:_trendTag(_effDef-p.def)})}
+     ${statCell('stat-mdef','M.DEF',_effMdef,{title:'Magic Defence — resists enemy spells and ailments',trend:_trendTag(_effMdef-(p.mdef||8))})}
+     ${statCell('stat-dodge','Dodge',_effDodge,{suffix:'%',title:`Physical Dodge. ${_statNote('Dodge',_effDodge-(p.dodge||0),'Evasion buffs active.','Debuffs reduced dodge.')}`,trend:_trendTag(_effDodge-p.dodge)})}
+     ${statCell('stat-mdodge','M.Dodge',_effMDodge,{suffix:'%',title:'Magic Dodge — deflects enemy spells',trend:_trendTag(_effMDodge-getBaseMdodge(G.player))})}
+     ${statCell('stat-acc','ACC',_effAcc,{suffix:'%',title:_statNote('ACC',_effAcc-(p.acc||0),'Battle Hymn increased ACC.','Blind/ruffle reduced ACC.'),trend:_trendTag(_effAcc-p.acc)})}
+     ${statCell('stat-spd','SPD',_effSpd,{title:_statNote('SPD',_effSpd-(p.spd||0),'Buff increased SPD.','Slow/clip effects reduced SPD.'),trend:_trendTag(_effSpd-p.spd)})}
+     ${statCell('stat-cc','CC',_critChance,{suffix:'%',title:'Crit Chance',trend:_trendTag(_critChance-5)})}
+     ${statCell('stat-cd','CD',_critMult.toFixed(1),{suffix:'×',title:'Crit Damage'})}`;
+
+  // Enemy stats display (same layout/order as player)
   const ep2=G.enemy.stats;
-  const sizeLabel={tiny:'Tiny',small:'Small',medium:'Medium',large:'Large',xl:'XL'}[G.enemy.size]||'?';
+  const eCritChance=Math.max(0,Math.min(100,ep2.critChance||5));
+  const eCritMult=(ep2.critMult||1.5);
+  const enemyCell=(klass,label,val,{suffix='',title=''}={})=>
+    `<div class="est ${klass}" title="${title}"><span class="stat-k">${label}</span><span class="stat-v">${val}${suffix}</span></div>`;
   document.getElementById('enemy-stats-mini').innerHTML =
-    `<div class="est stat-atk">ATK <span>${ep2.atk}</span></div>
-     <div class="est stat-def">DEF <span>${ep2.def}</span></div>
-     <div class="est stat-spd">SPD <span>${ep2.spd}</span></div>
-     <div class="est stat-dodge">Dodge <span>${ep2.dodge||0}%</span></div>
-     <div class="est stat-acc">ACC <span>${ep2.acc||70}%</span></div>
-     <div class="est">Size <span>${sizeLabel}</span></div>
-     <div class="est stat-magic" title="Magic Attack">✦ATK <span>${ep2.matk||6}</span></div>
-     <div class="est stat-magic" title="Magic Defence">✦DEF <span>${ep2.mdef||8}</span></div>`;
+    `${enemyCell('stat-atk','ATK',ep2.atk,{title:'Physical attack'})}
+     ${enemyCell('stat-matk','M.ATK',ep2.matk||6,{title:'Magic attack'})}
+     ${enemyCell('stat-def','DEF',ep2.def,{title:'Physical defence'})}
+     ${enemyCell('stat-mdef','M.DEF',ep2.mdef||8,{title:'Magic defence'})}
+     ${enemyCell('stat-dodge','Dodge',ep2.dodge||0,{suffix:'%',title:'Physical dodge'})}
+     ${enemyCell('stat-mdodge','M.Dodge',ep2.mdodge??ep2.dodge??0,{suffix:'%',title:'Magic dodge'})}
+     ${enemyCell('stat-acc','ACC',ep2.acc||70,{suffix:'%',title:'Accuracy'})}
+     ${enemyCell('stat-spd','SPD',ep2.spd||0,{title:'Speed'})}
+     ${enemyCell('stat-cc','CC',eCritChance,{suffix:'%',title:'Crit chance'})}
+     ${enemyCell('stat-cd','CD',Number(eCritMult).toFixed(1),{suffix:'×',title:'Crit damage'})}`;
   // Enemy abilities
   const eal=document.getElementById('enemy-abilities-list'); eal.innerHTML='';
   (G.enemy.abilities||[]).forEach(abKey=>{
