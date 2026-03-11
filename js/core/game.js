@@ -2859,9 +2859,39 @@ function initSelection() {
   buildDifficultyPicker();
 
   // Build bird grid
-  buildClassFilterMenu();
+  buildSelectionViewButtons();
+  buildGameModeToggle();
   buildBirdGrid(G_selView);
   renderHighscoreBoard();
+}
+
+function buildSelectionViewButtons(){
+  const host=document.getElementById('view-toggle');
+  if(!host) return;
+  const btns=[['all','All'],['size','By Size'],...CLASS_ORDER.map(c=>[`class:${c}`,idToClassLabel(c)])];
+  host.innerHTML=btns.map(([id,label])=>`<button class="view-toggle-btn ${G_selView===id?'active':''}" onclick="setSelView('${id}',this)">${label}</button>`).join('');
+}
+
+function buildGameModeToggle(){
+  const host=document.getElementById('game-mode-toggle');
+  if(!host) return;
+  const isEndless=!!(G._gameMode==='endless' || document.getElementById('endless-check')?.checked);
+  host.innerHTML=`<div class="mode-toggle"><button class="mode-toggle-btn ${!isEndless?'active':''}" onclick="setGameMode('story',this)">📖 Story Mode</button><button class="mode-toggle-btn ${isEndless?'active':''}" onclick="setGameMode('endless',this)">♾ Endless Mode</button></div>`;
+}
+
+function setGameMode(mode,btn){
+  G._gameMode=(mode==='endless')?'endless':'story';
+  const endless=(G._gameMode==='endless');
+  const main=document.getElementById('endless-check');
+  const alt=document.getElementById('endless-check-alt');
+  if(main) main.checked=endless;
+  if(alt) alt.checked=endless;
+  if(btn){
+    const wrap=btn.closest('.mode-toggle');
+    wrap?.querySelectorAll('.mode-toggle-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  buildGameModeToggle();
 }
 
 function buildClassFilterMenu(){
@@ -2981,10 +3011,17 @@ function selectDifficulty(id) {
 }
 
 function setSelView(view, btn) {
-  G_selView = view;
+  if(String(view).startsWith('class:')){
+    G_classFilter=String(view).split(':')[1]||'all';
+    G_selView=view;
+    buildBirdGrid('all');
+  }else{
+    G_selView = view;
+    if(view!=='all') G_classFilter='all';
+    buildBirdGrid(view);
+  }
   document.querySelectorAll('.view-toggle-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  buildBirdGrid(view);
+  btn?.classList.add('active');
 }
 
 function buildBirdGrid(view='size') {
@@ -3263,8 +3300,7 @@ function updateAscentPanel(key) {
 }
 
 function syncEndlessCheck(cb) {
-  const main = document.getElementById('endless-check');
-  if(main) main.checked = cb.checked;
+  setGameMode(cb.checked?'endless':'story');
 }
 
 
@@ -3274,7 +3310,7 @@ function beginRun(){ return startGame(); }
 // ============================================================
 function startGame() {
   if(!G.selected) return;
-  G.endlessMode = document.getElementById('endless-check').checked;
+  G.endlessMode = (G._gameMode==='endless') || !!document.getElementById('endless-check')?.checked;
   G.difficulty = G._selectedDifficulty || 'juvenile';
   const bd = BIRDS[G.selected];
   G.collectedRewards=[];
@@ -7707,6 +7743,8 @@ function postCombat() {
       checkGrowthStage(G.player);
       applyClassGrowthOnLevelUp();
       const _postStats={...G.player.stats};
+      G._lastLevelUpStatsBefore=_preStats;
+      G._lastLevelUpStatsAfter=_postStats;
       G._lastLevelUpStatGains={
         hp:(_postStats.maxHp||0)-(_preStats.maxHp||0),
         atk:(_postStats.atk||0)-(_preStats.atk||0),
@@ -8078,6 +8116,19 @@ function showLevelUpScreen() {
   const g=G._lastLevelUpStatGains||{};
   const gainTxt=[['HP',g.hp],['ATK',g.atk],['DEF',g.def],['SPD',g.spd],['MATK',g.matk],['MDEF',g.mdef]].filter(x=>x[1]>0).map(x=>`${x[0]} +${x[1]}`).join(' · ');
   document.getElementById('lu-sub').textContent=`Lv.${G.player.birdLevel} reached! Stat gains: ${gainTxt||'minor growth'} — choose a skill to improve:`;
+  const before=G._lastLevelUpStatsBefore||{};
+  const after=G._lastLevelUpStatsAfter||{};
+  const pairs=[['HP','maxHp'],['ATK','atk'],['DEF','def'],['SPD','spd'],['MATK','matk'],['MDEF','mdef']];
+  const prevWrap=document.getElementById('lu-stat-preview');
+  if(prevWrap){
+    prevWrap.innerHTML=pairs.map(([label,key])=>{
+      const ov=before[key]??0;
+      const nv=after[key]??ov;
+      const improved=nv>ov;
+      const arrow=improved?'<span class="lu-stat-arrow">➜</span>':'<span class="lu-stat-arrow" style="opacity:.4;color:var(--text-dim)">→</span>';
+      return `<div class="lu-stat-row"><strong>${label}</strong><span><span class="v-old">${ov}</span>${arrow}<span class="${improved?'v-new':'v-old'}">${nv}</span></span></div>`;
+    }).join('');
+  }
 
   document.getElementById('lu-skills-panel').classList.add('active');
 
@@ -8863,12 +8914,15 @@ function buildRefGuide() {
     return card(b.name, `${b.tagline||''} · Class: ${(b.class||'').toUpperCase()}`,u,b.class||'bird');
   }).join('');
 
-  const abilities=Object.entries(ABILITY_TEMPLATES||{}).filter(([id,t])=>isMatch(t.name)||isMatch(t.shortDesc)).map(([id,t])=>{
+  const abilities=Object.entries(ABILITY_TEMPLATES||{}).filter(([id,t])=>isMatch(t.name)||isMatch(t.shortDesc)||isMatch(t.desc)).map(([id,t])=>{
     const c=G.codex?.abilities?.[id]||{seen:false,used:false};
     const u=!!c.seen;
     if(!u&&!showLocked) return '';
     const meta=`${t.rarity||'common'} · ${t.codexType||'attack'}`;
-    return card(t.name, t.shortDesc||t.desc||'No description yet.',u,meta);
+    const base=(t.shortDesc||t.desc||'No description yet.');
+    const path=formatAbilityLevelPathway(t);
+    const desc=path?`${base}<br><br><strong style="color:var(--gold-light)">Level Path:</strong><br>${path.replace(/\n/g,'<br>')}`:base;
+    return card(t.name, desc,u,meta);
   }).join('');
 
   const enemies=(ENEMIES||[]).filter(e=>isMatch(e.name)).map(e=>{
@@ -8887,7 +8941,21 @@ function buildRefGuide() {
     return card(id[0].toUpperCase()+id.slice(1),d,u,'status');
   }).join('');
 
-  const arts=[...(G.collectedRewards||[])].filter(r=>isMatch(r.name)).map(r=>card(r.name,r.desc,true,r.tier||'reward')).join('') || (showLocked?card('???','Find rewards in runs to fill this section.',false,'locked'):'');
+  const tierOrder=['grey','green','blue','purple','gold'];
+  const tierLabel={grey:'Grey',green:'Green',blue:'Blue',purple:'Purple',gold:'Gold'};
+  const rewardsSeen=new Set(Object.keys(G.codex?.artifacts||{}).filter(id=>G.codex?.artifacts?.[id]?.seen));
+  const pool=(typeof getUpgradePool==='function')?getUpgradePool():[];
+  const artsByTier=tierOrder.map(tier=>{
+    const items=pool.filter(r=>r.tier===tier && (isMatch(r.name)||isMatch(r.desc))).map(r=>{
+      const key=r.id||r.name;
+      const unlocked=rewardsSeen.has(key) || (G.collectedRewards||[]).some(x=>(x.id||x.name)===key);
+      if(!unlocked && !showLocked) return '';
+      return card(r.name,r.desc,unlocked,tier);
+    }).filter(Boolean).join('');
+    if(!items) return '';
+    return `<div style="grid-column:1/-1;margin-top:4px"><div style="font-family:'Cinzel',serif;color:var(--gold-light);font-size:.78rem;letter-spacing:.06em;margin:3px 0 6px;">${tierLabel[tier]} Tier</div><div class="ref-skills-grid">${items}</div></div>`;
+  }).join('');
+  const arts=artsByTier || (showLocked?card('???','Find rewards in runs to fill this section.',false,'locked'):'' );
 
   const mechanics=`<div class="ref-skills-grid">
     ${card('Energy & Cooldowns','Main attacks are free unless spells. Abilities spend energy and may go on cooldown.',true,'core')}
@@ -8910,6 +8978,11 @@ function buildRefGuide() {
   if(lEl){ lEl.checked=prevShowLocked; lEl.onchange=()=>buildRefGuide(); }
 }
 
+
+
+function renderReferenceGuide(){
+  buildRefGuide();
+}
 
 // ============================================================
 //  RUN UNLOCK TRACKING

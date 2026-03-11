@@ -59,7 +59,8 @@
 <div id="dev-code-msg" style="font-size:.72rem;color:var(--text-dim);margin-top:4px;min-height:16px;"></div>
 </div>
 <div class="endless-row" style="max-width:1100px;margin:8px auto 14px;text-align:center;">
-<label><input id="endless-check" type="checkbox"/> ♾ Endless Mode — bosses every 10 stages</label>
+<div id="game-mode-toggle"></div>
+<input id="endless-check" type="checkbox" style="display:none"/>
 </div>
 <!-- REFERENCE GUIDE -->
 <div class="ref-guide" id="ref-guide" style="max-width:1100px;margin:0 auto 14px;">
@@ -84,11 +85,11 @@
 <div class="view-toggle" id="view-toggle">
 <button class="view-toggle-btn" onclick="setSelView('all',this)">All</button>
 <button class="view-toggle-btn active" onclick="setSelView('size',this)">By Size</button>
-<button class="view-toggle-btn" onclick="setSelView('class',this)">By Class</button>
+
 </div>
 <span id="bird-count-label" style="font-size:.7rem;color:var(--text-dim);font-style:italic;"></span>
 </div>
-<div class="class-filter-tabs" id="class-filter-tabs"></div>
+
 <div id="bird-grid"></div>
 </div>
 <div class="sel-right">
@@ -189,6 +190,7 @@
 <div class="levelup-screen-inner">
 <h2>✦ Level Up! ✦</h2>
 <p class="levelup-sub" id="lu-sub">Your bird grows stronger. Choose your path:</p>
+<div id="lu-stat-preview"></div>
 <div class="levelup-choice-row"><div class="levelup-choice-title">🦅 Upgrade a Skill</div></div>
 <div class="levelup-panel" id="lu-skills-panel">
 <div class="skill-grid" id="lu-skill-grid"></div>
