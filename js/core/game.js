@@ -3642,9 +3642,27 @@ Estimated damage: ${eab.dmg||(`${low}-${high}`)}`;
 function setHpBar(who,hp,max) {
   const pct=Math.max(0,hp/max*100);
   const bar=document.getElementById(`${who}-hp-bar`);
+  if(!bar) return;
   bar.style.width=pct+'%';
   bar.className='hp-bar-fill'+(pct<25?' low':pct<50?' mid':'');
-  document.getElementById(`${who}-hp-text`).textContent=`${Math.max(0,hp)}/${max}`;
+
+  const key=`${who}Hp`;
+  G._uiLastHp = G._uiLastHp || {};
+  const prevHp = Number.isFinite(G._uiLastHp[key]) ? G._uiLastHp[key] : hp;
+  const delta = hp - prevHp;
+  G._uiLastHp[key] = hp;
+
+  const hpTextEl=document.getElementById(`${who}-hp-text`);
+  if(hpTextEl){
+    hpTextEl.textContent=`${Math.max(0,hp)}/${max} (${Math.round(pct)}%)`;
+    hpTextEl.classList.remove('hp-delta-up','hp-delta-down');
+    if(delta<0){ hpTextEl.classList.add('hp-delta-down'); }
+    else if(delta>0){ hpTextEl.classList.add('hp-delta-up'); }
+  }
+
+  bar.classList.remove('recent-hit','recent-heal');
+  if(delta<0) bar.classList.add('recent-hit');
+  else if(delta>0) bar.classList.add('recent-heal');
 
   // Danger pulse on player panel when low HP
   if(who==='player') {
@@ -4464,9 +4482,39 @@ function playAvatarAnim(who,cls,dur=600) {
 
 function spawnFloat(who,text,cls) {
   const wrap=getAvatarWrap(who);
+  if(!wrap) return;
+  const raw=String(text||'').trim();
   const el=document.createElement('div');
-  el.className=`float-number ${cls}`; el.textContent=text;
-  wrap.appendChild(el); setTimeout(()=>el.remove(),1200);
+  el.className=`float-number ${cls}`;
+
+  const lower=raw.toLowerCase();
+  const isDamage = cls==='fn-dmg' || cls==='fn-crit' || /^[-−]/.test(raw) || lower.includes(' dmg');
+  const isAilment = ['poison','bleed','burn','weaken','para','fear','confuse','slow','stun','lull','resonance'].some(k=>lower.includes(k));
+  const isBuff = ['immune','guard','evade','dodge','heal','atk','def','acc','crit','energy'].some(k=>lower.includes(k));
+
+  if(isDamage) el.classList.add('float-damage');
+  if(isAilment || cls==='fn-poison' || cls==='fn-burn') el.classList.add('float-ailment');
+  if(isBuff && !isDamage) el.classList.add('float-buff');
+
+  const iconMatch = raw.match(/^([^\w\s+\-]+)/);
+  const icon = iconMatch ? iconMatch[0] : '';
+  const content = icon ? raw.slice(icon.length).trim() : raw;
+  if(icon){
+    const ico=document.createElement('span');
+    ico.className='float-icon';
+    ico.textContent=icon;
+    // hook for future ailment/attack sprites
+    if(isAilment) ico.dataset.spriteType='ailment';
+    if(isDamage) ico.dataset.spriteType='attack';
+    el.appendChild(ico);
+  }
+  const txt=document.createElement('span');
+  txt.className='float-text';
+  txt.textContent=content || raw;
+  el.appendChild(txt);
+
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),1250);
 }
 
 function flashPanel(who,color) {
@@ -9312,6 +9360,28 @@ function confirmAbandon() {
   renderRunHistory();
 }
 
+
+function unlockAllCodexEntries(){
+  if(!G.codex) G.codex={abilities:{},enemies:{},birds:{},artifacts:{},statuses:{}};
+  const ensure=(type,id,used=false)=>{
+    if(!id) return;
+    if(!G.codex[type]) G.codex[type]={};
+    if(!G.codex[type][id]) G.codex[type][id]={seen:false,used:false};
+    G.codex[type][id].seen=true;
+    if(used) G.codex[type][id].used=true;
+  };
+
+  Object.keys(BIRDS||{}).forEach(id=>ensure('birds',id,false));
+  Object.keys(ABILITY_TEMPLATES||{}).forEach(id=>ensure('abilities',id,true));
+  Object.values(ENEMIES||{}).forEach(e=>ensure('enemies',e?.id||e?.name,false));
+  Object.keys(AILMENTS||{}).forEach(id=>ensure('statuses',id,false));
+
+  try{
+    const pool=(typeof getUpgradePool==='function') ? getUpgradePool() : [];
+    pool.forEach(r=>ensure('artifacts',r?.id||r?.name,false));
+  }catch(_){/* ignore artifact unlock errors */}
+}
+
 // ============================================================
 //  DEV CODE
 // ============================================================
@@ -9350,6 +9420,15 @@ function checkDevCode(val) {
     if (msg) { msg.textContent = '🦉 Duke Blakiston unlocked as a playable champion.'; msg.style.color = 'var(--gold-light)'; }
     setTimeout(() => { if (msg) msg.textContent = ''; }, 3200);
     initSelectionSafe();
+    return;
+  }
+  if (code === 'reference') {
+    unlockAllCodexEntries();
+    const input = document.getElementById('dev-code-input');
+    if (input) input.value = '';
+    if (msg) { msg.textContent = '📖 Reference: all Codex entries unlocked for browsing.'; msg.style.color = 'var(--gold-light)'; }
+    setTimeout(() => { if (msg) msg.textContent = ''; }, 3200);
+    renderReferenceGuide();
     return;
   }
   if (val.length >= 10) {
