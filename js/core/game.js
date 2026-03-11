@@ -1245,22 +1245,50 @@ function rollRarity(){
 }
 
 const UPGRADE_CARDS_REWORK = [
-  {id:'g_quill1',tier:'grey',icon:'🪶',name:'Quill Stitch',desc:'+6 Max HP. First hit each battle -10%.',tags:['sustain'],apply:p=>{p.stats.maxHp+=6;p.firstHitReduce=Math.max(p.firstHitReduce||0,0.10);}},
-  {id:'g_talon1',tier:'grey',icon:'🗡️',name:'Talon Hone',desc:'+1 ATK. +3 damage vs Bleeding.',tags:['offense'],apply:p=>{p.stats.atk+=1;p.vsBleedBonus=(p.vsBleedBonus||0)+3;}},
-  {id:'g_shell1',tier:'grey',icon:'🛡️',name:'Down Padding',desc:'+1 DEF.',tags:['defense'],apply:p=>{p.stats.def+=1;}},
-  {id:'g_focus1',tier:'grey',icon:'🎯',name:'Steady Eye',desc:'+4% hit chance on your next attack each turn.',tags:['utility'],apply:p=>{p.nextAttackAccBonus=4;}},
-  {id:'gr_hp',tier:'green',icon:'❤️',name:'Stronger Heart',desc:'+12 Max HP. Heal +6 after battle.',tags:['sustain'],apply:p=>{p.stats.maxHp+=12;p.postBattleFlatHeal=(p.postBattleFlatHeal||0)+6;}},
-  {id:'gr_pierce',tier:'green',icon:'🪓',name:'Split-Feather',desc:'+2 ATK. Attacks pierce +10% DEF.',tags:['offense'],apply:p=>{p.stats.atk+=2;p.pierceBonus=(p.pierceBonus||0)+0.10;}},
-  {id:'gr_spell',tier:'green',icon:'🔮',name:'Runic Throat',desc:'+2 MATK. Every 3 spells: apply Poison(1).',tags:['offense'],apply:p=>{p.stats.matk=(p.stats.matk||0)+2;p.spellProcPoison=3;}},
-  {id:'gr_speed',tier:'green',icon:'💨',name:'Wind-Set',desc:'+1 SPD. First attack each battle +30%.',tags:['utility'],apply:p=>{p.stats.spd=(p.stats.spd||0)+1;p.firstAttackBonusPct=Math.max(p.firstAttackBonusPct||0,0.30);}},
-  {id:'b_guard',tier:'blue',icon:'🧱',name:'Quill Armor',desc:'+3 DEF.',tags:['defense'],apply:p=>{p.stats.def+=3;}},
-  {id:'b_bleed',tier:'blue',icon:'🩸',name:'Ripper Beak',desc:'+3 ATK. Crits apply Bleed(1).',stackable:false,tags:['offense'],apply:p=>{p.stats.atk+=3;p.critBleed=(p.critBleed||0)+1;}},
-  {id:'b_energy',tier:'blue',icon:'🔋',name:'Hot Blood',desc:'Start battle with +1 energy (non-stacking).',stackable:false,tags:['utility'],apply:p=>{p.startEnergyBonus=Math.max(p.startEnergyBonus||0,1);}},
-  {id:'b_hex',tier:'blue',icon:'🕯️',name:'Dread Choir',desc:'+2 MATK. First spell each battle inflicts Fear(1).',tags:['offense'],apply:p=>{p.stats.matk=(p.stats.matk||0)+2;p.openingFearOnSpell=1;}},
-  {id:'p_echo',tier:'purple',icon:'🎶',name:'Echo Feather',desc:'First skill each battle repeats at 50%.',stackable:false,tags:['utility'],apply:p=>{p.echoFirstSkill=0.5;}},
-  {id:'p_blood',tier:'purple',icon:'🩸',name:'Blood Quill',desc:'Below 50% HP: your first attack each turn +25%.',tags:['offense'],apply:p=>{p.lowHpFirstAtkBonus=0.25;}},
-  {id:'p_pierce',tier:'purple',icon:'🦅',name:'Raptor Doctrine',desc:'Attacks pierce +25% DEF. (One-time)',stackable:false,tags:['offense'],apply:p=>{p.pierceBonus=Math.max(p.pierceBonus||0,0.25);}},
-  {id:'z_crown',tier:'gold',icon:'👑',name:'Court-Sunder',desc:'Once per battle: your next attack ignores all DEF.',stackable:false,tags:['offense'],apply:p=>{p.onceIgnoreDef=true;}},
+  {id:'g_feather_guard',tier:'grey',icon:'🛡️',name:'Feather Guard',desc:'+1 DEF',tags:['defense'],apply:p=>{p.stats.def+=1;}},
+  {id:'g_keen_beak',tier:'grey',icon:'🗡️',name:'Keen Beak',desc:'+1 ATK',tags:['offense'],apply:p=>{p.stats.atk+=1;}},
+  {id:'g_spell_feather',tier:'grey',icon:'✨',name:'Spell Feather',desc:'+1 MATK',tags:['offense'],apply:p=>{p.stats.matk=(p.stats.matk||0)+1;}},
+  {id:'g_warding_down',tier:'grey',icon:'🔷',name:'Warding Down',desc:'+1 MDEF',tags:['defense'],apply:p=>{p.stats.mdef=(p.stats.mdef||0)+1;}},
+  {id:'g_fleet_step',tier:'grey',icon:'💨',name:'Fleet Step',desc:'+1 SPD',tags:['utility'],apply:p=>{p.stats.spd=(p.stats.spd||0)+1;}},
+  {id:'g_focused_eye',tier:'grey',icon:'🎯',name:'Focused Eye',desc:'+5% Hit Chance',tags:['utility'],apply:p=>{p.firstAttackAccBonus=(p.firstAttackAccBonus||0)+5;}},
+  {id:'g_quick_blood',tier:'grey',icon:'💥',name:'Quick Blood',desc:'Crit chance +4%',tags:['offense'],apply:p=>{p.stats.critChance=(p.stats.critChance||5)+4;}},
+  {id:'g_light_frame',tier:'grey',icon:'🪽',name:'Light Frame',desc:'Dodge +4%',tags:['defense'],apply:p=>{p.stats.dodge=Math.min(95,(p.stats.dodge||0)+4);}},
+  {id:'g_feather_lining',tier:'grey',icon:'❤️',name:'Feather Lining',desc:'+5 Max HP',tags:['sustain'],apply:p=>{p.stats.maxHp+=5;p.stats.hp=Math.min(p.stats.hp+5,p.stats.maxHp);}},
+  {id:'g_talon_precision',tier:'grey',icon:'👁️',name:'Talon Precision',desc:'First attack each battle +8% hit chance',tags:['utility'],apply:p=>{p.firstAttackAccBonus=(p.firstAttackAccBonus||0)+8;}},
+
+  {id:'gr_serrated_talon',tier:'green',icon:'🩸',name:'Serrated Talon',desc:'Attacks apply Bleed(1) on hit (10% chance)',tags:['offense'],apply:p=>{p.bleedOnHitChance=(p.bleedOnHitChance||0)+10;}},
+  {id:'gr_venom_beak',tier:'green',icon:'☣️',name:'Venom Beak',desc:'Attacks apply Poison(1) on hit (10% chance)',tags:['offense'],apply:p=>{p.poisonOnHitChance=(p.poisonOnHitChance||0)+10;}},
+  {id:'gr_blood_memory',tier:'green',icon:'🗡️',name:'Blood Memory',desc:'Deal +2 damage to Bleeding enemies',tags:['offense'],apply:p=>{p.vsBleedFlatBonus=(p.vsBleedFlatBonus||0)+2;}},
+  {id:'gr_toxic_study',tier:'green',icon:'🧪',name:'Toxic Study',desc:'Poison deals +1 damage',tags:['offense'],apply:p=>{p.poisonFlatBonus=(p.poisonFlatBonus||0)+1;}},
+  {id:'gr_calm_focus',tier:'green',icon:'🎯',name:'Calm Focus',desc:'First attack each battle +20% accuracy',tags:['utility'],apply:p=>{p.firstAttackAccBonus=(p.firstAttackAccBonus||0)+20;}},
+  {id:'gr_war_rhythm',tier:'green',icon:'🔋',name:'War Rhythm',desc:'First attack each battle costs 0 Energy',tags:['utility'],stackable:false,apply:p=>{p.firstAttackFree=true;}},
+  {id:'gr_hard_plumage',tier:'green',icon:'🪨',name:'Hard Plumage',desc:'First hit each battle deals -15% damage',tags:['defense'],stackable:false,apply:p=>{p.firstHitReduce=Math.max(p.firstHitReduce||0,0.15);}},
+  {id:'gr_battle_instinct',tier:'green',icon:'⚡',name:'Battle Instinct',desc:'Gain +1 SPD when below 50% HP',tags:['utility'],stackable:false,apply:p=>{p.lowHpSpdBonus=1;}},
+  {id:'gr_rune_focus',tier:'green',icon:'🔮',name:'Rune Focus',desc:'First spell each battle +30% damage',tags:['offense'],stackable:false,apply:p=>{p.firstSpellBattleBonusPct=Math.max(p.firstSpellBattleBonusPct||0,0.30);}},
+  {id:'gr_iron_molt',tier:'green',icon:'🛡️',name:'Iron Molt',desc:'Gain +1 DEF when below 50% HP',tags:['defense'],stackable:false,apply:p=>{p.lowHpDefBonus=1;}},
+
+  {id:'b_deep_cut',tier:'blue',icon:'🩸',name:'Deep Cut',desc:'Bleed stacks applied by you increase by +1',tags:['offense'],apply:p=>{p.bleedBonusStacks=(p.bleedBonusStacks||0)+1;}},
+  {id:'b_venom_reservoir',tier:'blue',icon:'☣️',name:'Venom Reservoir',desc:'Poison lasts 1 extra turn',tags:['offense'],apply:p=>{p.poisonExtraTurns=(p.poisonExtraTurns||0)+1;}},
+  {id:'b_predator_sight',tier:'blue',icon:'👁️',name:'Predator Sight',desc:'+10% Crit Chance',tags:['offense'],apply:p=>{p.stats.critChance=(p.stats.critChance||5)+10;}},
+  {id:'b_execution_beak',tier:'blue',icon:'💢',name:'Execution Beak',desc:'Crit damage +30%',tags:['offense'],apply:p=>{p.critDamageBonusPct=(p.critDamageBonusPct||0)+0.30;}},
+  {id:'b_spell_echo',tier:'blue',icon:'🎶',name:'Spell Echo',desc:'Every 4th spell deals +40% damage',tags:['offense'],stackable:false,apply:p=>{p.everyFourthSpellBonusPct=0.40;}},
+  {id:'b_quick_recovery',tier:'blue',icon:'🩹',name:'Quick Recovery',desc:'Heal 3 HP after battle',tags:['sustain'],apply:p=>{p.postBattleFlatHeal=(p.postBattleFlatHeal||0)+3;}},
+  {id:'b_storm_pulse',tier:'blue',icon:'🌩️',name:'Storm Pulse',desc:'First attack each battle always hits',tags:['utility'],stackable:false,apply:p=>{p.firstAttackAlwaysHit=true;}},
+  {id:'b_iron_feather_mantle',tier:'blue',icon:'🧱',name:'Iron Feather Mantle',desc:'+2 DEF',tags:['defense'],apply:p=>{p.stats.def+=2;}},
+  {id:'b_arcane_plumage',tier:'blue',icon:'🔷',name:'Arcane Plumage',desc:'+2 MDEF',tags:['defense'],apply:p=>{p.stats.mdef=(p.stats.mdef||0)+2;}},
+  {id:'b_hawk_instinct',tier:'blue',icon:'💨',name:'Hawk Instinct',desc:'+2 SPD',tags:['utility'],apply:p=>{p.stats.spd=(p.stats.spd||0)+2;}},
+
+  {id:'p_blood_frenzy',tier:'purple',icon:'🩸',name:'Blood Frenzy',desc:'Deal +25% damage to Bleeding enemies',tags:['offense'],stackable:false,apply:p=>{p.vsBleedPctBonus=Math.max(p.vsBleedPctBonus||0,0.25);}},
+  {id:'p_venom_scholar',tier:'purple',icon:'☣️',name:'Venom Scholar',desc:'Poison damage increases by +50%',tags:['offense'],stackable:false,apply:p=>{p.poisonTickMult=Math.max(p.poisonTickMult||1,1.5);}},
+  {id:'p_duelist_discipline',tier:'purple',icon:'🎯',name:'Duelist Discipline',desc:'First attack each battle crit chance +30%',tags:['offense'],apply:p=>{p.firstAttackCritBonus=(p.firstAttackCritBonus||0)+30;}},
+  {id:'p_battle_meditation',tier:'purple',icon:'🧘',name:'Battle Meditation',desc:'Your first spell each battle costs 0 Energy',tags:['utility'],stackable:false,apply:p=>{p.firstSpellFree=true;}},
+  {id:'p_survivors_molt',tier:'purple',icon:'🪶',name:"Survivor's Molt",desc:'When first reduced below 30% HP heal 8',tags:['sustain'],stackable:false,apply:p=>{p.survivorMoltHeal=Math.max(p.survivorMoltHeal||0,8);}},
+  {id:'p_precision_talon',tier:'purple',icon:'🏹',name:'Precision Talon',desc:'+15% Hit Chance',tags:['utility'],apply:p=>{p.firstAttackAccBonus=(p.firstAttackAccBonus||0)+15;}},
+  {id:'p_relentless_strike',tier:'purple',icon:'⚔️',name:'Relentless Strike',desc:'Your first attack each turn deals +10% damage',tags:['offense'],stackable:false,apply:p=>{p.firstAttackEachTurnBonusPct=Math.max(p.firstAttackEachTurnBonusPct||0,0.10);}},
+
+  {id:'z_sky_predator',tier:'gold',icon:'👑',name:'Sky Predator',desc:'Your first attack each battle always crits',tags:['offense'],stackable:false,apply:p=>{p.firstAttackAlwaysCrit=true;}},
+  {id:'z_blackstone_trophy',tier:'gold',icon:'🗿',name:'Blackstone Trophy',desc:'Enemies start battle with Fear(1)',tags:['utility'],stackable:false,apply:p=>{p.openingEnemyFear=(p.openingEnemyFear||0)+1;}},
+  {id:'z_molting_ritual',tier:'gold',icon:'🔥',name:'Molting Ritual',desc:'After each battle gain +1 ATK but lose 3 Max HP',tags:['risk'],stackable:false,apply:p=>{p.moltingRitual=true;}},
 ];
 
 function getUpgradePool(){ return UPGRADE_CARDS_REWORK.slice(); }
@@ -3379,8 +3407,15 @@ function resetForNewBattle(){
   G._goldReplaceMode=false;
   G.turnCount=0;
   G._incomingAttackKind=null;
+  G._firstAttackUsed=false;
+  G._firstSpellUsed=false;
+  G._spellCastCount=0;
   if(G.player){
     G.player._mimicStored=null;
+    G.player._firstHitReducedUsed=false;
+    G.player._lowHpSpdApplied=false;
+    G.player._lowHpDefApplied=false;
+    G.player._survivorMoltUsed=false;
     G.player._mimicUsed=false;
     G.player._mimicAbility=null;
   }
@@ -3476,6 +3511,9 @@ function loadStage() {
   // Kookaburra ambush
   const bd2=BIRDS[G.player.birdKey||'sparrow'];
   if(bd2&&bd2.passive&&bd2.passive.onBattleStart) bd2.passive.onBattleStart(G.player);
+  if((G.player?.openingEnemyFear||0)>0){
+    G.enemyStatus.feared=Math.max(G.enemyStatus.feared||0, G.player.openingEnemyFear);
+  }
   updateComboMeter();
   // Speed determines first turn
   const pSpd=G.player.stats.spd, eSpd=G.enemy.stats.spd;
@@ -4904,8 +4942,28 @@ function applyPlayerSlow(spdPenalty,dodgePenalty,turns){
 
 function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
   let dmg=Math.max(1,amount);
-  const critMult=G.player.goldCritMult||1.5;
+  const critMult=(G.player.goldCritMult||1.5) + (isCrit?(G.player?.critDamageBonusPct||0):0);
   if (isCrit) dmg=Math.floor(dmg*critMult);
+  if(target==='enemy'){
+    const ab=G._activePlayerAbility||null;
+    const kind=String(ab?.btnType||ab?.type||ABILITY_TEMPLATES?.[ab?.id]?.btnType||ABILITY_TEMPLATES?.[ab?.id]?.type||'').toLowerCase();
+    const isAttack=(kind==='physical'||kind==='ranged');
+    const isSpell=(kind==='spell');
+    if(G.enemyStatus?.bleed?.stacks>0){
+      dmg += (G.player?.vsBleedFlatBonus||0);
+      if((G.player?.vsBleedPctBonus||0)>0) dmg=Math.floor(dmg*(1+G.player.vsBleedPctBonus));
+    }
+    if(isSpell && !G._firstSpellUsed && (G.player?.firstSpellBattleBonusPct||0)>0){
+      dmg=Math.floor(dmg*(1+G.player.firstSpellBattleBonusPct));
+    }
+    if(isSpell && (G.player?.everyFourthSpellBonusPct||0)>0 && (((G._spellCastCount||0)+1)%4===0)){
+      dmg=Math.floor(dmg*(1+G.player.everyFourthSpellBonusPct));
+    }
+    if(isAttack && !G.playerTurnFlags?.firstAttackResolved && (G.player?.firstAttackEachTurnBonusPct||0)>0){
+      dmg=Math.floor(dmg*(1+G.player.firstAttackEachTurnBonusPct));
+      if(G.playerTurnFlags) G.playerTurnFlags.firstAttackResolved=true;
+    }
+  }
   let wasBlocked=false;
   const def=target==='enemy'?G.enemyStatus.defending:G.playerStatus.defending;
   const defAb=G.player.abilities.find(a=>a.id==='crowDefend');
@@ -4962,7 +5020,25 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
       if(G.playerStatus.parry<=0){delete G.playerStatus.parry;delete G.playerStatus.parryLevel;delete G.playerStatus.parryMult;delete G.playerStatus.parryTakenMult;}
       renderStatuses('player-status',G.playerStatus);
     }
+    if((G.player?.firstHitReduce||0)>0 && !G.player._firstHitReducedUsed){
+      dmg=Math.max(1,Math.floor(dmg*(1-G.player.firstHitReduce)));
+      G.player._firstHitReducedUsed=true;
+    }
     G.player.stats.hp-=dmg;
+    if((G.player?.lowHpSpdBonus||0)>0 && !G.player._lowHpSpdApplied && G.player.stats.hp<=Math.floor((G.player.stats.maxHp||1)*0.5)){
+      G.player.stats.spd=(G.player.stats.spd||0)+G.player.lowHpSpdBonus;
+      G.player._lowHpSpdApplied=true;
+    }
+    if((G.player?.lowHpDefBonus||0)>0 && !G.player._lowHpDefApplied && G.player.stats.hp<=Math.floor((G.player.stats.maxHp||1)*0.5)){
+      G.player.stats.def=(G.player.stats.def||0)+G.player.lowHpDefBonus;
+      G.player._lowHpDefApplied=true;
+    }
+    if((G.player?.survivorMoltHeal||0)>0 && !G.player._survivorMoltUsed && G.player.stats.hp>0 && G.player.stats.hp<=Math.floor((G.player.stats.maxHp||1)*0.3)){
+      const heal=G.player.survivorMoltHeal;
+      G.player.stats.hp=Math.min((G.player.stats.maxHp||1),G.player.stats.hp+heal);
+      G.player._survivorMoltUsed=true;
+      spawnFloat('player',`+${heal}`,'fn-heal');
+    }
     if(G.playerStatus.countering&&dmg>0){
       const c=G.playerStatus.countering;
       const back=Math.max(1,Math.floor(dmg*(c.mult||1.2)));
@@ -5010,6 +5086,11 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     }
     if(G.comboReady&&!isCrit){isCrit=true;dmg=Math.max(1,Math.floor(dmg*(G.player.goldCritMult||1.5)));consumeCombo();logMsg('🔥 Combo Crit!','crit');}
     G.enemy.stats.hp-=dmg;
+    const _atkKind=String(srcAbility?.btnType||srcAbility?.type||G._activePlayerAbility?.btnType||G._activePlayerAbility?.type||'').toLowerCase();
+    if((_atkKind==='physical'||_atkKind==='ranged') && dmg>0){
+      if((G.player?.bleedOnHitChance||0)>0 && chance(Math.min(95,G.player.bleedOnHitChance))) applyAilment('enemy','bleed',1);
+      if((G.player?.poisonOnHitChance||0)>0 && chance(Math.min(95,G.player.poisonOnHitChance))) applyAilment('enemy','poison',1);
+    }
     if(G.enemy?.id==='duke_blakiston' && (G.enemyStatus.wardens||0)>0){
       G.enemyStatus.wardens-=1;
       const rr=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.15));
@@ -5118,7 +5199,12 @@ function getPlayerAccuracy() {
 // Check if player attack misses given ability miss chance + accuracy system
 // Returns true if miss
 function playerAttackMisses(ab) {
-  const moveMiss = getPlayerMissChance(ab);
+  const t=ABILITY_TEMPLATES?.[ab?.id]||ABILITY_TEMPLATES_EXTRA?.[ab?.id]||ab||{};
+  const kind=String(t.btnType||t.type||ab?.btnType||ab?.type||'').toLowerCase();
+  const isAttack=(kind==='physical'||kind==='ranged');
+  if(isAttack && !G._firstAttackUsed && G.player?.firstAttackAlwaysHit) return false;
+  let moveMiss = getPlayerMissChance(ab);
+  if(isAttack && !G._firstAttackUsed) moveMiss=Math.max(0,moveMiss-(G.player?.firstAttackAccBonus||0));
   return chance(moveMiss);
 }
 
@@ -5183,8 +5269,11 @@ function applyAilment(target,ailId,stacks=1) {
     if (!status[key]) status[key]={stacks:0,turns:3};
     const cap = G.player ? (G.player.poisonCap||5) : 5;
     const biomeBonus=(target==='player' && (G.biomeMod?.enemyPoisonPlus||0)>0)?G.biomeMod.enemyPoisonPlus:0;
-    status[key].stacks=Math.min((status[key].stacks||0)+stacks+biomeBonus, cap);
-    status[key].turns=3;
+    const fromPlayer=(target==='enemy');
+    const extraStacks=(fromPlayer&&key==='bleed')?(G.player?.bleedBonusStacks||0):0;
+    status[key].stacks=Math.min((status[key].stacks||0)+stacks+extraStacks+biomeBonus, cap);
+    const extraTurns=(fromPlayer&&key==='poison')?(G.player?.poisonExtraTurns||0):0;
+    status[key].turns=3+extraTurns;
   } else if (ailId==='weaken') {
     status.weaken=3;
   } else if (ailId==='paralyzed') {
@@ -5202,7 +5291,14 @@ function applyAilment(target,ailId,stacks=1) {
 function getPlayerCritChance(ab) {
   let base = G.player.stats.critChance || 5;
   if (G.playerStatus.burning&&G.playerStatus.burning>0) base+=20;
-  return base;
+  const t=ABILITY_TEMPLATES?.[ab?.id]||ABILITY_TEMPLATES_EXTRA?.[ab?.id]||ab||{};
+  const kind=String(t.btnType||t.type||ab?.btnType||ab?.type||'').toLowerCase();
+  const isAttack=(kind==='physical'||kind==='ranged');
+  if(isAttack && !G._firstAttackUsed){
+    if(G.player?.firstAttackAlwaysCrit) return 100;
+    base += (G.player?.firstAttackCritBonus||0);
+  }
+  return Math.min(100,base);
 }
 
 function getPlayerHitBonus(ab) {
@@ -5217,7 +5313,8 @@ async function tickDoTs(who) {
   // Poison
   if (status.poison&&status.poison.stacks>0&&status.poison.turns>0) {
     const tickMult = who==='player' ? (G.player?.poisonTickMult||1) : 1;
-    const dmg=Math.max(1, Math.floor(status.poison.stacks * tickMult));
+    const flatBonus = who==='player' ? (G.player?.poisonFlatBonus||0) : 0;
+    const dmg=Math.max(1, Math.floor(status.poison.stacks * tickMult)+flatBonus);
     stats.hp-=dmg;
     spawnFloat(who,`☣ -${dmg}`,'fn-poison');
     setHpBar(who,stats.hp,stats.maxHp);
@@ -5812,6 +5909,11 @@ const ACTIONS = {
     let dmg=Math.max(1,baseDmg);
     const critMult=G.player.goldCritMult||1.5;
     G.enemy.stats.hp-=dmg;
+    const _atkKind=String(srcAbility?.btnType||srcAbility?.type||G._activePlayerAbility?.btnType||G._activePlayerAbility?.type||'').toLowerCase();
+    if((_atkKind==='physical'||_atkKind==='ranged') && dmg>0){
+      if((G.player?.bleedOnHitChance||0)>0 && chance(Math.min(95,G.player.bleedOnHitChance))) applyAilment('enemy','bleed',1);
+      if((G.player?.poisonOnHitChance||0)>0 && chance(Math.min(95,G.player.poisonOnHitChance))) applyAilment('enemy','poison',1);
+    }
     await doAttack('player','enemy',{dmgDealt:dmg,wasDodged:false,wasBlocked:false,isCrit:false});
     setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
     if(G.battleOver)return;
@@ -6543,6 +6645,9 @@ async function playerAction(ab,fromQueue=false) {
   if(flybyWasCharged) G.player.stats.atk*=2;
   await ACTIONS[ab.id](ab);
   if(chargedDouble && !G.battleOver && G.enemy.stats.hp>0){await ACTIONS[ab.id](ab);}
+  const _abKind=String(ab?.btnType||ab?.type||ABILITY_TEMPLATES?.[ab?.id]?.btnType||ABILITY_TEMPLATES?.[ab?.id]?.type||'').toLowerCase();
+  if(_abKind==='physical'||_abKind==='ranged') G._firstAttackUsed=true;
+  if(_abKind==='spell'){ G._firstSpellUsed=true; G._spellCastCount=(G._spellCastCount||0)+1; }
   G._lastPlayerAbility = ab.id;
   setAbilityCooldown(ab);
   if(ab.btnType==='spell' || ab.type==='spell'){
@@ -6570,7 +6675,7 @@ function startPlayerTurn(player){
     player.energy += player.firstTurnEnergy;
   }
   G.playerActionsThisTurn=0;
-  G.playerTurnFlags={energyGainedThisTurn:0,onHitTriggered:false};
+  G.playerTurnFlags={energyGainedThisTurn:0,onHitTriggered:false,firstAttackResolved:false};
   G.turn='player';
   G.turnPhase=TURN.PLAYER;
   G.phase='PLAYER';
@@ -6620,6 +6725,12 @@ function getAbilityEnergyCost(ab, player){
   }
 
   if(isMainAttackAbility(ab) && !isSpellAbilityId(ab.id)) cost = 1;
+
+  const tType=(t?.btnType||t?.type||ab.btnType||ab.type||'').toLowerCase();
+  const isAttack=(tType==='physical'||tType==='ranged');
+  const isSpell=(tType==='spell');
+  if(isAttack && !G._firstAttackUsed && p?.firstAttackFree) cost=0;
+  if(isSpell && !G._firstSpellUsed && p?.firstSpellFree) cost=0;
 
   if(cost===1 && isMultiHitAbility(ab)) cost += 1;
 
@@ -7632,6 +7743,13 @@ function postCombat() {
     G.player.stats.hp = Math.min(G.player.stats.hp + postHeal, G.player.stats.maxHp);
     spawnFloat('player', `+${postHeal} 🩹`, 'fn-heal');
 
+    // Flat post-battle heal (if present)
+    const flatHeal = (G.player.postBattleFlatHeal || 0);
+    if(flatHeal>0){
+      G.player.stats.hp = Math.min(G.player.stats.maxHp, G.player.stats.hp + flatHeal);
+      spawnFloat('player', `+${flatHeal} 🩹`, 'fn-heal');
+    }
+
     // Bonus heal (if present)
     const bonusPct = (G.player.postBattleHealBonusPct || 0);
     if (bonusPct > 0) {
@@ -7656,6 +7774,12 @@ function postCombat() {
     const perfectBonus = (bs.dmgTaken <= 0) ? 2 : 0;
     const fastWinBonus = (bs.turns <= 3) ? 1 : 0;
 
+    if(G.player?.moltingRitual){
+      G.player.stats.atk += 1;
+      G.player.stats.maxHp = Math.max(1, (G.player.stats.maxHp||1) - 3);
+      G.player.stats.hp = Math.min(G.player.stats.hp, G.player.stats.maxHp);
+      logMsg('🔥 Molting Ritual: +1 ATK, -3 Max HP.', 'system');
+    }
     const shinyGain = sizeShiny + bossShiny + stageBonusShiny + perfectBonus + fastWinBonus;
     G.shinyObjects += shinyGain;
 

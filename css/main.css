@@ -425,8 +425,10 @@ header p{color:var(--text-dim);font-style:italic;font-size:1rem;margin-top:4px;}
 .combat-stats-dropdown[open] summary::after{content:"▴";}
 
 /* Mobile battle layout mode (accessibility setting) */
-body.ui-mobile-mode #screen-battle .battle-layout{gap:8px;}
-body.ui-mobile-mode #screen-battle .combatants{grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;}
+body.ui-mobile-mode #screen-battle .battle-layout{display:flex;flex-direction:column;gap:8px;}
+body.ui-mobile-mode #screen-battle .combatants{order:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;}
+body.ui-mobile-mode #screen-battle .action-panel{order:2;}
+body.ui-mobile-mode #screen-battle .battle-log{order:3;}
 body.ui-mobile-mode #screen-battle .vs-separator{display:none;}
 body.ui-mobile-mode #screen-battle .combatant-panel{padding:9px 8px 8px;border-radius:10px;}
 body.ui-mobile-mode #screen-battle .combatant-name{font-size:.8rem;min-height:2.1em;}
@@ -454,8 +456,6 @@ body.ui-mobile-mode #screen-battle .battle-top{padding:7px 9px;}
 body.ui-mobile-mode #screen-battle .turn-lbl,
 body.ui-mobile-mode #screen-battle .bird-lv,
 body.ui-mobile-mode #screen-battle .level-badge{font-size:.7rem;}
-body.ui-mobile-mode #screen-battle .action-panel{grid-row:4;}
-body.ui-mobile-mode #screen-battle .battle-log{grid-row:5;}
 
 /* ===== REWARD SCREEN ===== */
 .reward-screen-inner{max-width:860px;margin:0 auto;text-align:center;}
