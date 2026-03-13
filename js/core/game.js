@@ -1139,6 +1139,16 @@ function inferAIPersonalityFromStyle(style='tactical', name=''){
   return 'tactical';
 }
 
+function inferEnemyClassFromStyle(style='tactical'){
+  const s=String(style||'').toLowerCase();
+  if(['berserker'].includes(s)) return 'bruiser';
+  if(['aggressive'].includes(s)) return 'striker';
+  if(['cautious','defensive'].includes(s)) return 'tank';
+  if(['trickster'].includes(s)) return 'trickster';
+  if(['predator'].includes(s)) return 'predator';
+  return 'support';
+}
+
 function makeEnemy(name, emoji, hp, atk, def, spd, style, isBoss=false, bossTitle='', opts={}) {
   const acc = opts.acc||72;
   const dodge = opts.dodge||5;
@@ -1149,17 +1159,21 @@ function makeEnemy(name, emoji, hp, atk, def, spd, style, isBoss=false, bossTitl
   const baseEn = Number.isFinite(opts.baseEn)
     ? opts.baseEn
     : (isBoss ? 6 : (size==='xl'?5:size==='large'?4:size==='medium'?4:3));
+  const enemyClass = opts.enemyClass || inferEnemyClassFromStyle(style);
+  const cc = Number.isFinite(opts.cc) ? opts.cc : (Number.isFinite(opts.critChance) ? (opts.critChance/100) : 0.05);
+  const cd = Number.isFinite(opts.cd) ? opts.cd : (Number.isFinite(opts.critMult) ? opts.critMult : 1.5);
   const portraitKey = opts.portraitKey||null;
   const enemyTier = opts.enemyTier || (isBoss ? (/final boss/i.test(String(bossTitle||'')) ? 'boss' : 'lieutenant') : 'normal');
-  return {name, emoji, portraitKey, hp, maxHp:hp, atk, def, spd, acc, dodge, size, aiStyle:style, aiPersonality:(opts.aiPersonality||inferAIPersonalityFromStyle(style,name)), isBoss, bossTitle, enemyTier, abilities,
-    stats:{hp,maxHp:hp,atk,def,spd,acc,dodge,mdef,matk,en:baseEn}};
+  return {name, emoji, portraitKey, hp, maxHp:hp, atk, def, spd, acc, dodge, size, enemyClass, aiStyle:style, aiPersonality:(opts.aiPersonality||inferAIPersonalityFromStyle(style,name)), isBoss, bossTitle, enemyTier, abilities,
+    stats:{hp,maxHp:hp,atk,def,spd,acc,dodge,mdef,matk,en:baseEn,cc,cd,critChance:Math.round(cc*100),critMult:cd}};
 }
 
 function makeDukeBlakiston(){
   return {
     id:'duke_blakiston', name:'Duke Blakiston', portraitKey:'duke_blakiston', isBoss:true, size:'xl', aiType:'boss_duke', aiPersonality:'tyrant',
+    enemyClass:'predator',
     enemyTier:'boss',
-    stats:{maxHp:360,hp:360,atk:16,matk:16,def:9,mdef:9,spd:7,acc:85,dodge:8,en:6},
+    stats:{maxHp:360,hp:360,atk:16,matk:16,def:9,mdef:9,spd:7,acc:85,dodge:8,en:6,cc:0.12,cd:1.7,critChance:12,critMult:1.7},
     duke:{phase:1,nightfallTurns:0,decreeKey:null,decreeStacks:0,riverCd:0,summonCd:0,verdictCd:0}
   };
 }
@@ -1171,7 +1185,8 @@ const ENEMY_ABILITY_POOL = {
     G.playerStatus.weaken=Math.max(G.playerStatus.weaken||0,2+((G.biomeMod?.dread||0)>0?1:0));logMsg(`🐔 ${e.name} weakens you!`,'enemy-action');}},
   eStun:    {name:'Body Slam', desc:'Physical slam that scales with ATK + chance to stun.', dmg:'Base + ATK scaling', fn(e,p,G){
     const slam=calcEnemyAbilityDamage(e,{stat:'atk',base:6,scaling:0.95,variance:0.2});
-    const rr=dealDamage('player',slam);
+    const spike=rollEnemyCritDamage(slam);
+    const rr=dealDamage('player',spike.amount);
     spawnFloat('player',`-${rr.dmgDealt}`,'fn-dmg');
     const _bd=BIRDS[G.player.birdKey];if(_bd&&_bd.passive&&(_bd.passive.immuneStun||G.player.immuneParalyze)){spawnFloat('player','🛡 Immune!','fn-status');logMsg(`${e.name}'s stun bounced off!`,'miss');return;}
     if(chance(25)){G.playerStatus.stunned=(G.playerStatus.stunned||0)+1;logMsg(`😵 ${e.name} stuns you!`,'enemy-action');}else{logMsg(`${e.name}'s stun missed.`,'miss');}}},
@@ -3721,9 +3736,9 @@ function loadStage() {
         if(pool.length>0){
           const src=pool[Math.floor(Math.random()*pool.length)];
           ed={name:src.name,emoji:src.emoji,birdKey:src.birdKey,portraitKey:src.birdKey,hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
-            acc:src.acc,dodge:src.dodge,size:src.size,aiStyle:src.aiStyle,aiPersonality:(src.aiPersonality||inferAIPersonalityFromStyle(src.aiStyle,src.name)),isBoss:false,bossTitle:'',enemyTier:'elite',
+            acc:src.acc,dodge:src.dodge,size:src.size,enemyClass:(src.enemyClass||inferEnemyClassFromStyle(src.aiStyle)),aiStyle:src.aiStyle,aiPersonality:(src.aiPersonality||inferAIPersonalityFromStyle(src.aiStyle,src.name)),isBoss:false,bossTitle:'',enemyTier:'elite',
             abilities:src.abilities,stats:{hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
-            acc:src.acc,dodge:src.dodge,mdef:8,matk:6,en:(src.size==='xl'?5:src.size==='large'?4:src.size==='medium'?4:3)}};
+            acc:src.acc,dodge:src.dodge,mdef:8,matk:6,cc:0.05,cd:1.5,critChance:5,critMult:1.5,en:(src.size==='xl'?5:src.size==='large'?4:src.size==='medium'?4:3)}};
         }
       }
       // Fallback / normal enemy
@@ -3744,9 +3759,11 @@ function loadStage() {
   ed.hp=scaled.hp; ed.maxHp=scaled.maxHp;
   ed.atk=scaled.atk; ed.def=scaled.def; ed.spd=scaled.spd;
   ed.acc=scaled.acc; ed.dodge=scaled.dodge; ed.mdodge=scaled.mdodge;
+  ed.cc=scaled.cc; ed.cd=scaled.cd;
   ed.mdef=scaled.mdef; ed.matk=scaled.matk;
+  ed.enemyClass=scaled.enemyClass||ed.enemyClass||inferEnemyClassFromStyle(ed.aiStyle);
   if(G.player?.mutBloodMoon){ ed.atk=Math.floor(ed.atk*1.10); ed.matk=Math.floor((ed.matk||ed.atk)*1.10); }
-  ed.stats = {hp:ed.hp, maxHp:ed.hp, atk:ed.atk, def:ed.def, spd:ed.spd, acc:ed.acc, dodge:ed.dodge, mdodge:ed.mdodge, mdef:ed.mdef, matk:ed.matk, en:(scaled.en||0)};
+  ed.stats = {hp:ed.hp, maxHp:ed.hp, atk:ed.atk, def:ed.def, spd:ed.spd, acc:ed.acc, dodge:ed.dodge, mdodge:ed.mdodge, mdef:ed.mdef, matk:ed.matk, cc:ed.cc, cd:ed.cd, critChance:Math.round((ed.cc||0.05)*100), critMult:ed.cd||1.5, en:(scaled.en||0)};
   const baseEnemyEnergy = Math.max(1, scaled.en||ed.stats.en||3);
   ed.energyMax=baseEnemyEnergy;
   ed.energy=baseEnemyEnergy;
@@ -3908,8 +3925,8 @@ function refreshBattleUI() {
 
   // Enemy stats display (same layout/order as player)
   const ep2=G.enemy.stats;
-  const eCritChance=Math.max(0,Math.min(100,ep2.critChance||5));
-  const eCritMult=(ep2.critMult||1.5);
+  const eCritChance=Math.max(0,Math.min(100,Math.round((ep2.cc??((ep2.critChance||5)/100))*100)));
+  const eCritMult=(ep2.cd??ep2.critMult??1.5);
   const enemyCell=(klass,label,val,{suffix='',title=''}={})=>
     `<div class="est ${klass}" title="${title}"><span class="stat-k">${label}</span><span class="stat-v">${val}${suffix}</span></div>`;
   document.getElementById('enemy-stats-mini').innerHTML =
@@ -5157,11 +5174,31 @@ const ENEMY_TIER_MULTIPLIERS = {
   lieutenant:{hp:1.7,atk:1.2,def:1.2},
 };
 
+const ENEMY_SIZE_MODIFIERS = {
+  tiny:{hp:0.75,atk:0.85,def:0.7,matk:1.0,mdef:0.9,spd:1.35,acc:1.05},
+  small:{hp:0.9,atk:0.95,def:0.9,matk:1.0,mdef:0.95,spd:1.15,acc:1.03},
+  medium:{hp:1.0,atk:1.0,def:1.0,matk:1.0,mdef:1.0,spd:1.0,acc:1.0},
+  large:{hp:1.25,atk:1.15,def:1.2,matk:1.0,mdef:1.1,spd:0.9,acc:0.97},
+  xl:{hp:1.5,atk:1.25,def:1.35,matk:1.0,mdef:1.15,spd:0.8,acc:0.95},
+};
+
+const ENEMY_CLASS_MODIFIERS = {
+  striker:{atk:1.2,matk:0.9,def:0.85,mdef:1.0,spd:1.15,acc:1.05,ccAdd:0.08,cdSet:1.6},
+  mage:{atk:0.9,matk:1.25,def:1.0,mdef:1.15,spd:1.0,acc:1.02,ccAdd:0.03},
+  tank:{atk:1.0,matk:1.0,def:1.35,mdef:1.25,spd:0.85,acc:0.95,ccAdd:0.0},
+  trickster:{atk:1.0,matk:1.0,def:1.0,mdef:1.0,spd:1.2,acc:1.08,ccAdd:0.05},
+  bruiser:{atk:1.25,matk:1.0,def:1.1,mdef:1.0,spd:1.0,acc:1.0,ccAdd:0.04},
+  predator:{atk:1.15,matk:1.0,def:1.0,mdef:1.0,spd:1.1,acc:1.05,ccAdd:0.10,cdSet:1.7},
+  support:{atk:1.0,matk:1.1,def:1.0,mdef:1.1,spd:1.0,acc:1.05,ccAdd:0.0},
+};
+
 function getEnemyBaseStats(base){
   const s=base?.stats||{};
   const hp=(base.hp??s.maxHp??s.hp??1);
   const size=base?.size||'medium';
   const en=(s.en??base.en??(base.isBoss?6:(size==='xl'?5:size==='large'?4:size==='medium'?4:3)));
+  const ccRaw=(s.cc??base.cc??((s.critChance??base.critChance??5)/100));
+  const cdRaw=(s.cd??base.cd??(s.critMult??base.critMult??1.5));
   return {
     hp:Math.max(1,Math.floor(hp)),
     atk:Math.max(1,Math.floor(base.atk??s.atk??1)),
@@ -5172,6 +5209,8 @@ function getEnemyBaseStats(base){
     acc:Math.max(60,Math.floor(base.acc??s.acc??70)),
     dodge:Math.max(0,Math.floor(base.dodge??s.dodge??5)),
     mdodge:Math.max(0,Math.floor(base.mdodge??s.mdodge??(base.dodge??s.dodge??3))),
+    cc:Math.max(0,Math.min(0.95,Number(ccRaw)||0.05)),
+    cd:Math.max(1.1,Number(cdRaw)||1.5),
     en:Math.max(1,Math.floor(en)),
   };
 }
@@ -5192,13 +5231,37 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   const tier=resolveEnemyTier(enemyBase, opts.tier);
   const mult=ENEMY_TIER_MULTIPLIERS[tier]||ENEMY_TIER_MULTIPLIERS.normal;
   const base=getEnemyBaseStats(enemyBase);
+  const sizeKey=String(enemyBase?.size||'medium').toLowerCase();
+  const sizeMod=ENEMY_SIZE_MODIFIERS[sizeKey]||ENEMY_SIZE_MODIFIERS.medium;
+  const classKey=String(enemyBase?.enemyClass||inferEnemyClassFromStyle(enemyBase?.aiStyle)||'support').toLowerCase();
+  const classMod=ENEMY_CLASS_MODIFIERS[classKey]||ENEMY_CLASS_MODIFIERS.support;
 
-  let hp=base.hp*(1+s*0.05);
-  let atk=base.atk*(1+s*0.035);
-  let matk=base.matk*(1+s*0.035);
-  let def=base.def+Math.floor(s/5);
-  let mdef=base.mdef+Math.floor(s/6);
-  let spd=base.spd+Math.floor(s/10);
+  // Base -> Size -> Class -> Stage -> Tier -> Endless
+  let hpBase=base.hp*sizeMod.hp;
+  let atkBase=base.atk*sizeMod.atk;
+  let defBase=base.def*sizeMod.def;
+  let matkBase=base.matk*sizeMod.matk;
+  let mdefBase=base.mdef*sizeMod.mdef;
+  let spdBase=base.spd*sizeMod.spd;
+  let accBase=base.acc*sizeMod.acc;
+  let cc=base.cc;
+  let cd=base.cd;
+
+  atkBase*=classMod.atk;
+  matkBase*=classMod.matk;
+  defBase*=classMod.def;
+  mdefBase*=classMod.mdef;
+  spdBase*=classMod.spd;
+  accBase*=classMod.acc;
+  cc=Math.min(0.95,Math.max(0,cc+(classMod.ccAdd||0)));
+  if(Number.isFinite(classMod.cdSet)) cd=classMod.cdSet;
+
+  let hp=hpBase*(1+s*0.05);
+  let atk=atkBase*(1+s*0.035);
+  let matk=matkBase*(1+s*0.035);
+  let def=defBase+Math.floor(s/5);
+  let mdef=mdefBase+Math.floor(s/6);
+  let spd=spdBase+Math.floor(s/10);
 
   hp*=mult.hp;
   atk*=mult.atk;
@@ -5222,7 +5285,7 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   def*=diffMult;
   mdef*=diffMult;
 
-  const acc=Math.max(60,Math.min(94,Math.floor(base.acc+Math.floor((s-1)/5)+(tier==='boss'?2:0))));
+  const acc=Math.max(60,Math.min(96,Math.floor(accBase+Math.floor((s-1)/5)+(tier==='boss'?2:0))));
   const dodge=Math.max(0,Math.min(42,Math.floor(base.dodge+Math.floor((s-1)/8)+(tier==='boss'?2:0))));
   const mdodge=Math.max(0,Math.min(32,Math.floor(base.mdodge+Math.floor((s-1)/10)+(tier==='boss'?1:0))));
 
@@ -5233,7 +5296,7 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   mdef=Math.max(0,Math.round(mdef));
   spd=Math.max(1,Math.round(spd));
 
-  return {hp,maxHp:hp,atk,def,matk,mdef,spd,acc,dodge,mdodge,en:base.en,tier};
+  return {hp,maxHp:hp,atk,def,matk,mdef,spd,acc,dodge,mdodge,cc,cd,critChance:Math.round(cc*100),critMult:cd,en:base.en,tier,enemyClass:classKey};
 }
 
 function buildScaledBoss(enemyBase, stage, opts={}){
@@ -5619,6 +5682,14 @@ function edmg(mult=1) {
     out=Math.floor(out*1.4);
   }
   return out;
+}
+
+function rollEnemyCritDamage(baseDamage){
+  const raw=Math.max(1,Math.floor(baseDamage||1));
+  const cc=Math.max(0,Math.min(0.95,G.enemy?.stats?.cc??((G.enemy?.stats?.critChance||5)/100)));
+  const cd=Math.max(1.1,Number(G.enemy?.stats?.cd??G.enemy?.stats?.critMult??1.5));
+  const isCrit=chance(Math.round(cc*100));
+  return {amount:isCrit?Math.max(1,Math.floor(raw*cd)):raw,isCrit};
 }
 
 function getPlayerMissChance(ab) {
@@ -7984,7 +8055,8 @@ function dukeApplyDecreePunish(){
 }
 function dukeOwlsVerdict(){
   const p=G.player.stats; const missing=1-(p.hp/p.maxHp); const mult=1.15+missing*0.95;
-  const r=dealDamage('player',edmg(1.35*mult));
+  const burst=rollEnemyCritDamage(edmg(1.35*mult));
+  const r=dealDamage('player',burst.amount);
   spawnFloat('player',`🦉-${r.dmgDealt}`,'fn-dmg');
   logMsg('🦉 Owl’s Verdict!','boss');
 }
@@ -8009,7 +8081,8 @@ function dukeTurnAI(){
   if(d.riverCd===0){ d.riverCd=3; mem.utilityStreak=(mem.utilityStreak||0)+1; mem.lastTurnHadDamage=false; mem.lastAbilityId='dukeRiverGrip'; mem.lastActionCategory='control'; dukeRiverGrip(); return; }
   const p=G.player.stats;
   if(d.verdictCd===0 && (p.hp<=Math.floor(p.maxHp*0.5) || (G.enemyStatus.enraged||0)>0)){ d.verdictCd=3; mem.utilityStreak=0; mem.lastAbilityId='dukeOwlsVerdict'; mem.lastActionCategory='heavy'; mem.lastTurnHadDamage=true; dukeOwlsVerdict(); return; }
-  const r=dealDamage('player',edmg(1.0));
+  const snap=rollEnemyCritDamage(edmg(1.0));
+  const r=dealDamage('player',snap.amount);
   mem.utilityStreak=0; mem.lastAbilityId='dukeTalons'; mem.lastActionCategory='damage'; mem.lastTurnHadDamage=(r.dmgDealt||0)>0;
   spawnFloat('player',`-${r.dmgDealt}`,'fn-dmg');
   logMsg('🦉 Talons in the dark.','boss');
@@ -8107,11 +8180,12 @@ async function enemyTurn() {
       G._incomingAttackKind='physical';
       if(totalEnemyMiss>0&&chance(totalEnemyMiss)){await doMiss('enemy');logMsg(`${e.name} attack missed!`,'miss');}
       else{
-        const r=dealDamage('player',edmg());
+        const strikeRoll=rollEnemyCritDamage(edmg());
+        const r=dealDamage('player',strikeRoll.amount);
         await doAttack('enemy','player',r);
         setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);
         if(r.wasDodged)logMsg(`${e.name} attacks — dodged!`,'enemy-action');
-        else logMsg(`${e.name} attacks for ${r.dmgDealt}!`,'enemy-action');
+        else logMsg(`${e.name} attacks${strikeRoll.isCrit?' CRIT':''} for ${r.dmgDealt}!`,'enemy-action');
         if((r.dmgDealt||0)>0) turnHadDamage=true;
       }
     } else if(action.type==='heavy'){
@@ -8119,11 +8193,12 @@ async function enemyTurn() {
       const missTot=20+totalEnemyMiss;
       if(chance(missTot)){await doMiss('enemy');logMsg(`${e.name} heavy missed!`,'miss');}
       else{
-        const r=dealDamage('player',edmg(1.6));
+        const heavyRoll=rollEnemyCritDamage(edmg(1.6));
+        const r=dealDamage('player',heavyRoll.amount);
         await doAttack('enemy','player',r);
         setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);
         if(r.wasDodged)logMsg(`Heavy — dodged!`,'enemy-action');
-        else logMsg(`💢 ${e.name} heavy hits for ${r.dmgDealt}!`,'enemy-action');
+        else logMsg(`💢 ${e.name} heavy${heavyRoll.isCrit?' CRIT':''} hits for ${r.dmgDealt}!`,'enemy-action');
         if((r.dmgDealt||0)>0) turnHadDamage=true;
       }
     } else if(action.type==='defend'){
