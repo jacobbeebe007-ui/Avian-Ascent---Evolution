@@ -5034,18 +5034,8 @@ function getPlayerEffectiveAcc(){
   return Math.max(0,getPlayerBaseAcc()+getPlayerAccMod());
 }
 
-const STAT_KEYS = ['maxHp','atk','def','matk','mdef','spd','dodge','mdodge'];
 const SOFTCAP_K = {acc:120,dodge:120,mdodge:140};
 const HIT_CLAMP = {min:0.15,max:0.95};
-const CLASS_GROWTH_PROFILES = {
-  tank:{maxHp:0.055,atk:0.010,def:0.050,matk:0.000,mdef:0.028,acc:0.010,spd:0.006,dodge:0.004,mdodge:0.004},
-  knight:{maxHp:0.030,atk:0.028,def:0.045,matk:0.005,mdef:0.025,acc:0.022,spd:0.015,dodge:0.008,mdodge:0.008},
-  assassin:{maxHp:0.010,atk:0.045,def:0.008,matk:0.000,mdef:0.008,acc:0.026,spd:0.045,dodge:0.012,mdodge:0.008},
-  ranger:{maxHp:0.018,atk:0.028,def:0.010,matk:0.008,mdef:0.015,acc:0.045,spd:0.032,dodge:0.012,mdodge:0.010},
-  mage:{maxHp:0.010,atk:0.000,def:0.008,matk:0.048,mdef:0.026,acc:0.022,spd:0.020,dodge:0.006,mdodge:0.012},
-  bard:{maxHp:0.022,atk:0.015,def:0.022,matk:0.018,mdef:0.022,acc:0.022,spd:0.024,dodge:0.010,mdodge:0.010},
-  summoner:{maxHp:0.022,atk:0.010,def:0.010,matk:0.038,mdef:0.024,acc:0.022,spd:0.015,dodge:0.009,mdodge:0.010},
-};
 function softCapChance(stat,k){return stat<=0?0:stat/(stat+k);}
 function clamp01(v){return Math.max(0,Math.min(1,v));}
 function getAccChance(acc){return softCapChance(Math.max(0,acc||0),SOFTCAP_K.acc);}
@@ -5057,76 +5047,9 @@ function calcHitChance(attAcc,defDodge,baseHit=0.72){
 }
 function calcDefenseMultiplier(def){return 100/(100+Math.max(0,def||0));}
 
-function applyClassGrowthOnLevelUp(){
-  if(!G.player) return;
-
-  const bd = BIRDS[G.player.birdKey] || {};
-  const cls = (bd.class || 'knight').toLowerCase();
-  const lvl = (G.player.birdLevel || 1);
-
-  let hpFlat  = (lvl <= 10) ? 8 : 0;
-  let hpPct   = (lvl <= 10) ? 0 : 0.04;
-  let defFlat = (lvl <= 10) ? 1 : 0;
-  let defPct  = (lvl <= 10) ? 0 : 0.02;
-  let mdefFlat = (lvl <= 10) ? 1 : 0;
-  let mdefPct  = (lvl <= 10) ? 0 : 0.02;
-
-  if(cls === 'tank'){
-    hpFlat += 2; hpPct += 0.01; defPct += 0.01; mdefPct += 0.01;
-  } else if(cls === 'knight'){
-    defPct += 0.01;
-  } else if(cls === 'assassin'){
-    hpFlat = Math.max(0, hpFlat - 2);
-    hpPct  = Math.max(0, hpPct - 0.01);
-    defFlat = Math.max(0, defFlat - 1);
-    mdefFlat = Math.max(0, mdefFlat - 1);
-  } else if(cls === 'mage' || cls === 'summoner'){
-    mdefPct += 0.01;
-  } else if(cls === 'bard'){
-    hpFlat += 1;
-  }
-
-  if(G.player.stats.maxHp < 1) G.player.stats.maxHp = 1;
-  if(G.player.stats.def == null) G.player.stats.def = 0;
-  if(G.player.stats.mdef == null) G.player.stats.mdef = 0;
-  if(G.player.stats.spd == null) G.player.stats.spd = 0;
-
-  const oldMax = G.player.stats.maxHp;
-  const hpGain = Math.max(1, Math.floor(oldMax * hpPct)) + hpFlat;
-  G.player.stats.maxHp += hpGain;
-
-  const defGain = Math.max(0, Math.floor(G.player.stats.def * defPct)) + defFlat;
-  G.player.stats.def += defGain;
-
-  const oldMdef = G.player.stats.mdef;
-  const mdefGain = Math.max(0, Math.floor(oldMdef * mdefPct)) + mdefFlat;
-  G.player.stats.mdef = oldMdef + mdefGain;
-
-  if(cls === 'ranger' && lvl % 4 === 0){
-    G.player.stats.spd += 1;
-  }
-
-  G.player.stats.hp = Math.min(G.player.stats.hp + hpGain, G.player.stats.maxHp);
-}
-
 // Apply one-time bonuses when stage changes
 function applyGrowthStageTransition(p, fromStage, toStage){
   if(!p?.stats) return;
-
-  if(toStage===GROWTH.JUVENILE){
-    p.stats.maxHp += 5;
-    p.stats.hp = Math.min(p.stats.hp + 5, p.stats.maxHp);
-    p.stats.atk += 1;
-    p.stats.def += 1;
-    p.stats.spd = (p.stats.spd||0) + 1;
-  }
-  if(toStage===GROWTH.ADULT){
-    p.stats.maxHp += 10;
-    p.stats.hp = Math.min(p.stats.hp + 10, p.stats.maxHp);
-    p.stats.atk += 2;
-    p.stats.def += 1;
-    p.stats.spd = (p.stats.spd||0) + 1;
-  }
 
   const cls=(p.class || (BIRDS[p.birdKey]?.class) || '').toLowerCase();
   p.growthStage = toStage;
@@ -8491,23 +8414,11 @@ function postCombat() {
 
     // Level up check
     let leveled = false;
+    let levelUpsGained = 0;
     while (G.player.exp >= expForLevel(G.player.birdLevel + 1)) {
       G.player.exp -= expForLevel(G.player.birdLevel + 1);
       G.player.birdLevel++;
-      const _preStats={...G.player.stats};
       checkGrowthStage(G.player);
-      applyClassGrowthOnLevelUp();
-      const _postStats={...G.player.stats};
-      G._lastLevelUpStatsBefore=_preStats;
-      G._lastLevelUpStatsAfter=_postStats;
-      G._lastLevelUpStatGains={
-        hp:(_postStats.maxHp||0)-(_preStats.maxHp||0),
-        atk:(_postStats.atk||0)-(_preStats.atk||0),
-        def:(_postStats.def||0)-(_preStats.def||0),
-        spd:(_postStats.spd||0)-(_preStats.spd||0),
-        matk:(_postStats.matk||0)-(_preStats.matk||0),
-        mdef:(_postStats.mdef||0)-(_preStats.mdef||0)
-      };
 
       // Level-up heal: 50% of currently missing HP
       const missingHp = Math.max(0, G.player.stats.maxHp - G.player.stats.hp);
@@ -8515,9 +8426,11 @@ function postCombat() {
       G.player.stats.hp = Math.min(G.player.stats.hp + lvHeal, G.player.stats.maxHp);
 
       leveled = true;
+      levelUpsGained++;
       logMsg(`🌟 LEVEL UP! Now Lv.${G.player.birdLevel}! Healed ${lvHeal} HP.`, 'exp-gain');
       SFX.levelUp();
     }
+    G._pendingLevelUpChoices = (G._pendingLevelUpChoices||0) + levelUpsGained;
 
     handleBossClearUnlocks();
     checkRunUnlocks();
@@ -8783,7 +8696,32 @@ function getGoldCardLimit(){
 // ============================================================
 //  LEVEL-UP SCREEN — select then confirm
 // ============================================================
-let _luSelectedSkillId=null;
+let _luSelectedStatChoiceId=null;
+const LEVELUP_STAT_POOL = [
+  {id:'vit6', label:'+6 Vitality', stat:'maxHp', amount:6, apply(){ G.player.stats.maxHp=(G.player.stats.maxHp||1)+6; G.player.stats.hp=Math.min((G.player.stats.hp||1)+6,G.player.stats.maxHp||1); }},
+  {id:'atk2', label:'+2 ATK', stat:'atk', amount:2, apply(){ G.player.stats.atk=(G.player.stats.atk||0)+2; }},
+  {id:'matk2', label:'+2 MATK', stat:'matk', amount:2, apply(){ G.player.stats.matk=(G.player.stats.matk||0)+2; }},
+  {id:'def1', label:'+1 DEF', stat:'def', amount:1, apply(){ G.player.stats.def=(G.player.stats.def||0)+1; }},
+  {id:'mdef1', label:'+1 MDEF', stat:'mdef', amount:1, apply(){ G.player.stats.mdef=(G.player.stats.mdef||0)+1; }},
+  {id:'spd1', label:'+1 SPD', stat:'spd', amount:1, apply(){ G.player.stats.spd=(G.player.stats.spd||0)+1; }},
+  {id:'acc2', label:'+2 ACC', stat:'acc', amount:2, apply(){ G.player.stats.acc=(G.player.stats.acc||0)+2; }},
+  {id:'cc2', label:'+2% CC', stat:'critChance', amount:2, apply(){ G.player.stats.critChance=Math.min(95,(G.player.stats.critChance||5)+2); }},
+  {id:'cd01', label:'+0.1 CD', stat:'goldCritMult', amount:0.1, apply(){ G.player.goldCritMult=Math.min(3.0,(G.player.goldCritMult||1.5)+0.1); }},
+];
+const ENDLESS_RARE_LEVELUP_CHOICES = [
+  {id:'vit10', label:'+10 Vitality', stat:'maxHp', amount:10, apply(){ G.player.stats.maxHp=(G.player.stats.maxHp||1)+10; G.player.stats.hp=Math.min((G.player.stats.hp||1)+10,G.player.stats.maxHp||1); }},
+  {id:'atk3', label:'+3 ATK', stat:'atk', amount:3, apply(){ G.player.stats.atk=(G.player.stats.atk||0)+3; }},
+  {id:'spd2', label:'+2 SPD', stat:'spd', amount:2, apply(){ G.player.stats.spd=(G.player.stats.spd||0)+2; }},
+];
+const LEVELUP_ARCHETYPE_WEIGHT = {
+  striker:{atk:3.0,spd:2.8,matk:0.9,mdef:0.9,maxHp:0.9,def:1.0,acc:1.2,critChance:1.3,goldCritMult:1.1},
+  mage:{atk:0.9,spd:1.0,matk:3.0,mdef:2.8,maxHp:1.0,def:0.9,acc:1.1,critChance:1.0,goldCritMult:1.0},
+  tank:{atk:1.0,spd:0.8,matk:0.9,mdef:1.4,maxHp:3.0,def:3.0,acc:0.9,critChance:0.8,goldCritMult:0.9},
+  trickster:{atk:1.3,spd:3.0,matk:1.0,mdef:1.0,maxHp:0.9,def:1.0,acc:2.6,critChance:1.1,goldCritMult:1.0},
+  bruiser:{atk:3.0,spd:1.2,matk:0.9,mdef:1.0,maxHp:1.1,def:2.6,acc:1.0,critChance:1.1,goldCritMult:1.0},
+  predator:{atk:2.8,spd:2.0,matk:0.9,mdef:0.9,maxHp:1.0,def:1.0,acc:1.4,critChance:2.8,goldCritMult:2.0},
+  support:{atk:0.9,spd:1.1,matk:2.5,mdef:2.5,maxHp:1.1,def:1.0,acc:1.2,critChance:0.9,goldCritMult:0.9},
+};
 
 function isMainAttackAbility(ab){
   if(!ab) return false;
@@ -8824,6 +8762,44 @@ function applyMainAttackAutoLevel(){
       logMsg(`⚔ ${main.name} auto-upgraded to Lv.${newLv}!`,'exp-gain');
     }
   }
+}
+
+function getPlayerLevelArchetype(){
+  const cls=String(BIRDS[G.player?.birdKey]?.class||'knight').toLowerCase();
+  if(['assassin'].includes(cls)) return 'striker';
+  if(['mage','summoner'].includes(cls)) return 'mage';
+  if(['tank'].includes(cls)) return 'tank';
+  if(['bard'].includes(cls)) return 'support';
+  if(['ranger'].includes(cls)) return 'predator';
+  if(['knight'].includes(cls)) return 'bruiser';
+  return 'support';
+}
+
+function weightedPickUniqueOptions(pool,count,getWeight){
+  const source=[...pool];
+  const out=[];
+  while(source.length&&out.length<count){
+    const weights=source.map(x=>Math.max(0.01,Number(getWeight(x))||1));
+    const total=weights.reduce((a,b)=>a+b,0);
+    let r=Math.random()*total;
+    let idx=0;
+    for(let i=0;i<source.length;i++){ r-=weights[i]; if(r<=0){ idx=i; break; } }
+    out.push(source.splice(idx,1)[0]);
+  }
+  return out;
+}
+
+function buildLevelUpStatChoices(){
+  const arch=getPlayerLevelArchetype();
+  const bias=LEVELUP_ARCHETYPE_WEIGHT[arch]||LEVELUP_ARCHETYPE_WEIGHT.support;
+  const basePool=[...LEVELUP_STAT_POOL];
+  if(isEndlessRunActive() && chance(18)){
+    const rare=ENDLESS_RARE_LEVELUP_CHOICES[Math.floor(Math.random()*ENDLESS_RARE_LEVELUP_CHOICES.length)];
+    const replaceIdx=Math.floor(Math.random()*basePool.length);
+    basePool.splice(replaceIdx,1,rare);
+  }
+  const picks=weightedPickUniqueOptions(basePool,3,(opt)=>bias[opt.stat]||1);
+  return picks.map((x,i)=>({...x,choiceId:`${x.id}_${i}_${Date.now()}`}));
 }
 
 function getBirdExclusiveLearnPool(birdKey){
@@ -8890,62 +8866,55 @@ function ensureMainAttackAndLoadoutRules(){
 
 function showLevelUpScreen() {
   showScreen('screen-levelup');
-  _luSelectedSkillId=null;
-  const g=G._lastLevelUpStatGains||{};
-  const gainTxt=[['HP',g.hp],['ATK',g.atk],['DEF',g.def],['SPD',g.spd],['MATK',g.matk],['MDEF',g.mdef]].filter(x=>x[1]>0).map(x=>`${x[0]} +${x[1]}`).join(' · ');
-  document.getElementById('lu-sub').textContent=`Lv.${G.player.birdLevel} reached! Stat gains: ${gainTxt||'minor growth'} — choose a skill to improve:`;
-  const before=G._lastLevelUpStatsBefore||{};
-  const after=G._lastLevelUpStatsAfter||{};
-  const pairs=[['HP','maxHp'],['ATK','atk'],['DEF','def'],['SPD','spd'],['MATK','matk'],['MDEF','mdef']];
+  _luSelectedStatChoiceId=null;
+  const remaining=Math.max(1,G._pendingLevelUpChoices||1);
+  document.getElementById('lu-sub').textContent=`Lv.${G.player.birdLevel} reached! Choose 1 stat upgrade (${remaining} remaining):`;
+  const now=G.player.stats||{};
+  const pairs=[['HP','maxHp'],['ATK','atk'],['DEF','def'],['SPD','spd'],['MATK','matk'],['MDEF','mdef'],['ACC','acc']];
   const prevWrap=document.getElementById('lu-stat-preview');
   if(prevWrap){
     prevWrap.innerHTML=pairs.map(([label,key])=>{
-      const ov=before[key]??0;
-      const nv=after[key]??ov;
-      const improved=nv>ov;
-      const arrow=improved?'<span class="lu-stat-arrow">➜</span>':'<span class="lu-stat-arrow" style="opacity:.4;color:var(--text-dim)">→</span>';
-      return `<div class="lu-stat-row"><strong>${label}</strong><span><span class="v-old">${ov}</span>${arrow}<span class="${improved?'v-new':'v-old'}">${nv}</span></span></div>`;
+      const val=now[key]??0;
+      return `<div class="lu-stat-row"><strong>${label}</strong><span><span class="v-new">${val}</span></span></div>`;
     }).join('');
   }
 
   document.getElementById('lu-skills-panel').classList.add('active');
 
   document.getElementById('lu-skill-confirm').className='confirm-btn';
-  document.getElementById('lu-skip-btn').className='confirm-btn visible';
+  document.getElementById('lu-skip-btn').className='confirm-btn';
 
-  buildSkillGrid();
+  buildStatChoiceGrid();
 }
 
 function showLUPanel(which) {
   document.getElementById('lu-skills-panel').classList.add('active');
-  _luSelectedSkillId=null;
+  _luSelectedStatChoiceId=null;
   document.getElementById('lu-skill-confirm').className='confirm-btn';
-  document.getElementById('lu-skip-btn').className='confirm-btn visible';
+  document.getElementById('lu-skip-btn').className='confirm-btn';
 }
 
-function buildSkillGrid() {
+function buildStatChoiceGrid() {
   const grid=document.getElementById('lu-skill-grid'); grid.innerHTML='';
-  G.player.abilities.filter(a=>a&&a.id&&a.id!=='skipTurn'&&a.id!=='sittingDuck').forEach(ab=>{
-    const tmpl=ABILITY_TEMPLATES[ab.id];
-    if(!tmpl||ab.level>=4)return;
-    const nextLv=ab.level+1;
-    const nextDesc=tmpl.levels[Math.min(nextLv-1,tmpl.levels.length-1)].desc;
+  const options=buildLevelUpStatChoices();
+  G._levelUpStatChoices=options;
+  options.forEach(opt=>{
     const c=document.createElement('div');
     c.className='skill-upgrade-card';
     c.innerHTML=`
-      <div class="su-name">${ab.name}</div>
-      <div class="su-lv">Lv.${ab.level} → Lv.${nextLv}</div>
-      <div class="su-effect">${nextDesc}</div>`;
+      <div class="su-name">${opt.label}</div>
+      <div class="su-lv">Stat Choice</div>
+      <div class="su-effect">Improve ${String(opt.stat).toUpperCase()} by ${opt.amount}.</div>`;
     c.onclick=()=>{
       document.querySelectorAll('#lu-skill-grid .skill-upgrade-card').forEach(x=>x.classList.remove('selected'));
       c.classList.add('selected');
-      _luSelectedSkillId=ab.id;
+      _luSelectedStatChoiceId=opt.choiceId;
       document.getElementById('lu-skill-confirm').className='confirm-btn visible';
     };
     grid.appendChild(c);
   });
   if(!grid.children.length){
-    grid.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:20px;">All abilities at max level!<br><span style="font-size:.8rem;opacity:.7;">Press Continue.</span></div>';
+    grid.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:20px;">No stat upgrades available.</div>';
   }
 }
 
@@ -9018,24 +8987,22 @@ function refreshPlayerAbilityAilments(){
 }
 
 async function confirmSkillUpgrade() {
-  if(!_luSelectedSkillId){logMsg('Select a skill to upgrade first!','miss');return;}
-  const ab=G.player.abilities.find(a=>a.id===_luSelectedSkillId);
-  if(!ab){return;}
-  const prevLevel=ab.level||1;
-  ab.level=Math.min(ab.level+1,4);
-  const tmpl=ABILITY_TEMPLATES[_luSelectedSkillId];
-  if(tmpl){
-    if(prevLevel<4 && ab.level===4 && (tmpl.type==='physical'||tmpl.type==='ranged') && ailmentSlotsForLevel(tmpl,4)>ailmentSlotsForLevel(tmpl,3)){
-      const choice=await openAbilityModificationChoice(ab, tmpl);
-      if(choice) ab.modAilmentChoice=choice;
-    }
-    ab.ailmentIds=deriveAbilityAilments(ab, tmpl);
+  if(!_luSelectedStatChoiceId){logMsg('Select a stat upgrade first!','miss');return;}
+  const pick=(G._levelUpStatChoices||[]).find(x=>x.choiceId===_luSelectedStatChoiceId);
+  if(!pick){
+    logMsg('That stat upgrade is no longer available.','miss');
+    showLevelUpScreen();
+    return;
   }
-  logMsg(`🌟 ${ab.name} upgraded to Lv.${ab.level}!`,'exp-gain');
-  refreshPlayerAbilityAilments();
-  normalizeAbilityCooldownsForPlayer(G.player);
-  enforceAbilityCosts(G.player);
-  _luSelectedSkillId=null;
+  pick.apply();
+  logMsg(`📈 ${pick.label} applied!`,'exp-gain');
+  _luSelectedStatChoiceId=null;
+  G._levelUpStatChoices=[];
+  G._pendingLevelUpChoices=Math.max(0,(G._pendingLevelUpChoices||1)-1);
+  if((G._pendingLevelUpChoices||0)>0){
+    showLevelUpScreen();
+    return;
+  }
   afterLevelUp();
 }
 
