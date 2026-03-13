@@ -142,15 +142,15 @@ const ABILITY_TEMPLATES = {
   // ---- SPARROW ----
   rapidPeck:{
     id:'rapidPeck', name:'Rapid Peck', isBasic:true, type:'physical', btnType:'physical',
-    desc:'Multi-hit assassin basic. Expensive, high roll potential, chain stops on miss.',
+    desc:'Fast striker flurry. 3 reliable pecks with tempo pressure.',
     baseMissChance:8, baseDmgMult:0.5, pierceDef:0,
-    energyByLevel:[2,2,2,3],
-    energyCost:2,
+    energyByLevel:[1,1,1,1],
+    energyCost:1,
     levels:[
-      {lv:1, desc:'2-3 hits, 8% miss each. 50% dmg'},
-      {lv:2, desc:'2-4 hits, 8% miss each. 58% dmg — Avian Poison 15%', newAilment:'poison', ailChance:15},
-      {lv:3, desc:'3-4 hits, 8% miss each. 66% dmg — Avian Poison 20%', ailChance:20},
-      {lv:4, desc:'3-5 hits, 8% miss each. 74% dmg — Avian Poison 25%', ailChance:25},
+      {lv:1, desc:'3 hits, 8% miss each. 55% dmg per hit'},
+      {lv:2, desc:'3 hits, 8% miss each. 55% dmg per hit'},
+      {lv:3, desc:'3 hits, 8% miss each. 55% dmg per hit'},
+      {lv:4, desc:'3 hits, 8% miss each. 55% dmg per hit'},
     ]
   },
 
