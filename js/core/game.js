@@ -677,7 +677,7 @@ const BIRDS = {
     size:'tiny', class:'assassin',
     stats:{hp:28,maxHp:28,atk:5,def:2,spd:9,dodge:35,acc:85,mdef:6,matk:6,critChance:10},
     statBars:{HP:28/50,ATK:5/15,SPD:9/10,Dodge:.7,ACC:.85}, color:'#6a8ae8',
-    startAbilities:['rapidPeck','swoop','windFeint','predatorMark'],
+    startAbilities:['rapidPeck','dart','windFeint','predatorMark'],
     passive:{id:'windDancer',name:'Wind Dancer',desc:'Every dodge grants +1% permanent dodge (max +15%).',
       onDodge(p){if(!p._windDancerBonus)p._windDancerBonus=0;if(p._windDancerBonus<15){p._windDancerBonus++;p.stats.dodge=Math.min(p.stats.dodge+1,100);}}},
   },
@@ -981,7 +981,7 @@ const BIRDS = {
     size:'xl', class:'tank',
     stats:{hp:55,maxHp:55,atk:9,def:7,spd:2,dodge:5,acc:70,mdef:12,matk:4},
     statBars:{HP:55/50,ATK:9/15,SPD:2/10,Dodge:.1,ACC:.7}, color:'#e8c96a',
-    startAbilities:['bracePeck','gooseHonk','guard','fearHonk'],
+    startAbilities:['gooseHonk','headWhip','guard','fearHonk'],
     passive:{id:'bruisedHide',name:'Bruised Hide',desc:'Every 20 HP taken = +1 ATK until battle ends. Takes 20% reduced physical damage.',
       physicalResist:0.20,
       onDamage(p,dmg){if(!p._bruiseAcc)p._bruiseAcc=0;p._bruiseAcc+=dmg;while(p._bruiseAcc>=20){p._bruiseAcc-=20;G.player.stats.atk++;spawnFloat('player','💢+ATK','fn-status');}}},
@@ -1335,7 +1335,7 @@ const UPGRADE_CARDS_REWORK = [
   {id:'b_iron_feather_mantle',tier:'blue',icon:'🧱',name:'Iron Feather Mantle',desc:'+3 DEF',tags:['stat','def'],apply:p=>{p.stats.def+=3;}},
   {id:'b_arcane_mantle',tier:'blue',icon:'🔷',name:'Arcane Mantle',desc:'+3 MDEF',tags:['stat','mdef'],apply:p=>{p.stats.mdef=(p.stats.mdef||0)+3;}},
   {id:'b_hawk_instinct',tier:'blue',icon:'💨',name:'Hawk Instinct',desc:'+3 SPD',tags:['stat','spd'],apply:p=>{p.stats.spd=(p.stats.spd||0)+3;}},
-  {id:'b_storm_pulse',tier:'blue',icon:'🌩️',name:'Storm Pulse',desc:'First attack each battle always hits',tags:['opening'],stackable:false,apply:p=>{p.firstAttackAlwaysHit=true;}},
+  {id:'b_storm_pulse',tier:'blue',icon:'🌩️',name:'Storm Pulse',desc:'First damaging ability each battle always hits',tags:['opening'],stackable:false,apply:p=>{p.firstAttackAlwaysHit=true;}},
   {id:'b_spell_echo',tier:'blue',icon:'🎶',name:'Spell Echo',desc:'Every 4th spell deals +30% damage',tags:['status-synergy','magic'],stackable:false,apply:p=>{p.everyFourthSpellBonusPct=0.30;}},
   {id:'b_deep_cut',tier:'blue',icon:'🩸',name:'Deep Cut',desc:'Bleed applied by you gains +1 stack',tags:['status-synergy','bleed'],apply:p=>{p.bleedBonusStacks=(p.bleedBonusStacks||0)+1;}},
   {id:'b_venom_reservoir',tier:'blue',icon:'☣️',name:'Venom Reservoir',desc:'Poison lasts +1 turn',tags:['status-synergy','poison'],apply:p=>{p.poisonExtraTurns=(p.poisonExtraTurns||0)+1;}},
@@ -1569,7 +1569,7 @@ const CLASS_ROLE_BY_CLASS = {
   ranger:'striker',
   tank:'tank',
   knight:'bruiser',
-  mage:'mage',
+  mage:'support',
   summoner:'trickster',
   bard:'support',
 };
@@ -2399,7 +2399,7 @@ Object.entries(ABILITY_ENERGY_PATCH).forEach(([id, patch])=>{
 });
 
 const ENERGY_BY_LEVEL_PATCH={
-  rapidPeck:[2,2,2,3], dart:[2,2,3,3], evade:[1,1,2,2], blackPeck:[1,1,1,1],
+  rapidPeck:[1,1,1,1], dart:[1,1,1,1], evade:[1,1,2,2], blackPeck:[1,1,1,1],
   dirge:[3,3,3,3], lullaby:[2,2,2,3], crowStrike:[1,1,1,1], talonRake:[1,1,1,2],
   beakSlam:[3,3,3,3], crowDefend:[1,1,2,2], mudLash:[1,1,1,2], serpentCrusher:[3,3,3,3],
   shoebillClamp:[2,2,3,3], fleshRipper:[1,1,1,1], serratedSlash:[1,1,1,1], diveGouge:[3,3,3,3],
@@ -5850,7 +5850,8 @@ function playerAttackMisses(ab) {
   const t=ABILITY_TEMPLATES?.[ab?.id]||ABILITY_TEMPLATES_EXTRA?.[ab?.id]||ab||{};
   const kind=String(t.btnType||t.type||ab?.btnType||ab?.type||'').toLowerCase();
   const isAttack=(kind==='physical'||kind==='ranged');
-  if(isAttack && !G._firstAttackUsed && G.player?.firstAttackAlwaysHit) return false;
+  const isDamaging=(isAttack||kind==='spell');
+  if(isDamaging && !G._firstAttackUsed && G.player?.firstAttackAlwaysHit) return false;
   let moveMiss = getPlayerMissChance(ab);
   if(isAttack && !G._firstAttackUsed) moveMiss=Math.max(0,moveMiss-(G.player?.firstAttackAccBonus||0));
   return chance(moveMiss);
@@ -6559,26 +6560,13 @@ const ACTIONS = {
     const lv=ab.level;
     if(G.swoopCooldown>0){logMsg(`Swoop on cooldown!`,'miss');return;}
     const mult=1+0.15*(lv-1);
-    const baseDmg=pdmg(mult);
-    // Swoop always hits, bypasses dodge (dealDamage but force hit)
-    let dmg=Math.max(1,baseDmg);
-    const critMult=G.player.goldCritMult||1.5;
-    G.enemy.stats.hp-=dmg;
-    const _atkKind=String(srcAbility?.btnType||srcAbility?.type||G._activePlayerAbility?.btnType||G._activePlayerAbility?.type||'').toLowerCase();
-    if((_atkKind==='physical'||_atkKind==='ranged') && dmg>0){
-      if((G.player?.bleedOnHitChance||0)>0 && chance(Math.min(95,G.player.bleedOnHitChance))) applyAilment('enemy','bleed',1);
-      if((G.player?.poisonOnHitChance||0)>0 && chance(Math.min(95,G.player.poisonOnHitChance))) applyAilment('enemy','poison',1);
-      if((G.player?.augAttackBleedChance||0)>0 && chance(Math.min(95,G.player.augAttackBleedChance))) applyAilment('enemy','bleed',1);
-      if((G.player?.augCritBleed||0)>0 && isCrit) applyAilment('enemy','bleed',G.player.augCritBleed);
-      if((G.player?.relCarrionLedger||false) && (G.enemyStatus?.bleed?.stacks||0)>0) G.enemy.stats.hp=Math.max(0,G.enemy.stats.hp-1);
-      if((G.player?.augHuntersMarkPct||0)>0) G.playerStatus.huntersMarkBonusPct=G.player.augHuntersMarkPct;
-    }
-    if(_atkKind==='spell' && dmg>0){
-      if(G.player?.augSpellPoison) applyAilment('enemy','poison',1);
-      if(G.player?.augSpellCritPoison && isCrit) applyAilment('enemy','poison',1);
-      if(G.player?.augFirstSpellFear && !G._firstSpellUsed) applyAilment('enemy','feared',1);
-    }
-    await doAttack('player','enemy',{dmgDealt:dmg,wasDodged:false,wasBlocked:false,isCrit:false});
+    const isCrit=chance(getPlayerCritChance(ab));
+    const oldDodge=G.enemy.stats.dodge;
+    G.enemy.stats.dodge=0;
+    const r=dealDamage('enemy',pdmg(mult,ab),isCrit);
+    G.enemy.stats.dodge=oldDodge;
+    r.wasDodged=false;
+    await doAttack('player','enemy',r);
     setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
     if(G.battleOver)return;
     const stunC=lv>=2?20+10*(lv-2):0;
@@ -6586,7 +6574,7 @@ const ACTIONS = {
     if(tryApplyAilment('enemy','weaken',ab)){spawnFloat('enemy','🐔 Weaken!','fn-status');}
     const cd=lv>=3?1:2; G.swoopCooldown=cd;
     if(lv>=4)G.swoopCooldown=0;
-    logMsg(`🦅 Swoop! ${dmg} dmg, can't be dodged!${G.swoopCooldown>0?' (CD '+G.swoopCooldown+'t)':''}`, 'player-action');
+    logMsg(`🦅 Swoop! ${r.dmgDealt} dmg, can't be dodged!${G.swoopCooldown>0?' (CD '+G.swoopCooldown+'t)':''}`, 'player-action');
   },
 
   async diveBomb(ab) {
@@ -7245,6 +7233,16 @@ function registerAbilityAlias(newId, sourceId, name, override={}){
     ACTIONS[newId]=async function(ab){
       const prox={...ab,id:sourceId,name};
       const out=await ACTIONS[sourceId](prox);
+      if(newId==='fearHonk'){
+        const lv=Math.max(1,Math.min(4,Number(ab?.level)||1));
+        const turns=(lv>=3)?2:1;
+        applyAilment('enemy','feared',turns);
+        if(lv>=4) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+10;
+        await doSpell('enemy',`😨 Fear Honk!`);
+        renderStatuses('enemy-status',G.enemyStatus);
+        logMsg(`😨 Fear Honk applies Fear${lv>=4?' and -10% ACC':''}.`,'player-action');
+        return;
+      }
       if(newId==='fruitBomb') applyAilment('enemy','poison',1);
       if(newId==='savageKick') applyAilment('enemy','bleed',1);
       if(newId==='threatDisplay') G.enemyStatus.weaken=Math.max(G.enemyStatus.weaken||0,1);
@@ -7326,7 +7324,7 @@ registerAbilityAlias('sandKick','dustKick','Sand Kick',{type:'utility',btnType:'
 registerAbilityAlias('momentumStrike','savageKick','Momentum Strike',{type:'physical',btnType:'physical'});
 registerAbilityAlias('powerKick','kick','Power Kick',{isBasic:true,type:'physical',btnType:'physical'});
 registerAbilityAlias('stampedeStrike','trample','Stampede Strike',{type:'physical',btnType:'physical'});
-registerAbilityAlias('fearHonk','honkTerror','Fear Honk',{type:'utility',btnType:'utility'});
+registerAbilityAlias('fearHonk','honkTerror','Fear Honk',{type:'utility',btnType:'utility',desc:'Debuff honk: applies Fear without direct damage.'});
 registerAbilityAlias('wingShield','guard','Wing Shield',{type:'utility',btnType:'utility'});
 registerAbilityAlias('royalGuard','guard','Royal Guard',{type:'utility',btnType:'utility'});
 registerAbilityAlias('calmingSong','hum','Calming Song',{type:'utility',btnType:'utility'});
@@ -7349,6 +7347,57 @@ registerAbilityAlias('stormSong','sonicDirge','Storm Song',{type:'spell',btnType
 registerAbilityAlias('nightfallCall','dukeDecree','Nightfall Call',{type:'spell',btnType:'spell'});
 registerAbilityAlias('courtSummon','dukeWardens','Court Summon',{type:'utility',btnType:'utility'});
 registerAbilityAlias('verdict','dukeRiverGrip','Verdict',{type:'spell',btnType:'spell'});
+
+const RELIABLE_ONE_EN_ATTACK_BY_CLASS = Object.freeze({
+  assassin:'rapidPeck',
+  striker:'rapidPeck',
+  predator:'silentPierce',
+  ranger:'silentPierce',
+  bruiser:'bracePeck',
+  tank:'bracePeck',
+  knight:'bracePeck',
+  support:'mockingPeck',
+  bard:'mockingPeck',
+  summoner:'mockingPeck',
+  mage:'blackPeck',
+});
+function getAbilityLevel1EnergyCost(id){
+  const t=ABILITY_TEMPLATES?.[id];
+  if(!t) return 99;
+  if(Number.isFinite(t.energyCost)) return Math.max(0, Math.floor(t.energyCost));
+  if(Array.isArray(t.energyByLevel) && t.energyByLevel.length) return Math.max(0, Math.floor(Number(t.energyByLevel[0])||0));
+  return 0;
+}
+function isAbilityLikelyDamaging(id){
+  const t=ABILITY_TEMPLATES?.[id];
+  if(!t) return false;
+  const kind=String(t.btnType||t.type||'').toLowerCase();
+  if(kind==='utility') return false;
+  if(t.isMainAttack || t.isBasic) return true;
+  const txt=String(t.levels?.[0]?.desc||t.desc||'').toLowerCase();
+  if(!txt) return kind==='physical' || kind==='spell';
+  if(/deal|damage|hit|strike|slash|peck|jab|kick|burn|poison|bleed/.test(txt)) return true;
+  if(/heal|cleanse|guard|shield|dodge|taunt|cooldown|restore/.test(txt)) return false;
+  return kind==='physical';
+}
+function ensureStarterKitEnergySmoothing(){
+  for(const bd of Object.values(BIRDS||{})){
+    if(!bd || !Array.isArray(bd.startAbilities) || !bd.startAbilities.length) continue;
+    const ids=[...new Set(bd.startAbilities.filter(Boolean))];
+    const hasOneEnDamage=ids.some(id=>getAbilityLevel1EnergyCost(id)<=1 && isAbilityLikelyDamaging(id));
+    if(hasOneEnDamage){
+      bd.startAbilities=ids;
+      continue;
+    }
+    const cls=String(bd.class||'support').toLowerCase();
+    const fallback=RELIABLE_ONE_EN_ATTACK_BY_CLASS[cls] || 'rapidPeck';
+    const fallbackOk=ABILITY_TEMPLATES?.[fallback] && getAbilityLevel1EnergyCost(fallback)<=1 && isAbilityLikelyDamaging(fallback);
+    const pick=fallbackOk?fallback:'rapidPeck';
+    const next=[pick, ...ids.filter(id=>id!==pick)];
+    bd.startAbilities=next.slice(0,4);
+  }
+}
+ensureStarterKitEnergySmoothing();
 
 async function playerAction(ab,fromQueue=false) {
   const now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
@@ -9152,7 +9201,7 @@ const LEVELUP_STAT_POOL = [
   {id:'spd1', label:'+1 SPD', stat:'spd', amount:1, apply(){ G.player.stats.spd=(G.player.stats.spd||0)+1; }},
   {id:'acc2', label:'+2 ACC', stat:'acc', amount:2, apply(){ G.player.stats.acc=(G.player.stats.acc||0)+2; }},
   {id:'cc2', label:'+2% CC', stat:'critChance', amount:2, apply(){ G.player.stats.critChance=Math.min(95,(G.player.stats.critChance||5)+2); }},
-  {id:'cd01', label:'+0.1 CD', stat:'goldCritMult', amount:0.1, apply(){ G.player.goldCritMult=Math.min(3.0,(G.player.goldCritMult||1.5)+0.1); }},
+  {id:'cd01', label:'+0.1 CritDmg', stat:'goldCritMult', amount:0.1, apply(){ G.player.goldCritMult=Math.min(3.0,(G.player.goldCritMult||1.5)+0.1); }},
 ];
 const ENDLESS_RARE_LEVELUP_CHOICES = [
   {id:'vit10', label:'+10 Vitality', stat:'maxHp', amount:10, apply(){ G.player.stats.maxHp=(G.player.stats.maxHp||1)+10; G.player.stats.hp=Math.min((G.player.stats.hp||1)+10,G.player.stats.maxHp||1); }},
