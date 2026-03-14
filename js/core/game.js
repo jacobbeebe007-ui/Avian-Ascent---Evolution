@@ -677,7 +677,7 @@ const BIRDS = {
     size:'tiny', class:'assassin',
     stats:{hp:28,maxHp:28,atk:5,def:2,spd:9,dodge:35,acc:85,mdef:6,matk:6,critChance:10},
     statBars:{HP:28/50,ATK:5/15,SPD:9/10,Dodge:.7,ACC:.85}, color:'#6a8ae8',
-    startAbilities:['rapidPeck','talonStrike','battleChirp','windSlash'],
+    startAbilities:['rapidPeck','needleJab','windFeint','predatorMark'],
     passive:{id:'windDancer',name:'Wind Dancer',desc:'Every dodge grants +1% permanent dodge (max +15%).',
       onDodge(p){if(!p._windDancerBonus)p._windDancerBonus=0;if(p._windDancerBonus<15){p._windDancerBonus++;p.stats.dodge=Math.min(p.stats.dodge+1,100);}}},
   },
@@ -688,7 +688,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 10 with Sparrow.',
     stats:{hp:25,maxHp:25,atk:7,def:1,spd:12,dodge:55,acc:92,mdef:4,matk:10,critChance:18},
     color:'#40e8c0',
-    startAbilities:['nectarJab','evade','swoop'],
+    startAbilities:['rapidPeck','sonicDash','blinkFlutter','comboStrike'],
     passive:{id:'hoverBlitz',name:'Hover Blitz',desc:'+2 SPD per dodge (max +10, resets on hit). Crits heal 10% HP.',
       onBattleStart(p){p._hoverStacks=0;},
       onDodge(p){if(!p._hoverStacks)p._hoverStacks=0;if(p._hoverStacks<10){p._hoverStacks+=2;p.stats.spd=Math.min(p.stats.spd+2,20);}},
@@ -702,7 +702,7 @@ const BIRDS = {
     size:'small', class:'mage',
     stats:{hp:38,maxHp:38,atk:6,def:3,spd:7,dodge:25,acc:80,mdef:8,matk:14},
     statBars:{HP:38/50,ATK:6/15,SPD:7/10,Dodge:.5,ACC:.8}, color:'#9a6ae8',
-    startAbilities:['blackPeck','dirge','sonicDirge'],
+    startAbilities:['blackPeck','stormChorus','battleChorus','thunderScreech'],
     passive:{id:'songResilient',name:'Song Resilient',desc:'Every successful spell cast, restore 2 HP.',
       onSpell(p){p.stats.hp=Math.min(p.stats.hp+2,p.stats.maxHp);}},
   },
@@ -711,7 +711,7 @@ const BIRDS = {
     size:'small', class:'bard',
     stats:{hp:34,maxHp:34,atk:7,def:3,spd:8,dodge:28,acc:85,mdef:8,matk:16},
     color:'#1a6aba',
-    startAbilities:['dirge','lullaby','breakClamp'],
+    startAbilities:['echoSong','mimicSong','confuseChorus','battleChorus'],
     passive:{id:'parrot',name:'Parrot',
       desc:'After an enemy uses an ability, gain +5% Dodge for 1 turn (max 20%).',
       onBattleStart(p){p._macawEchoDodge=0;},
@@ -724,7 +724,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 with Hummingbird.',
     stats:{hp:32,maxHp:32,atk:8,def:3,spd:10,dodge:28,acc:88,critChance:10,mdef:8,matk:8},
     statBars:{HP:32/50,ATK:8/15,SPD:10/10,Dodge:.56,ACC:.88}, color:'#6a8ac8',
-    startAbilities:['rapidPeck','swoop','evade'],
+    startAbilities:['swoopCut','skyfallStrike','windFeint','predatorMark'],
     passive:{id:'terminalVelocity',name:'Terminal Velocity',desc:'Each turn without taking damage stacks +2% Crit Chance (max +20%). Taking damage resets it.',
       onBattleStart(p){p._velocityStacks=0;},
       onTurnEnd(p){if(!p._tookDmgThisTurn){p._velocityStacks=Math.min(p._velocityStacks+2,20);}p._tookDmgThisTurn=false;},
@@ -737,7 +737,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:28,maxHp:28,atk:12,def:2,spd:9,dodge:38,acc:92,critChance:15,mdef:3,matk:3},
     statBars:{HP:28/50,ATK:12/15,SPD:9/10,Dodge:.76,ACC:.92}, color:'#e8f0f8',
-    startAbilities:['silentPierce','evade','featherRuffle'],
+    startAbilities:['silentPierce','nightTalon','predatorMark','huntersCry'],
     passive:{id:'shadowCloak',name:'Shadow Cloak',
       desc:'First attack each battle is unblockable + +35% crit chance (not guaranteed). Taking no damage a turn stacks +2% crit (max +12%, resets on hit).',
       onBattleStart(p){p._shadowCloakReady=true;p._owlCritStacks=0;},
@@ -752,7 +752,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 with Magpie.',
     stats:{hp:34,maxHp:34,atk:8,def:3,spd:8,dodge:48,acc:88,critChance:12,mdef:5,matk:7},
     color:'#a0784a',
-    startAbilities:['probeStrike','diveBomb','evade'],
+    startAbilities:['silentPierce','diveBomb','windFeint','predatorMark'],
     passive:{id:'probeMaster',name:'Probe Master',desc:'Pierce attacks ignore 20-35% DEF (scaling per hit). +10% dmg vs high-HP foes (above 75% HP).',
       get _pierceBase(){return 30;}},
   },
@@ -763,7 +763,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:30,maxHp:30,atk:5,def:2,spd:6,dodge:18,acc:78,mdef:12,matk:16},
     color:'#2a1a3a',
-    startAbilities:['blackPeck','sonicDirge','owlPsyche'],
+    startAbilities:['piercingScreech','stormChorus','battleChorus','thunderScreech'],
     passive:{id:'crestScream',name:'Crest Scream',desc:'Spells ignore 20% enemy M.DEF. Critical spells apply Brain Fog (−15% SPD/ACC for 3t).',
       get _mdefPierce(){return 20;}},
   },
@@ -774,7 +774,7 @@ const BIRDS = {
     size:'medium', class:'knight',
     stats:{hp:35,maxHp:35,atk:6,def:4,spd:5,dodge:15,acc:90,mdef:10,matk:6},
     statBars:{HP:35/50,ATK:6/15,SPD:5/10,Dodge:.3,ACC:.9}, color:'#c0c8d8',
-    startAbilities:['mockingPeck','murderMurmuration','dreadCall','battleFocus'],
+    startAbilities:['mockingPeck','stickLance','guard','battleFocus'],
     passive:{id:'ironWill',name:'Iron Will',desc:'Each successful block = +1 DEF permanently (max +8). Immune to Weaken.',
       immuneWeaken:true,
       onBlock(p){if(!p._ironWillBonus)p._ironWillBonus=0;if(p._ironWillBonus<8){p._ironWillBonus++;p.stats.def++;}}},
@@ -786,7 +786,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 10 with Macaw.',
     stats:{hp:46,maxHp:46,atk:9,def:5,spd:7,dodge:22,acc:82,mdef:10,matk:8},
     statBars:{HP:46/50,ATK:9/15,SPD:7/10,Dodge:.44,ACC:.82}, color:'#c8a060',
-    startAbilities:['bashUp','sitAndWait','theJoker'],
+    startAbilities:['mockingPeck','laughingCall','dizzyChorus','echoLaugh'],
     passive:{id:'ambushMaster',name:'Ambush Master',desc:'First attack each battle always crits. Immune to Fear and Confused. Boss kill resets Ambush for next fight.',
       immuneFear:true, immuneConfused:true,
       onBattleStart(p){p._ambushReady=true;},
@@ -799,7 +799,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 with Kookaburra.',
     stats:{hp:38,maxHp:38,atk:6,def:4,spd:6,dodge:20,acc:82,critChance:6,mdef:10,matk:14},
     statBars:{HP:38/50,ATK:6/15,SPD:6/10,Dodge:.4,ACC:.82}, color:'#c8902a',
-    startAbilities:['dart','lullaby','shriekwave'],
+    startAbilities:['mockingPeck','echoSong','mimicSong','confuseChorus'],
     passive:{id:'lyreLyre',name:'Lyre Lyre',desc:'Reduces a randomly selected enemy stat at battle start and grants that amount to Lyrebird as a buff.',
       onBattleStart(p){
         const enemy=G?.enemy?.stats;
@@ -832,7 +832,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:38,maxHp:38,atk:8,def:3,spd:7,dodge:22,acc:82,mdef:8,matk:14},
     color:'#6030d0',
-    startAbilities:['theJoker','birdBrain','blackPeck'],
+    startAbilities:['blackPeck','dreadCall','nightfallSong','fearChorus'],
     passive:{id:'omen',name:'Omen',
       desc:'At battle start, a random blessing and a random curse are applied to both sides.',
       onBattleStart(p){
@@ -859,7 +859,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 10 with Robin.',
     stats:{hp:42,maxHp:42,atk:7,def:4,spd:8,dodge:32,acc:84,mdef:9,matk:12,critChance:8},
     color:'#2a2a2a',
-    startAbilities:['glintJab','stealShine','featherFlick','dart'],
+    startAbilities:['featherFlick','glintJab','mockingSong','stealTempo'],
     passive:{id:'murderCall',name:'Murder Call',desc:'Mob attacks gain +10% hit vs low-HP foes. Each kill raises summon cap (max +3).',
       onBattleStart(p){p._murderBonusCap=0;}},
   },
@@ -870,7 +870,7 @@ const BIRDS = {
     size:'small', class:'ranger',
     stats:{hp:34,maxHp:34,atk:7,def:3,spd:8,dodge:24,acc:88,mdef:8,matk:8,critChance:8},
     color:'#d86a4c',
-    startAbilities:['dart','mudshot','cactiSpine'],
+    startAbilities:['needleJab','swoopCut','focusChirp','predatorMark'],
     passive:{id:'hedgeHunter',name:'Hedge Hunter',desc:'Ranged hits grant +2% ACC for this battle (max +12%).',
       onBattleStart(p){p._robinAccStacks=0;},
       onPhysicalHit(p){if((p._robinAccStacks||0)<12){p._robinAccStacks=(p._robinAccStacks||0)+2;p.stats.acc=Math.min(100,(p.stats.acc||80)+2);}}},
@@ -882,7 +882,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:40,maxHp:40,atk:8,def:4,spd:7,dodge:22,acc:86,mdef:9,matk:9},
     color:'#4a6a9a',
-    startAbilities:['rockDrop','stickLance','aerialPoop'],
+    startAbilities:['decorate','inspireSong','charmDisplay','focusCall'],
     passive:{id:'collectorInstinct',name:'Collector Instinct',desc:'First ranged hit each battle gains +20% damage and +20% pierce.',
       onBattleStart(p){p._bowerEmpowered=true;}},
   },
@@ -895,7 +895,7 @@ const BIRDS = {
     unlockHint:'Enter: "Ahh Ahh Eee Eee Tookie Tookie"',
     stats:{hp:45,maxHp:45,atk:7,def:5,spd:4,dodge:12,acc:75,mdef:8,matk:10},
     statBars:{HP:45/50,ATK:7/15,SPD:4/10,Dodge:.24,ACC:.75}, color:'#60c840',
-    startAbilities:['serratedBill','fruitBomb','taunt','preen'],
+    startAbilities:['fruitSpit','sunCall','jungleChorus','echoScreech'],
     passive:{id:'fruitful',name:'Fruitful',desc:'Whenever you heal, gain +1% ACC (max +12%).',
       onHeal(p,amt){if(!p._fruitfulBonus)p._fruitfulBonus=0;if(p._fruitfulBonus<12){const gain=Math.max(1,Math.floor(amt/8));const actual=Math.min(gain,12-p._fruitfulBonus);p._fruitfulBonus+=actual;p.stats.acc=Math.min(p.stats.acc+actual,100);}}},
   },
@@ -906,7 +906,7 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 30 with any Bard.',
     stats:{hp:44,maxHp:44,atk:8,def:5,spd:6,dodge:20,acc:84,mdef:10,matk:12},
     color:'#f0f4fc',
-    startAbilities:['serratedSlash','hum','preen'],
+    startAbilities:['bracePeck','wingShield','royalGuard','calmingSong'],
     passive:{id:'swanSong',name:'Swan Song',
       desc:'Upon reaching 0 HP, deal one final strike at 200% ATK. If it kills the enemy, Swan survives at 1 HP.',
       onBattleStart(p){p._swanSongFired=false;},
@@ -919,7 +919,7 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 30 with any Ranger.',
     stats:{hp:48,maxHp:48,atk:8,def:4,spd:6,dodge:18,acc:80,mdef:12,matk:8},
     color:'#e8609a',
-    startAbilities:['swoopCut','mudLash','preen','graceStep'],
+    startAbilities:['mudshot','marshCall','bogWhisper','rotChorus'],
     passive:{id:'stanceBalance',name:'Balance Master',
       desc:'Alternate attack and utility abilities each turn to gain +20% ATK (2t) or +20% dodge (2t).',
       onBattleStart(p){p._lastAbType=null;},
@@ -945,7 +945,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 10 with Crow.',
     stats:{hp:48,maxHp:48,atk:9,def:6,spd:5,dodge:10,acc:80,critChance:8,mdef:10,matk:6},
     statBars:{HP:48/50,ATK:9/15,SPD:5/10,Dodge:.2,ACC:.8}, color:'#e0a060',
-    startAbilities:['raptorKick','stickLance','battleRhythm','guard'],
+    startAbilities:['headWhip','serratedSlash','guard','threatDisplay'],
     passive:{id:'serpentStomp',name:'Serpent Stomp',desc:'Every physical attack has a 20% chance to Paralyze the enemy. Immune to Poison.',
       immunePoison:true,
       onPhysicalHit(p,G){if(chance(20)&&!G.enemyStatus.paralyzed){G.enemyStatus.paralyzed=1;spawnFloat('enemy','⚡ Para!','fn-status');}}},
@@ -957,7 +957,7 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 50 with any bird.',
     stats:{hp:54,maxHp:54,atk:8,def:6,spd:7,dodge:14,acc:82,mdef:11,matk:15,critChance:8},
     color:'#9fb7c9',
-    startAbilities:['wingStorm','wormRiot','supersonic'],
+    startAbilities:['galeStrike','oceanCall','windChorus','stormSong'],
     passive:{id:'tradeWinds',name:'Trade Winds',desc:'Casting a spell grants +1 SPD (max +4) this battle.',
       onSpell(p){p._tradeWind=(p._tradeWind||0);if(p._tradeWind<4){p._tradeWind++;p.stats.spd=Math.min(20,(p.stats.spd||1)+1);}}},
   },
@@ -969,7 +969,7 @@ const BIRDS = {
     unlockHint:'Reach level 21 in Endless mode with any Mage.',
     stats:{hp:36,maxHp:36,atk:6,def:3,spd:8,dodge:24,acc:84,mdef:9,matk:14,critChance:8},
     color:'#b0c8d8',
-    startAbilities:['fruitSpit','diveSnatch','windSlash','mobSwarm'],
+    startAbilities:['featherFlick','diveSnatch','blindScreech','distractingChorus'],
     passive:{id:'scavengeFlock',name:'Scavenge Flock',desc:'Summoned mobs steal 5% enemy ATK as SPD bonus (stacks). Immune to Fear.',
       immuneFear:true,
       onBattleStart(p){p._scavengeStacks=0;}},
@@ -981,7 +981,7 @@ const BIRDS = {
     size:'xl', class:'tank',
     stats:{hp:55,maxHp:55,atk:9,def:7,spd:2,dodge:5,acc:70,mdef:12,matk:4},
     statBars:{HP:55/50,ATK:9/15,SPD:2/10,Dodge:.1,ACC:.7}, color:'#e8c96a',
-    startAbilities:['gooseHonk','honkTerror','guard','heavyTalon'],
+    startAbilities:['bracePeck','gooseHonk','guard','fearHonk'],
     passive:{id:'bruisedHide',name:'Bruised Hide',desc:'Every 20 HP taken = +1 ATK until battle ends. Takes 20% reduced physical damage.',
       physicalResist:0.20,
       onDamage(p,dmg){if(!p._bruiseAcc)p._bruiseAcc=0;p._bruiseAcc+=dmg;while(p._bruiseAcc>=20){p._bruiseAcc-=20;G.player.stats.atk++;spawnFloat('player','💢+ATK','fn-status');}}},
@@ -993,7 +993,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 10 with Goose.',
     stats:{hp:70,maxHp:70,atk:10,def:10,spd:2,dodge:5,acc:72,critChance:5,mdef:16,matk:6},
     statBars:{HP:70/50,ATK:10/15,SPD:2/10,Dodge:.1,ACC:.72}, color:'#5a7090',
-    startAbilities:['bracePeck','shoebillClamp','sitAndWait','fishSnatcher'],
+    startAbilities:['bracePeck','shoebillClamp','guard','huntersCry'],
     passive:{id:'prehistoricStare',name:'Prehistoric Stare',desc:'Enemies have 15% chance to skip attack from dread (30% when feared). Immune to Fear & Stun.',
       immuneFear:true, immuneStun:true,
       onEnemyAttackCheck(p,G){const fearBonus=G.enemyStatus.feared>0?15:0;return chance(15+fearBonus);}},
@@ -1005,7 +1005,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 with Hummingbird.',
     stats:{hp:58,maxHp:58,atk:13,def:6,spd:4,dodge:8,acc:78,critChance:15,mdef:8,matk:6},
     statBars:{HP:58/50,ATK:13/15,SPD:4/10,Dodge:.16,ACC:.78}, color:'#c84030',
-    startAbilities:['fleshRipper','talonRake','beakSlam'],
+    startAbilities:['fleshTear','raptorDive','predatorMark','executionTalon'],
     abilityPool:['physical'],
     passive:{id:'warlordsPath',name:"Warlord's Path",desc:'Every boss kill permanently raises ATK by 3. Takes 15% reduced magic damage.',
       magicResist:0.15,
@@ -1018,7 +1018,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:60,maxHp:60,atk:11,def:7,spd:4,dodge:10,acc:78,mdef:10,matk:6},
     color:'#e8e4d8',
-    startAbilities:['huntersJab','skyStrike','focusSight','windSlash'],
+    startAbilities:['skyTalon','rendingStrike','predatorMark','freedomCry'],
     passive:{id:'lastStand',name:'Last Stand',
       desc:'First time per battle you would die, survive at 1 HP and gain +5 ATK for 3 turns. Immune to Paralysis.',
       immuneParalyze:true,
@@ -1032,7 +1032,7 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 30 with any Tank.',
     stats:{hp:65,maxHp:65,atk:9,def:9,spd:3,dodge:12,acc:75,mdef:14,matk:5},
     color:'#3a5878',
-    startAbilities:['icebreakerHonk','iceGuard','bodySlam','rallyCall'],
+    startAbilities:['icebreakerHonk','snowWall','guard','tundraCall'],
     passive:{id:'blubberCoat',name:'Blubber Coat',desc:'Reduces all magic damage by 25–40% (scales with missing HP). Waddle applies Lullaby (15% skip/turn) on attack.',
       get _baseMagicReduce(){return 0.25;},
       onMagicHit(p,dmg){const hpPct=p.stats.hp/p.stats.maxHp;return Math.floor(dmg*(1-(0.25+(1-hpPct)*0.15)));},
@@ -1045,7 +1045,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 with Shoebill.',
     stats:{hp:72,maxHp:72,atk:12,def:8,spd:1,dodge:5,acc:70,mdef:10,matk:4},
     color:'#b89060',
-    startAbilities:['kick','trample','guard','threatDisplay'],
+    startAbilities:['powerKick','stampedeStrike','sandKick','momentumCharge'],
     passive:{id:'rageCharge',name:'Rage Charge',desc:'Heavy attacks charge over 2–3 turns (+50% dmg/turn). Misses reset charge. Immune to Slow.',
       immuneSlow:true,
       onBattleStart(p){p._rageCharge=0;}},
@@ -1058,7 +1058,7 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:74,maxHp:74,atk:13,def:9,spd:3,dodge:8,acc:74,mdef:11,matk:4},
     color:'#3b4a56',
-    startAbilities:['raptorKick','raptorKickFrenzy','intimidatingStare','guard'],
+    startAbilities:['raptorKick','warStomp','momentumCharge','crushingTalon'],
     passive:{id:'jungleBulwark',name:'Jungle Bulwark',desc:'Takes 10% reduced physical damage. First heavy hit each battle applies Fear 2t.',
       physicalResist:0.10,
       onBattleStart(p){p._cassFearUsed=false;},
@@ -1071,7 +1071,7 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 40 with any Tank.',
     stats:{hp:80,maxHp:80,atk:14,def:10,spd:2,dodge:20,acc:72,mdef:10,matk:4},
     color:'#7a6040',
-    startAbilities:['kick','savageKick','threatDisplay','dustKick'],
+    startAbilities:['headWhip','warCharge','sandKick','momentumStrike'],
     passive:{id:'rumbleStrike',name:'Rumble Strike',desc:'+20% max HP. Counter-attacks on block for 30% ATK. Immune to Stun.',
       immuneStun:true,
       onBattleStart(p){if(!p._emuHPBoosted){p._emuHPBoosted=true;p.stats.maxHp=Math.floor(p.stats.maxHp*1.20);p.stats.hp=p.stats.maxHp;}},
@@ -1084,7 +1084,7 @@ const BIRDS = {
     unlockHint:"Enter code 'Blakiston' on the selection screen.",
     stats:{hp:68,maxHp:68,atk:11,def:9,spd:6,dodge:12,acc:84,mdef:14,matk:14,critChance:8},
     color:'#6f88c2',
-    startAbilities:['dukeRiverGrip','dukeDecree','dukeWardens'],
+    startAbilities:['nightTalon','nightfallCall','courtSummon','verdict'],
     passive:{id:'imperialEdict',name:'Imperial Edict',desc:'Casting a spell grants +1 MATK (max +4). Defending restores 2 HP.',
       onBattleStart(p){p._dukeMatk=0;},
       onSpell(p){if((p._dukeMatk||0)<4){p._dukeMatk=(p._dukeMatk||0)+1;p.stats.matk=(p.stats.matk||0)+1;}},
@@ -1811,7 +1811,7 @@ ABILITY_TEMPLATES['sittingDuck'] = ABILITY_SITTING_DUCK;
 const ABILITY_TEMPLATES_EXTRA = {
   // ---- STAT DEBUFFS ----
   featherRuffle:{
-    id:'featherRuffle', name:'Feather Ruffle', type:'spell', btnType:'spell',
+    id:'featherRuffle', name:'Feather Ruffle', type:'utility', btnType:'utility',
     desc:'Reduce enemy ATK. Lv1: 1 debuff (5t). Lv2+: adds ACC debuff (2 debuffs, max 3t).',
     levels:[
       {lv:1, desc:'Enemy ATK −15% for 5t'},
@@ -4465,7 +4465,7 @@ const ABILITY_DISPLAY_TAGS = {
   murderMurmuration:['MULTI','SIGNATURE'], stickLance:['HEAVY','SIGNATURE'], shoebillClamp:['HEAVY','CONTROL','SIGNATURE'],
   fishSnatcher:['UTILITY','HEAL','SIGNATURE'], fruitBomb:['SPELL','SIGNATURE'],
   roost:['HEAL'], preen:['UTILITY','HEAL'], crowDefend:['GUARD'], guard:['GUARD'], evade:['UTILITY'],
-  intimidate:['CONTROL'], threatDisplay:['CONTROL'], dreadCall:['SPELL','CONTROL'],
+  intimidate:['CONTROL'], threatDisplay:['CONTROL'], dreadCall:['UTILITY','CONTROL'],
   victoryChant:['UTILITY'], battleChirp:['UTILITY'], battleFocus:['UTILITY'],
   diveSnatch:['UTILITY','SIGNATURE'], stealShine:['UTILITY','SIGNATURE'], featherFlick:['UTILITY'], graceStep:['UTILITY'],
   savageKick:['HEAVY','SIGNATURE'], raptorKickFrenzy:['HEAVY','MULTI','SIGNATURE'], honkTerror:['CONTROL','SIGNATURE'],
@@ -7079,7 +7079,7 @@ registerAbilityAlias('honkTerror','gooseHonk','Honk Terror');
 registerAbilityAlias('heavyTalon','beakSlam','Heavy Talon');
 registerAbilityAlias('iceGuard','crowDefend','Ice Guard');
 registerAbilityAlias('bodySlam','beakSlam','Body Slam');
-registerAbilityAlias('rallyCall','victoryChant','Rally Call');
+registerAbilityAlias('rallyCall','victoryChant','Rally Call',{type:'utility',btnType:'utility'});
 registerAbilityAlias('kick','headWhip','Kick');
 registerAbilityAlias('trample','serpentCrusher','Trample');
 registerAbilityAlias('threatDisplay','intimidate','Threat Display');
@@ -7093,7 +7093,7 @@ registerAbilityAlias('fruitBomb','owlPsyche','Fruit Bomb');
 registerAbilityAlias('diveSnatch','fishSnatcher','Dive Snatch');
 registerAbilityAlias('savageKick','beakSlam','Savage Kick');
 registerAbilityAlias('skyStrike','deathDive','Sky Strike');
-registerAbilityAlias('dreadCall','dirge','Dread Call');
+registerAbilityAlias('dreadCall','dirge','Dread Call',{type:'utility',btnType:'utility',desc:'Dire call that pressures enemy focus and tempo.'});
 // Basic-move family aliases to keep starter identities distinct.
 registerAbilityAlias('swoopCut','dart','Swoop Cut',{isBasic:true,desc:'Striker basic. Quick cut with clean tempo pressure.'});
 registerAbilityAlias('glintJab','dart','Glint Jab',{isBasic:true,desc:'Trickster basic. Fast jab with slight setup pressure.'});
@@ -7102,6 +7102,68 @@ registerAbilityAlias('fruitSpit','mudshot','Fruit Spit',{isBasic:true,desc:'Mage
 registerAbilityAlias('bracePeck','gooseHonk','Brace Peck',{isBasic:true,desc:'Tank basic. Heavy peck that steadies the line.'});
 registerAbilityAlias('icebreakerHonk','gooseHonk','Icebreaker Honk',{isBasic:true,desc:'Tank basic. Chilling honk that cracks defenses.'});
 registerAbilityAlias('huntersJab','dart',"Hunter's Jab",{isBasic:true,desc:'Predator basic. Precise jab for clean finishing lines.'});
+registerAbilityAlias('needleJab','nectarJab','Needle Jab',{isBasic:true,desc:'Striker basic. Needle-fast jab with clean pressure.'});
+registerAbilityAlias('windFeint','evade','Wind Feint',{type:'utility',btnType:'utility'});
+registerAbilityAlias('predatorMark','featherRuffle','Predator Mark',{type:'utility',btnType:'utility'});
+registerAbilityAlias('sonicDash','swoop','Sonic Dash',{isBasic:true});
+registerAbilityAlias('blinkFlutter','evade','Blink Flutter',{type:'utility',btnType:'utility'});
+registerAbilityAlias('comboStrike','talonRake','Combo Strike',{type:'physical',btnType:'physical'});
+registerAbilityAlias('skyfallStrike','deathDive','Skyfall Strike',{type:'physical',btnType:'physical'});
+registerAbilityAlias('mockingSong','dirge','Mocking Song',{type:'utility',btnType:'utility'});
+registerAbilityAlias('stealTempo','stealShine','Steal Tempo',{type:'utility',btnType:'utility'});
+registerAbilityAlias('echoSong','shriekwave','Echo Song',{type:'spell',btnType:'spell'});
+registerAbilityAlias('mimicSong','birdBrain','Mimic Song',{type:'utility',btnType:'utility'});
+registerAbilityAlias('confuseChorus','dirge','Confuse Chorus',{type:'spell',btnType:'spell'});
+registerAbilityAlias('blindScreech','featherRuffle','Blind Screech',{type:'utility',btnType:'utility'});
+registerAbilityAlias('distractingChorus','taunt','Distracting Chorus',{type:'utility',btnType:'utility'});
+registerAbilityAlias('marshCall','mudLash','Marsh Call',{type:'spell',btnType:'spell'});
+registerAbilityAlias('bogWhisper','preen','Bog Whisper',{type:'utility',btnType:'utility'});
+registerAbilityAlias('rotChorus','sonicDirge','Rot Chorus',{type:'spell',btnType:'spell'});
+registerAbilityAlias('sunCall','owlPsyche','Sun Call',{type:'spell',btnType:'spell'});
+registerAbilityAlias('jungleChorus','taunt','Jungle Chorus',{type:'utility',btnType:'utility'});
+registerAbilityAlias('echoScreech','shriekwave','Echo Screech',{type:'spell',btnType:'spell'});
+registerAbilityAlias('nightfallSong','lullaby','Nightfall Song',{type:'utility',btnType:'utility'});
+registerAbilityAlias('fearChorus','dirge','Fear Chorus',{type:'spell',btnType:'spell'});
+registerAbilityAlias('piercingScreech','sonicDirge','Piercing Screech',{type:'spell',btnType:'spell'});
+registerAbilityAlias('stormChorus','owlPsyche','Storm Chorus',{type:'spell',btnType:'spell'});
+registerAbilityAlias('battleChorus','victoryChant','Battle Chorus',{type:'utility',btnType:'utility'});
+registerAbilityAlias('thunderScreech','sonicDirge','Thunder Screech',{type:'spell',btnType:'spell'});
+registerAbilityAlias('nightTalon','deathDive','Night Talon',{isBasic:true,type:'physical',btnType:'physical'});
+registerAbilityAlias('huntersCry','victoryChant',"Hunter's Cry",{type:'utility',btnType:'utility'});
+registerAbilityAlias('fleshTear','fleshRipper','Flesh Tear',{isBasic:true,type:'physical',btnType:'physical'});
+registerAbilityAlias('raptorDive','deathDive','Raptor Dive',{type:'physical',btnType:'physical'});
+registerAbilityAlias('executionTalon','beakSlam','Execution Talon',{type:'physical',btnType:'physical'});
+registerAbilityAlias('warStomp','trample','War Stomp',{type:'physical',btnType:'physical'});
+registerAbilityAlias('momentumCharge','chargeUp','Momentum Charge',{type:'utility',btnType:'utility'});
+registerAbilityAlias('crushingTalon','beakSlam','Crushing Talon',{type:'physical',btnType:'physical'});
+registerAbilityAlias('warCharge','trample','War Charge',{type:'physical',btnType:'physical'});
+registerAbilityAlias('sandKick','dustKick','Sand Kick',{type:'utility',btnType:'utility'});
+registerAbilityAlias('momentumStrike','savageKick','Momentum Strike',{type:'physical',btnType:'physical'});
+registerAbilityAlias('powerKick','kick','Power Kick',{isBasic:true,type:'physical',btnType:'physical'});
+registerAbilityAlias('stampedeStrike','trample','Stampede Strike',{type:'physical',btnType:'physical'});
+registerAbilityAlias('fearHonk','honkTerror','Fear Honk',{type:'utility',btnType:'utility'});
+registerAbilityAlias('wingShield','guard','Wing Shield',{type:'utility',btnType:'utility'});
+registerAbilityAlias('royalGuard','guard','Royal Guard',{type:'utility',btnType:'utility'});
+registerAbilityAlias('calmingSong','hum','Calming Song',{type:'utility',btnType:'utility'});
+registerAbilityAlias('snowWall','iceGuard','Snow Wall',{type:'utility',btnType:'utility'});
+registerAbilityAlias('tundraCall','rallyCall','Tundra Call',{type:'utility',btnType:'utility'});
+registerAbilityAlias('decorate','aerialPoop','Decorate',{isBasic:true,type:'utility',btnType:'utility'});
+registerAbilityAlias('inspireSong','victoryChant','Inspire Song',{type:'spell',btnType:'spell'});
+registerAbilityAlias('charmDisplay','taunt','Charm Display',{type:'utility',btnType:'utility'});
+registerAbilityAlias('focusCall','battleFocus','Focus Call',{type:'utility',btnType:'utility'});
+registerAbilityAlias('laughingCall','theJoker','Laughing Call',{type:'spell',btnType:'spell'});
+registerAbilityAlias('dizzyChorus','dirge','Dizzy Chorus',{type:'utility',btnType:'utility'});
+registerAbilityAlias('echoLaugh','shriekwave','Echo Laugh',{type:'spell',btnType:'spell'});
+registerAbilityAlias('skyTalon','skyStrike','Sky Talon',{isBasic:true,type:'physical',btnType:'physical'});
+registerAbilityAlias('rendingStrike','deathDive','Rending Strike',{type:'physical',btnType:'physical'});
+registerAbilityAlias('freedomCry','victoryChant','Freedom Cry',{type:'utility',btnType:'utility'});
+registerAbilityAlias('galeStrike','supersonic','Gale Strike',{isBasic:true,type:'physical',btnType:'physical'});
+registerAbilityAlias('oceanCall','wingStorm','Ocean Call',{type:'spell',btnType:'spell'});
+registerAbilityAlias('windChorus','hum','Wind Chorus',{type:'utility',btnType:'utility'});
+registerAbilityAlias('stormSong','sonicDirge','Storm Song',{type:'spell',btnType:'spell'});
+registerAbilityAlias('nightfallCall','dukeDecree','Nightfall Call',{type:'spell',btnType:'spell'});
+registerAbilityAlias('courtSummon','dukeWardens','Court Summon',{type:'utility',btnType:'utility'});
+registerAbilityAlias('verdict','dukeRiverGrip','Verdict',{type:'spell',btnType:'spell'});
 
 async function playerAction(ab,fromQueue=false) {
   const now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
