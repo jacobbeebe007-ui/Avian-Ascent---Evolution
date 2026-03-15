@@ -3426,6 +3426,13 @@ function buildBirdGrid() {
     return !!(b && b.stats && Number.isFinite(b.stats.hp) && Number.isFinite(b.stats.atk) && Number.isFinite(b.stats.def));
   });
   if(classFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([key,b])=>classToRoleId(b.class,key)===classFilter);
+
+  // Hard recovery: if strict stat validation gets stripped by legacy patch code,
+  // render from the full roster model instead of collapsing to Sparrow-only.
+  if(safeBirdEntries.length<=1){
+    safeBirdEntries = Object.entries(BIRDS).filter(([,b])=>!!(b && typeof b==='object' && b.name));
+    if(classFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([key,b])=>classToRoleId(b.class,key)===classFilter);
+  }
   const fallbackStarters = ['sparrow','goose','blackbird','crow','macaw','robin'];
 
   const groups = {};

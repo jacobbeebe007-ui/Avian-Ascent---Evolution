@@ -1408,19 +1408,6 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
 }
 
 
-/* Inline expanded selector cards (replaces right-side select panel) */
-.sel-layout{grid-template-columns:1fr !important;}
-.sel-right{display:none !important;}
-#ascent-panel{display:none !important;}
-.bird-card{position:relative;}
-.bird-card-expanded{
-  margin-top:10px;
-  border-top:1px solid rgba(201,168,76,.25);
-  padding-top:10px;
-  text-align:center;
-}
-.bird-card-expanded .cta{width:100%;max-width:360px;margin:10px auto 0;display:block;}
-
 /* Mobile landscape support */
 @media (max-width: 960px) and (orientation: landscape){
   .battle-layout{grid-template-rows:auto auto 1fr auto;gap:8px;}
