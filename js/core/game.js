@@ -3230,6 +3230,7 @@ let shopPurchaseMade = false;
 
 function initSelection() {
   const ui=ensureUIState();
+  if(!ui.selectionView) ui.selectionView='all';
   migrateLegacySelectionView(ui);
   if(!ui.expandedBird && G.selected) ui.expandedBird=G.selected;
   applyUIStateToDOM();
@@ -3396,7 +3397,7 @@ function selectDifficulty(id) {
 
 function setSelView(view, btn) {
   const ui=ensureUIState();
-  ui.selectionView = String(view||'size');
+  ui.selectionView = String(view||'all');
   migrateLegacySelectionView(ui);
   buildSelectionViewButtons();
   buildBirdGrid();
@@ -3404,9 +3405,10 @@ function setSelView(view, btn) {
 
 function buildBirdGrid() {
   const ui=ensureUIState();
+  if(!ui.selectionView) ui.selectionView='all';
   migrateLegacySelectionView(ui);
   const selectedView=ui.selectionView;
-  const view = String(selectedView).startsWith('role:') ? 'all' : selectedView;
+  const view = String(selectedView).startsWith('role:') ? 'all' : (selectedView==='size' ? 'size' : 'all');
   const classFilter = String(selectedView).startsWith('role:') ? (String(selectedView).split(':')[1]||'all') : 'all';
 
   const grid = document.getElementById('bird-grid');
@@ -3550,8 +3552,9 @@ function selectBird(key, el) {
   const ui=ensureUIState();
   G.selected = key;
   ui.expandedBird = key;
-  // Re-render cards so selected highlighting and the showcase panel stay in sync.
-  initSelectionSafe();
+  document.querySelectorAll('#bird-grid .bird-card.selected').forEach(n=>n.classList.remove('selected'));
+  if(el && el.classList) el.classList.add('selected');
+  updateAscentPanel(key);
 }
 
 
@@ -3612,6 +3615,8 @@ function updateAscentPanel(key) {
     panel.innerHTML='<div class="ascent-empty">← Select a bird to begin your ascent</div>';
     return;
   }
+
+  G.selected = key;
 
   const cls = classToRoleId(bird.class);
   const sizeClass = getUISizeClass(bird, 'panel');
