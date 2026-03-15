@@ -2686,7 +2686,7 @@ function getGrowthStageForLevel(lv){
   return GROWTH.FLETCHLING;
 }
 const MAX_PLAYER_ACTIONS_PER_TURN=6;
-const MAX_ENEMY_ACTIONS_PER_TURN=6;
+const MAX_ENEMY_ACTIONS_PER_TURN=3;
 const MAX_ENERGY_GAIN_PER_TURN=2;
 
 // ============================================================
@@ -3686,7 +3686,7 @@ function updateAscentPanel(key) {
   const classLabel=idToClassLabel(cls);
   const sizeLabel=SIZE_LABELS[bird.size||'medium']||bird.size;
   const startEn=(ENERGY_BY_SIZE[(bird.size||'medium').toLowerCase()] ?? 3);
-  const maxEn=startEn;
+  const maxEn=startEn+3;
   const cc=bird.stats.critChance||5;
   const cd=1.5;
   const roleSummary={
@@ -3708,42 +3708,86 @@ function updateAscentPanel(key) {
     return `<div class="ascent-ability-row"><div class="ascent-ability-top"><span class="ascent-ability-name">${t.name||id}</span><span class="ascent-ability-en">${en} EN</span></div><div class="ascent-ability-tags">${slotTag} · ${type}</div><div class="ascent-ability-desc">${short}</div></div>`;
   }).join('');
 
-  panel.innerHTML = `
-    <div class="showcase-top">
-      <div class="ascent-panel-portrait">${renderBirdIconHTML(key, sizeClass, false)}</div>
-      <div class="showcase-head">
-        <div class="ascent-panel-name">${bird.name}</div>
-        <div class="ascent-panel-tagline">${bird.tagline||''}</div>
-        <div class="showcase-meta">
-          <span class="class-badge class-${cls}">${classLabel.toUpperCase()}</span>
-          <span class="bird-size-chip">${sizeLabel}</span>
-          <span class="bird-size-chip">EN ${startEn}/${maxEn}</span>
+  const isCompactSelectMobile = document.body.classList.contains('ui-mobile-mode') && window.innerWidth < 900;
+  if(isCompactSelectMobile){
+    panel.innerHTML = `
+      <div class="mobile-select-top">
+        <div class="ascent-panel-portrait">${renderBirdIconHTML(key, sizeClass, false)}</div>
+        <div class="showcase-head">
+          <div class="ascent-panel-name">${bird.name}</div>
+          <div class="showcase-meta">
+            <span class="class-badge class-${cls}">${classLabel.toUpperCase()}</span>
+            <span class="bird-size-chip">${sizeLabel}</span>
+            <span class="bird-size-chip">EN ${startEn}/${maxEn}</span>
+          </div>
+        </div>
+      </div>`;
+
+    const mobileDetailsAnchor=document.getElementById('mobile-select-details-anchor');
+    if(mobileDetailsAnchor){
+      mobileDetailsAnchor.innerHTML=`
+        <details class="mobile-select-drawer" open>
+          <summary>Details</summary>
+          <div class="showcase-section"><div class="showcase-title">★ Passive</div><div class="ascent-panel-passive"><strong>${bird.passive?.name||'—'}:</strong> ${bird.passive?.desc||'No passive listed.'}</div></div>
+          <div class="showcase-section"><div class="showcase-title">🪶 Starting Abilities</div><div class="ascent-ability-list">${startAbilityDetails}</div></div>
+          <div class="showcase-section"><div class="showcase-title">📊 Full Stats</div>
+            <div class="showcase-stats-grid">
+              <div><span>HP</span><strong>${bird.stats.hp}</strong></div>
+              <div><span>ATK</span><strong>${bird.stats.atk}</strong></div>
+              <div><span>MATK</span><strong>${bird.stats.matk||0}</strong></div>
+              <div><span>DEF</span><strong>${bird.stats.def}</strong></div>
+              <div><span>MDEF</span><strong>${bird.stats.mdef||0}</strong></div>
+              <div><span>SPD</span><strong>${bird.stats.spd}</strong></div>
+              <div><span>ACC</span><strong>${bird.stats.acc}%</strong></div>
+              <div><span>CC</span><strong>${cc}%</strong></div>
+              <div><span>CD</span><strong>${cd.toFixed(1)}×</strong></div>
+              <div><span>Starting EN</span><strong>${startEn}</strong></div>
+              <div><span>Max EN</span><strong>${maxEn}</strong></div>
+            </div>
+          </div>
+        </details>
+        <button class="cta showcase-cta mobile-start-run" onclick="startSelectedBird('${key}')">Start Run</button>`;
+    }
+  } else {
+    const mobileDetailsAnchor=document.getElementById('mobile-select-details-anchor');
+    if(mobileDetailsAnchor) mobileDetailsAnchor.innerHTML='';
+    panel.innerHTML = `
+      <div class="showcase-top">
+        <div class="ascent-panel-portrait">${renderBirdIconHTML(key, sizeClass, false)}</div>
+        <div class="showcase-head">
+          <div class="ascent-panel-name">${bird.name}</div>
+          <div class="ascent-panel-tagline">${bird.tagline||''}</div>
+          <div class="showcase-meta">
+            <span class="class-badge class-${cls}">${classLabel.toUpperCase()}</span>
+            <span class="bird-size-chip">${sizeLabel}</span>
+            <span class="bird-size-chip">EN ${startEn}/${maxEn}</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="showcase-bottom">
-      <div class="showcase-section"><div class="showcase-title">★ Passive</div><div class="ascent-panel-passive"><strong>${bird.passive?.name||'—'}:</strong> ${bird.passive?.desc||'No passive listed.'}</div></div>
-      <div class="showcase-lower">
-      <div class="showcase-section"><div class="showcase-title">🪶 Starting Abilities</div><div class="ascent-ability-list">${startAbilityDetails}</div></div>
-      <div class="showcase-section"><div class="showcase-title">📊 Full Stats</div>
-        <div class="showcase-stats-grid">
-          <div><span>HP</span><strong>${bird.stats.hp}</strong></div>
-          <div><span>ATK</span><strong>${bird.stats.atk}</strong></div>
-          <div><span>MATK</span><strong>${bird.stats.matk||0}</strong></div>
-          <div><span>DEF</span><strong>${bird.stats.def}</strong></div>
-          <div><span>MDEF</span><strong>${bird.stats.mdef||0}</strong></div>
-          <div><span>SPD</span><strong>${bird.stats.spd}</strong></div>
-          <div><span>ACC</span><strong>${bird.stats.acc}%</strong></div>
-          <div><span>CC</span><strong>${cc}%</strong></div>
-          <div><span>CD</span><strong>${cd.toFixed(1)}×</strong></div>
-          <div><span>Starting EN</span><strong>${startEn}</strong></div>
-          <div><span>Max EN</span><strong>${maxEn}</strong></div>
+      <div class="showcase-bottom">
+        <div class="showcase-section"><div class="showcase-title">★ Passive</div><div class="ascent-panel-passive"><strong>${bird.passive?.name||'—'}:</strong> ${bird.passive?.desc||'No passive listed.'}</div></div>
+        <div class="showcase-lower">
+        <div class="showcase-section"><div class="showcase-title">🪶 Starting Abilities</div><div class="ascent-ability-list">${startAbilityDetails}</div></div>
+        <div class="showcase-section"><div class="showcase-title">📊 Full Stats</div>
+          <div class="showcase-stats-grid">
+            <div><span>HP</span><strong>${bird.stats.hp}</strong></div>
+            <div><span>ATK</span><strong>${bird.stats.atk}</strong></div>
+            <div><span>MATK</span><strong>${bird.stats.matk||0}</strong></div>
+            <div><span>DEF</span><strong>${bird.stats.def}</strong></div>
+            <div><span>MDEF</span><strong>${bird.stats.mdef||0}</strong></div>
+            <div><span>SPD</span><strong>${bird.stats.spd}</strong></div>
+            <div><span>ACC</span><strong>${bird.stats.acc}%</strong></div>
+            <div><span>CC</span><strong>${cc}%</strong></div>
+            <div><span>CD</span><strong>${cd.toFixed(1)}×</strong></div>
+            <div><span>Starting EN</span><strong>${startEn}</strong></div>
+            <div><span>Max EN</span><strong>${maxEn}</strong></div>
+          </div>
         </div>
-      </div>
-      <div class="showcase-section"><div class="showcase-title">🧭 Playstyle</div><div class="showcase-summary">${roleSummary}</div></div>
-      <button class="cta showcase-cta" onclick="startSelectedBird('${key}')">🪽 Select ${bird.name}</button>
-      </div>
-    </div>`;
+        <div class="showcase-section"><div class="showcase-title">🧭 Playstyle</div><div class="showcase-summary">${roleSummary}</div></div>
+        <button class="cta showcase-cta" onclick="startSelectedBird('${key}')">🪽 Select ${bird.name}</button>
+        </div>
+      </div>`;
+  }
   panel.classList.remove('is-empty');
   panel.classList.add('is-filled');
 }
@@ -8849,7 +8893,6 @@ function checkDeath() {
       if(_kookBd&&_kookBd.passive&&_kookBd.passive.id==='ambushMaster') _kookBd.passive.onBossKill(G.player);
     }
     logMsg(`✨ ${G.enemy.name} defeated!`,'crit');
-    showBattleCaption('Bird Slain');
     setTimeout(postCombat,700);return true;
   }
   if(G.player.stats.hp<=0){
