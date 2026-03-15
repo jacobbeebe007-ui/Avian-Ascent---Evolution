@@ -966,7 +966,7 @@ const BIRDS = {
     name:'Seagull', portraitKey:'seagull', tagline:'Screeching scavenger. Flock dive-bombs trash & foes.',
     size:'medium', class:'trickster',
     unlockRequires:'unlock_seagull',
-    unlockHint:'Reach level 21 in Endless mode with any Mage.',
+    unlockHint:'Reach level 21 in Endless mode with any Singer.',
     stats:{hp:36,maxHp:36,atk:6,def:3,spd:8,dodge:24,acc:84,mdef:9,matk:14,critChance:8},
     color:'#b0c8d8',
     startAbilities:['featherFlick','diveSnatch','blindScreech','distractingChorus'],
@@ -3419,21 +3419,6 @@ function buildBirdGrid() {
   if(classFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([key,b])=>classToRoleId(b.class,key)===classFilter);
   const fallbackStarters = ['sparrow','goose','blackbird','crow','macaw','robin'];
 
-  // Compute global max stats for bars
-  const globalMax={HP:1,ATK:1,DEF:1,SPD:1,Dodge:1,MDodge:1,ACC:1,Crit:1,MATK:1,MDEF:1};
-  safeBirdEntries.forEach(([,b])=>{
-    if(b.stats.hp>globalMax.HP)globalMax.HP=b.stats.hp;
-    if(b.stats.atk>globalMax.ATK)globalMax.ATK=b.stats.atk;
-    if(b.stats.def>globalMax.DEF)globalMax.DEF=b.stats.def;
-    if(b.stats.spd>globalMax.SPD)globalMax.SPD=b.stats.spd;
-    if(b.stats.dodge>globalMax.Dodge)globalMax.Dodge=b.stats.dodge;
-    if((b.stats.dodge||0)>globalMax.MDodge)globalMax.MDodge=b.stats.dodge;
-    if(b.stats.acc>globalMax.ACC)globalMax.ACC=b.stats.acc;
-    if(b.stats.critChance&&b.stats.critChance>globalMax.Crit)globalMax.Crit=b.stats.critChance;
-    if(b.stats.matk&&b.stats.matk>globalMax.MATK)globalMax.MATK=b.stats.matk;
-    if(b.stats.mdef&&b.stats.mdef>globalMax.MDEF)globalMax.MDEF=b.stats.mdef;
-  });
-
   const groups = {};
   const orderedKeys = view==='size' ? SIZE_ORDER : ROLE_ORDER;
   const groupLabels = view==='size' ? SIZE_LABELS : ROLE_LABELS;
@@ -3460,7 +3445,7 @@ function buildBirdGrid() {
       totalBirds++;
       const locked = bird.unlockRequires && !isUnlocked(bird.unlockRequires);
       if(!locked) totalUnlocked++;
-      row.appendChild(buildBirdCard(key,bird,locked,globalMax));
+      row.appendChild(buildBirdCard(key,bird,locked));
     });
     section.appendChild(row);
     grid.appendChild(section);
@@ -3488,7 +3473,7 @@ function buildBirdGrid() {
       totalBirds++;
       const locked = bird.unlockRequires && !isUnlocked(bird.unlockRequires);
       if(!locked) totalUnlocked++;
-      const card = buildBirdCard(key, bird, locked, globalMax);
+      const card = buildBirdCard(key, bird, locked);
       row.appendChild(card);
     });
 
@@ -3498,6 +3483,9 @@ function buildBirdGrid() {
 
   const label = document.getElementById('bird-count-label');
   if(label) label.textContent = `${totalUnlocked}/${totalBirds} available${classFilter!=='all' ? ` · ${idToClassLabel(classFilter)}`:''}`;
+
+  const focusKey=ui.expandedBird||G.selected||safeBirdEntries?.[0]?.[0]||'';
+  if(focusKey) updateAscentPanel(focusKey);
 
   // Hard fallback: never allow an empty/brick select screen.
   if(totalBirds===0){
@@ -3509,7 +3497,7 @@ function buildBirdGrid() {
     fallbackStarters.forEach(key=>{
       const bird=BIRDS[key];
       if(!bird||!bird.stats) return;
-      row.appendChild(buildBirdCard(key,bird,false,globalMax));
+      row.appendChild(buildBirdCard(key,bird,false));
     });
     section.appendChild(row);
     grid.appendChild(section);
@@ -3525,30 +3513,7 @@ document.addEventListener('click', (e)=>{
 });
 
 
-function buildBirdExpandedContent(key, bird){
-  const cls = classToRoleId(bird.class);
-  const sizeClass = getUISizeClass(bird, 'panel');
-  const tags = (bird.startAbilities||[]).map(id=>`<span class="ascent-ab-tag">${ABILITY_TEMPLATES[id]?ABILITY_TEMPLATES[id].name:id}</span>`).join('');
-  const startAbilityDetails=(bird.startAbilities||[]).map(id=>{
-    const t=ABILITY_TEMPLATES[id];
-    if(!t) return `• <span style='color:var(--text)'>${id}</span>`;
-    const baseDesc=t.desc||'No description available.';
-    const lv1=(t.levels&&t.levels[0]&&t.levels[0].desc)?t.levels[0].desc:'No effect data.';
-    return `• <span style='color:var(--text)'>${t.name||id}</span><br><span style='color:var(--text-dim)'>Attack: ${baseDesc}</span><br><span style='color:var(--gold-light)'>Effect/Dmg (Lv1): ${lv1}</span>`;
-  }).join('<br><br>');
-  return `
-    <div class="bird-card-expanded">
-      <div class="ascent-panel-tagline">${bird.tagline||''}</div>
-      <div class="ascent-panel-class"><span class="class-badge class-${cls}">${idToClassLabel(cls).toUpperCase()}</span> · ${SIZE_LABELS[bird.size||'medium']||bird.size}</div>
-      ${bird.passive?`<div class="ascent-panel-passive"><strong>★ ${bird.passive.name}:</strong> ${bird.passive.desc}</div>`:''}
-      <div class="ascent-abilities">${tags}</div>
-      <div style="text-align:left;font-size:.72rem;color:var(--text);background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px;margin:8px 0;"><strong>Full Stats:</strong> HP ${bird.stats.hp} · ATK ${bird.stats.atk} · DEF ${bird.stats.def} · SPD ${bird.stats.spd} · ACC ${bird.stats.acc}% · Dodge ${bird.stats.dodge}% · MATK ${bird.stats.matk||0} · MDEF ${bird.stats.mdef||0} · Crit ${bird.stats.critChance||0}%</div>
-      <div style="text-align:left;font-size:.7rem;color:var(--text-dim);margin:6px 0 10px;"><strong style="color:var(--gold-light)">Starting Attacks:</strong><br>${startAbilityDetails}</div>
-      <button class="cta" onclick="event.stopPropagation();startGame()">🪽 Take Flight as ${bird.name}</button>
-    </div>`;
-}
-
-function buildBirdCard(key, bird, locked, globalMax) {
+function buildBirdCard(key, bird, locked) {
   const card = document.createElement('div');
   const ui=ensureUIState();
   card.className = 'bird-card' + (locked ? ' bird-locked' : '') + (ui.expandedBird===key?' selected':'');
@@ -3556,24 +3521,6 @@ function buildBirdCard(key, bird, locked, globalMax) {
 
   const cls = classToRoleId(bird.class);
   const sizeClass = getUISizeClass(bird, 'select');
-
-  const keyStats = [
-    {k:'HP', v:bird.stats.hp, max:globalMax.HP, suffix:''},
-    {k:'ATK', v:bird.stats.atk, max:globalMax.ATK, suffix:''},
-    {k:'DEF', v:bird.stats.def, max:globalMax.DEF, suffix:''},
-    {k:'SPD', v:bird.stats.spd, max:globalMax.SPD, suffix:''},
-    {k:'Dodge', v:bird.stats.dodge, max:globalMax.Dodge, suffix:'%'},
-    {k:'MDodge', v:(bird.stats.mdodge??bird.stats.dodge??0), max:globalMax.MDodge, suffix:'%'},
-    {k:'ACC', v:bird.stats.acc, max:globalMax.ACC, suffix:'%'},
-    {k:'MATK', v:(bird.stats.matk||0), max:globalMax.MATK, suffix:''},
-    {k:'MDEF', v:(bird.stats.mdef||0), max:globalMax.MDEF, suffix:''},
-    {k:'Crit', v:(bird.stats.critChance||0), max:Math.max(globalMax.Crit||1,1), suffix:'%'},
-  ];
-  const bars = keyStats.map(({k,v,max,suffix})=>{
-    const pct=Math.min(100,(v/Math.max(max||1,1))*100);
-    const fill=locked?'#333':(k==='Dodge'||k==='MDodge'||k==='ACC'||k==='Crit'?'#c9a84c':(bird.color||'#6a8ae8'));
-    return `<div class="stat-row compact"><div class="stat-lbl">${k}</div><div class="stat-bg"><div class="stat-fill" style="width:${pct}%;background:${fill}"></div></div><div class="stat-val" style="${locked?'color:#444':''}">${v}${suffix}</div></div>`;
-  }).join('');
 
   const unlockLabel = bird.unlockHint || '🔒 Locked';
 
@@ -3587,16 +3534,14 @@ function buildBirdCard(key, bird, locked, globalMax) {
       <div class="bird-nm" style="color:#555;font-size:.8rem;">${bird.name}</div>
       <div class="lock-overlay"><span class="lock-icon" style="font-size:1rem;">🔒</span><div class="lock-label" style="font-size:.6rem;color:#555;line-height:1.3;">${unlockLabel}</div></div>`;
   } else {
-    const expanded = (ui.expandedBird===key) ? buildBirdExpandedContent(key,bird) : '';
     card.innerHTML = `
       <div class="bird-card-head">
         <span class="class-badge class-${cls}">${idToClassLabel(cls).toUpperCase()}</span>
         <span class="bird-size-chip">${SIZE_LABELS[bird.size||'medium']||bird.size}</span>
       </div>
-      <div style="display:flex;justify-content:center;margin:2px auto 6px;">${renderBirdIconHTML(key,sizeClass,false)}</div>
+      <div style="display:flex;justify-content:center;margin:4px auto 8px;">${renderBirdIconHTML(key,sizeClass,false)}</div>
       <div class="bird-nm">${bird.name}</div>
-      <div class="stat-bars">${bars}</div>
-      ${expanded}`;
+      <div class="bird-tagline-mini">${bird.tagline||''}</div>`;
   }
   return card;
 }
@@ -3605,7 +3550,7 @@ function selectBird(key, el) {
   const ui=ensureUIState();
   G.selected = key;
   ui.expandedBird = key;
-  // Re-render cards so the selected card expands inline (no side panel/auto-scroll).
+  // Re-render cards so selected highlighting and the showcase panel stay in sync.
   initSelectionSafe();
 }
 
@@ -3670,26 +3615,66 @@ function updateAscentPanel(key) {
 
   const cls = classToRoleId(bird.class);
   const sizeClass = getUISizeClass(bird, 'panel');
-  const tags = (bird.startAbilities||[]).map(id=>`<span class="ascent-ab-tag">${ABILITY_TEMPLATES[id]?ABILITY_TEMPLATES[id].name:id}</span>`).join('');
-  const startAbilityDetails=(bird.startAbilities||[]).map(id=>{
-    const t=ABILITY_TEMPLATES[id];
-    if(!t) return `• <span style='color:var(--text)'>${id}</span>`;
-    const baseDesc=t.desc||'No description available.';
-    const lv1=(t.levels&&t.levels[0]&&t.levels[0].desc)?t.levels[0].desc:'No effect data.';
-    return `• <span style='color:var(--text)'>${t.name||id}</span><br><span style='color:var(--text-dim)'>Attack: ${baseDesc}</span><br><span style='color:var(--gold-light)'>Effect/Dmg (Lv1): ${lv1}</span>`;
-  }).join('<br><br>');
+  const classLabel=idToClassLabel(cls);
+  const sizeLabel=SIZE_LABELS[bird.size||'medium']||bird.size;
+  const startEn=(ENERGY_BY_SIZE[(bird.size||'medium').toLowerCase()] ?? 3);
+  const maxEn=startEn;
+  const cc=bird.stats.critChance||5;
+  const cd=1.5;
+  const roleSummary={
+    striker:'Fast combo attacker',
+    bruiser:'Heavy bruiser with hit pressure',
+    tank:'Defensive frontliner',
+    trickster:'Debuff-focused trickster',
+    predator:'Execute-focused predator',
+    singer:'Song-based controller',
+  }[cls]||'Adaptive fighter';
+
+  const startAbilityDetails=(bird.startAbilities||[]).map((id,idx)=>{
+    const t=ABILITY_TEMPLATES[id]||{};
+    const en=Array.isArray(t.energyByLevel)?(t.energyByLevel[0]??t.energyCost??0):(t.energyCost??0);
+    const type=String(t.btnType||t.type||'utility').toUpperCase();
+    const tagOrder=['BASIC','SIGNATURE','UTILITY','CLASS'];
+    const slotTag=tagOrder[idx]||'CLASS';
+    const short=((t.levels&&t.levels[0]&&t.levels[0].desc)||t.desc||'No description').trim();
+    return `<div class="ascent-ability-row"><div class="ascent-ability-top"><span class="ascent-ability-name">${t.name||id}</span><span class="ascent-ability-en">${en} EN</span></div><div class="ascent-ability-tags">${slotTag} · ${type}</div><div class="ascent-ability-desc">${short}</div></div>`;
+  }).join('');
 
   panel.innerHTML = `
-    <div class="ascent-panel-portrait">${renderBirdIconHTML(key, sizeClass, false)}</div>
-    <div class="ascent-panel-name">${bird.name}</div>
-    <div class="ascent-panel-tagline">${bird.tagline}</div>
-    <div class="ascent-panel-class"><span class="class-badge class-${cls}">${idToClassLabel(cls).toUpperCase()}</span> · ${SIZE_LABELS[bird.size||'medium']||bird.size}</div>
-    ${bird.passive?`<div class="ascent-panel-passive"><strong>★ ${bird.passive.name}:</strong> ${bird.passive.desc}</div>`:''}
-    <div class="ascent-abilities">${tags}</div>
-    <div style="text-align:left;font-size:.72rem;color:var(--text);background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px;margin:8px 0;"><strong>Full Stats:</strong> HP ${bird.stats.hp} · ATK ${bird.stats.atk} · DEF ${bird.stats.def} · SPD ${bird.stats.spd} · ACC ${bird.stats.acc}% · Dodge ${bird.stats.dodge}% · MATK ${bird.stats.matk||0} · MDEF ${bird.stats.mdef||0} · Crit ${bird.stats.critChance||0}%</div>
-    <div style="text-align:left;font-size:.7rem;color:var(--text-dim);margin:6px 0 10px;"><strong style="color:var(--gold-light)">Starting Attacks:</strong><br>${startAbilityDetails}</div>
-    <button class="cta" onclick="startGame()">🪽 Take Flight as ${bird.name}</button>
-    <div style="margin-top:8px;">
+    <div class="showcase-top">
+      <div class="ascent-panel-portrait">${renderBirdIconHTML(key, sizeClass, false)}</div>
+      <div class="showcase-head">
+        <div class="ascent-panel-name">${bird.name}</div>
+        <div class="ascent-panel-tagline">${bird.tagline||''}</div>
+        <div class="showcase-meta">
+          <span class="class-badge class-${cls}">${classLabel.toUpperCase()}</span>
+          <span class="bird-size-chip">${sizeLabel}</span>
+          <span class="bird-size-chip">EN ${startEn}/${maxEn}</span>
+        </div>
+      </div>
+    </div>
+    <div class="showcase-bottom">
+      <div class="showcase-section"><div class="showcase-title">★ Passive</div><div class="ascent-panel-passive"><strong>${bird.passive?.name||'—'}:</strong> ${bird.passive?.desc||'No passive listed.'}</div></div>
+      <div class="showcase-lower">
+      <div class="showcase-section"><div class="showcase-title">🪶 Starting Abilities</div><div class="ascent-ability-list">${startAbilityDetails}</div></div>
+      <div class="showcase-section"><div class="showcase-title">📊 Full Stats</div>
+        <div class="showcase-stats-grid">
+          <div><span>HP</span><strong>${bird.stats.hp}</strong></div>
+          <div><span>ATK</span><strong>${bird.stats.atk}</strong></div>
+          <div><span>MATK</span><strong>${bird.stats.matk||0}</strong></div>
+          <div><span>DEF</span><strong>${bird.stats.def}</strong></div>
+          <div><span>MDEF</span><strong>${bird.stats.mdef||0}</strong></div>
+          <div><span>SPD</span><strong>${bird.stats.spd}</strong></div>
+          <div><span>ACC</span><strong>${bird.stats.acc}%</strong></div>
+          <div><span>CC</span><strong>${cc}%</strong></div>
+          <div><span>CD</span><strong>${cd.toFixed(1)}×</strong></div>
+          <div><span>Starting EN</span><strong>${startEn}</strong></div>
+          <div><span>Max EN</span><strong>${maxEn}</strong></div>
+        </div>
+      </div>
+      <div class="showcase-section"><div class="showcase-title">🧭 Playstyle</div><div class="showcase-summary">${roleSummary}</div></div>
+      <button class="cta showcase-cta" onclick="startGame()">🪽 Select ${bird.name}</button>
+      </div>
     </div>`;
   panel.classList.remove('is-empty');
   panel.classList.add('is-filled');
@@ -10159,7 +10144,7 @@ const ABILITIES_REFERENCE = {
   stormCall:{desc:'High-impact spell cast.',effect:'Heavy magic damage with setup payoff.'},
   dirgeOfDread:{desc:'Control song pattern.',effect:'Fear and weaken pressure over short windows.'},
   pinionVolley:{desc:'Predator multi-hit tool.',effect:'Repeated hits with armor-piercing pressure.'},
-  bleakBeak:{desc:'Support spell/basic hybrid.',effect:'Reliable low-cost spell chip and setup.'},
+  bleakBeak:{desc:'Singer spell/basic hybrid.',effect:'Reliable low-cost spell chip and setup.'},
 };
 
 const ENEMY_BIRD_DATA = [
@@ -10288,7 +10273,7 @@ function buildRefGuide() {
 
   const mechanics=`<div class="ref-skills-grid">
     ${card('Energy & Cooldowns','Main attacks are free unless spells. Abilities spend energy and many skills have cooldowns.',true,'core')}
-    ${card('Role Taxonomy','Birds are grouped by roles: Striker, Bruiser, Tank, Trickster, Predator, Support.',true,'roles')}
+    ${card('Role Taxonomy','Birds are grouped by roles: Striker, Bruiser, Tank, Trickster, Predator, Singer.',true,'roles')}
     ${card('Passive Evolution (Endless)','In Endless mode, passives evolve at milestones with offensive vs utility choices.',true,'endless')}
     ${card('Enemy AI Profiles','Enemy personalities (aggressive, tactical, control, tank, predator, etc.) bias action planning.',true,'ai')}
     ${card('Codex Unlocks','Entries unlock when seen/used during runs. Use search and Show Locked to browse all.',true,'codex')}
