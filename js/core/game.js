@@ -156,7 +156,7 @@ const ABILITY_TEMPLATES = {
 
   dart:{
     id:'dart', name:'Dart', type:'physical', btnType:'physical',
-    desc:'Fast reliable strike. Assassin basic with light Weaken pressure.', ailments:[],
+    desc:'Fast reliable strike. Striker basic with light Weaken pressure.', ailments:[],
     baseMissChance:12, baseDmgMult:1.0,
     energyByLevel:[1,1,1,1],
     energyCost:1,
@@ -432,7 +432,7 @@ const ABILITY_TEMPLATES = {
     id:'shadowJab', name:'Shadow Jab', type:'physical', btnType:'physical',
     isNeutral:false, allowedClasses:['singer'],
     energyByLevel:[1,1,1,1], energyCost:1, cooldownByLevel:[0,0,0,0],
-    desc:'Mage basic strike. Slightly low damage with light Fear pressure.', ailments:[],
+    desc:'Singer basic strike. Slightly low damage with light Fear pressure.', ailments:[],
     levels:[
       {lv:1, desc:'80% damage + 15% Fear', newAilment:'feared', ailChance:15},
       {lv:2, desc:'90% damage + 20% Fear', ailChance:20},
@@ -446,7 +446,7 @@ const ABILITY_TEMPLATES = {
     isNeutral:false, allowedClasses:['trickster','striker'],
     energyByLevel:[1,1,1,1], cooldownByLevel:[1,1,1,1],
     piercePctByLevel:[0.25,0.30,0.35,0.40],
-    desc:'Ranger payoff basic-skill hybrid. Two reliable piercing hits.',
+    desc:'Striker payoff basic-skill hybrid. Two reliable piercing hits.',
     levels:[
       {lv:1, desc:'2×52% hits, pierce 25% DEF'},
       {lv:2, desc:'2×60% hits, pierce 30% DEF'},
@@ -498,7 +498,7 @@ const ABILITY_TEMPLATES = {
     id:'skyHymn', name:'Sky Hymn', type:'spell', btnType:'spell',
     isNeutral:false, allowedClasses:['singer'],
     energyByLevel:[1,1,2,2], cooldownByLevel:[2,2,2,3],
-    desc:'Support song with small healing and momentum. Reliable, not explosive.', ailments:[],
+    desc:'Singer song with small healing and momentum. Reliable, not explosive.', ailments:[],
     levels:[
       {lv:1, desc:'Small heal + momentum'},
       {lv:2, desc:'Moderate heal + momentum'},
@@ -511,7 +511,7 @@ const ABILITY_TEMPLATES = {
     id:'marshHex', name:'Marsh Hex', type:'spell', btnType:'spell',
     isNeutral:false, allowedClasses:['singer'],
     energyByLevel:[2,2,3,3], cooldownByLevel:[2,2,3,3],
-    desc:'Mage payoff spell. Strong debuffing burst, not instant-delete damage.', ailments:[],
+    desc:'Singer payoff spell. Strong debuffing burst, not instant-delete damage.', ailments:[],
     levels:[
       {lv:1, desc:'118% MATK + Weaken/Fear'},
       {lv:2, desc:'132% MATK + stronger debuffs'},
@@ -537,7 +537,7 @@ const ABILITY_TEMPLATES = {
     id:'nightChill', name:'Night Chill', type:'spell', btnType:'spell',
     isNeutral:false, allowedClasses:['singer'],
     energyByLevel:[1,1,2,2], cooldownByLevel:[2,2,2,2],
-    desc:'Mage setup spell. Moderate damage with reliable Slow/Chilled pressure.', ailments:[],
+    desc:'Singer setup spell. Moderate damage with reliable Slow/Chilled pressure.', ailments:[],
     levels:[
       {lv:1, desc:'90% MATK + Slow'},
       {lv:2, desc:'102% MATK + stronger Slow'},
@@ -745,7 +745,7 @@ const BIRDS = {
   },
   kiwi:{
     name:'Kiwi', portraitKey:'kiwi', tagline:'Nocturnal probe. Beak pierces armor like butter.',
-    size:'small', class:'trickster',
+    size:'small', class:'predator',
     unlockRequires:'unlock_kiwi',
     unlockHint:'Defeat Stage 20 with Magpie.',
     stats:{hp:34,maxHp:34,atk:8,def:3,spd:8,dodge:48,acc:88,critChance:12,mdef:5,matk:7},
@@ -769,7 +769,7 @@ const BIRDS = {
   // ── MEDIUM ──────────────────────────────────────────────────
   crow:{
     name:'Crow', portraitKey:'crow', tagline:'Tactical. Precise. Unforgiving.',
-    size:'medium', class:'bruiser',
+    size:'medium', class:'trickster',
     stats:{hp:35,maxHp:35,atk:6,def:4,spd:5,dodge:15,acc:90,mdef:10,matk:6},
     statBars:{HP:35/50,ATK:6/15,SPD:5/10,Dodge:.3,ACC:.9}, color:'#c0c8d8',
     startAbilities:['mockingPeck','stickLance','guard','battleFocus'],
@@ -902,7 +902,7 @@ const BIRDS = {
     name:'Swan', portraitKey:'swan', tagline:'Elegance in life. Devastation in death.',
     size:'large', class:'tank',
     unlockRequires:'unlock_swan',
-    unlockHint:'Reach Endless Stage 30 with any Bard.',
+    unlockHint:'Reach Endless Stage 30 with any Singer.',
     stats:{hp:44,maxHp:44,atk:8,def:5,spd:6,dodge:20,acc:84,mdef:10,matk:12},
     color:'#f0f4fc',
     startAbilities:['bracePeck','wingShield','royalGuard','calmingSong'],
@@ -915,7 +915,7 @@ const BIRDS = {
     name:'Flamingo', portraitKey:'flamingo', tagline:'Balance is power. Grace is terror.',
     size:'large', class:'singer',
     unlockRequires:'unlock_flamingo',
-    unlockHint:'Reach Endless Stage 30 with any Ranger.',
+    unlockHint:'Reach Endless Stage 30 with any Striker.',
     stats:{hp:48,maxHp:48,atk:8,def:4,spd:6,dodge:18,acc:80,mdef:12,matk:8},
     color:'#e8609a',
     startAbilities:['mudshot','marshCall','bogWhisper','rotChorus'],
@@ -966,7 +966,7 @@ const BIRDS = {
     name:'Seagull', portraitKey:'seagull', tagline:'Screeching scavenger. Flock dive-bombs trash & foes.',
     size:'medium', class:'trickster',
     unlockRequires:'unlock_seagull',
-    unlockHint:'Reach level 21 in Endless mode with any Mage.',
+    unlockHint:'Reach level 21 in Endless mode with any Singer.',
     stats:{hp:36,maxHp:36,atk:6,def:3,spd:8,dodge:24,acc:84,mdef:9,matk:14,critChance:8},
     color:'#b0c8d8',
     startAbilities:['featherFlick','diveSnatch','blindScreech','distractingChorus'],
@@ -1007,7 +1007,7 @@ const BIRDS = {
     statBars:{HP:58/50,ATK:13/15,SPD:4/10,Dodge:.16,ACC:.78}, color:'#c84030',
     startAbilities:['fleshTear','raptorDive','predatorMark','executionTalon'],
     abilityPool:['physical'],
-    passive:{id:'warlordsPath',name:'Talon Tyrant',desc:'+18% damage vs enemies below 40% HP. Every boss kill permanently raises ATK by 3. Takes 15% reduced magic damage.',
+    passive:{id:'warlordsPath',name:'Talon Apex',desc:'+18% damage vs enemies below 40% HP. Every boss kill permanently raises ATK by 3. Takes 15% reduced magic damage.',
       magicResist:0.15,
       onBossKill(p){p.stats.atk+=3;spawnFloat('player','⚔+3 ATK','fn-crit');}},
   },
@@ -1573,6 +1573,45 @@ const CLASS_ROLE_BY_CLASS = {
   singer:'singer',
 };
 
+const FINAL_BIRD_CLASS_BY_KEY = Object.freeze({
+  sparrow:'striker', hummingbird:'striker', robin:'striker', peregrine:'striker',
+  cassowary:'bruiser', emu:'bruiser', ostrich:'bruiser', secretary:'bruiser', secretarybird:'bruiser',
+  goose:'tank', swan:'tank', penguin:'tank', emperorpenguin:'tank', shoebill:'tank', shoebillstork:'tank',
+  magpie:'trickster', lyrebird:'trickster', seagull:'trickster', kookaburra:'trickster', bowerbird:'trickster', crow:'trickster',
+  snowyowl:'predator', harpy:'predator', harpyeagle:'predator', baldeagle:'predator', dukeblakiston:'predator', duke_blakiston:'predator', kiwi:'predator',
+  blackbird:'singer', phainopepla:'singer', macaw:'singer', flamingo:'singer', toucan:'singer', raven:'singer', blackcockatoo:'singer', albatross:'singer', dove:'singer',
+});
+
+function normalizeBirdClassKey(birdKey=''){
+  return String(birdKey||'').toLowerCase().replace(/[^a-z_]/g,'');
+}
+
+function getFinalBirdClass(birdKey='', fallback=''){
+  const normalizedKey = normalizeBirdClassKey(birdKey);
+  if(normalizedKey && FINAL_BIRD_CLASS_BY_KEY[normalizedKey]) return FINAL_BIRD_CLASS_BY_KEY[normalizedKey];
+  const rawFallback = String(fallback||'').toLowerCase();
+  return CLASS_ROLE_BY_CLASS[rawFallback] || '';
+}
+
+function normalizeAllowedClassList(list=[]){
+  if(!Array.isArray(list)) return [];
+  const out=[];
+  list.forEach(cls=>{
+    const normalized = resolveFinalClass(cls);
+    if(normalized && !out.includes(normalized)) out.push(normalized);
+  });
+  return out;
+}
+
+function sanitizeAbilityClassRouting(store){
+  if(!store || typeof store!=='object') return;
+  Object.values(store).forEach(tmpl=>{
+    if(Array.isArray(tmpl?.allowedClasses)){
+      tmpl.allowedClasses = normalizeAllowedClassList(tmpl.allowedClasses);
+    }
+  });
+}
+
 
 const LEGACY_CLASS_FALLBACK = {
   support:'singer',
@@ -1591,10 +1630,14 @@ const LEGACY_CLASS_FALLBACK = {
 function resolveFinalClass(rawClass='', birdKey=''){
   const cls=String(rawClass||'').toLowerCase();
   const key=String(birdKey||'');
-  const birdClass=BIRDS?.[key]?.class;
-  if(birdClass && CLASS_ROLE_BY_CLASS[birdClass]) return birdClass;
+  const mappedBirdClass=getFinalBirdClass(key, BIRDS?.[key]?.class || cls);
+  if(mappedBirdClass) return mappedBirdClass;
   return CLASS_ROLE_BY_CLASS[cls] || LEGACY_CLASS_FALLBACK[cls] || 'singer';
 }
+
+Object.entries(BIRDS).forEach(([birdKey, bird])=>{
+  if(bird) bird.class = getFinalBirdClass(birdKey, bird.class) || 'singer';
+});
 
 
 const CLASS_PERK_DEFS = {
@@ -1629,6 +1672,198 @@ const CLASS_PERK_DEFS = {
     {id:'restorativeRhythm',name:'Restorative Rhythm',desc:'Healing skills restore +3 HP.',apply:p=>{p.perkHealFlat=(p.perkHealFlat||0)+3;}},
   ],
 };
+const CLASS_PERK_BY_CLASS = Object.freeze(CLASS_PERK_DEFS);
+const CLASS_PERK_SOURCE_RULES = Object.freeze({
+  'story-class-perk-10':{
+    mode:'story',
+    maxChoices:1,
+    title:'Choose a Class Perk',
+    subtitle:'Your fighting style begins to take shape.',
+  },
+  'endless-class-perk-30':{
+    mode:'endless',
+    maxChoices:2,
+    title:'Evolve Your Class',
+    subtitle:'Your role sharpens in the long hunt.',
+  },
+});
+
+function ensureClassPerkState(target=G){
+  if(!target || typeof target!=='object') return {classPerks:{}, runClassPerks:[]};
+  if(!target.classPerks || typeof target.classPerks!=='object') target.classPerks={};
+  if(!Array.isArray(target.runClassPerks)) target.runClassPerks=[];
+  return target;
+}
+
+function normalizeClassPerkIdList(list=[]){
+  return [...new Set((Array.isArray(list)?list:[]).map(id=>String(id||'').trim()).filter(Boolean))];
+}
+
+function getBirdClassRoleByKey(birdKey=''){
+  return resolveFinalClass(BIRDS?.[birdKey]?.class || '', birdKey);
+}
+
+function migrateLegacyClassPerkState(target=G, playerRef=null){
+  if(!target || typeof target!=='object') return ensureClassPerkState(target);
+  const state=ensureClassPerkState(target);
+  const legacyMap=(target.classPerksByBird && typeof target.classPerksByBird==='object') ? target.classPerksByBird : {};
+  const playerBirdKey=playerRef?.birdKey || target.player?.birdKey || '';
+
+  Object.entries(legacyMap).forEach(([birdKey, perkIds])=>{
+    const normalizedKey=String(birdKey||'');
+    if(!normalizedKey) return;
+    const merged=normalizeClassPerkIdList([...(state.classPerks[normalizedKey]||[]), ...normalizeClassPerkIdList(perkIds)]);
+    if(merged.length) state.classPerks[normalizedKey]=merged;
+  });
+
+  const migratedRunPerks=[];
+  (Array.isArray(target.runClassPerks)?target.runClassPerks:[]).forEach(entry=>{
+    if(!entry) return;
+    if(typeof entry==='string'){
+      if(!playerBirdKey) return;
+      migratedRunPerks.push({
+        birdKey:playerBirdKey,
+        classPerkId:entry,
+        source:'legacy-class-perk',
+      });
+      return;
+    }
+    const birdKey=String(entry.birdKey || playerBirdKey || '').trim();
+    const classPerkId=String(entry.classPerkId || entry.perkId || entry.id || '').trim();
+    if(!birdKey || !classPerkId) return;
+    migratedRunPerks.push({
+      birdKey,
+      classPerkId,
+      source:String(entry.source||'legacy-class-perk'),
+    });
+  });
+  state.runClassPerks=migratedRunPerks.filter((entry, idx, arr)=>(
+    arr.findIndex(other=>other.birdKey===entry.birdKey && other.classPerkId===entry.classPerkId && other.source===entry.source)===idx
+  ));
+
+  Object.entries(state.classPerks).forEach(([birdKey, perkIds])=>{
+    state.classPerks[birdKey]=normalizeClassPerkIdList(perkIds).filter(perkId=>{
+      const role=getBirdClassRoleByKey(birdKey);
+      return (CLASS_PERK_BY_CLASS[role]||[]).some(perk=>perk.id===perkId);
+    });
+    if(!state.classPerks[birdKey].length) delete state.classPerks[birdKey];
+  });
+
+  Object.entries(state.classPerks).forEach(([birdKey, perkIds])=>{
+    perkIds.forEach(perkId=>{
+      const exists=state.runClassPerks.some(entry=>entry.birdKey===birdKey && entry.classPerkId===perkId);
+      if(!exists){
+        state.runClassPerks.push({birdKey,classPerkId:perkId,source:'legacy-class-perk'});
+      }
+    });
+  });
+
+  delete target.classPerksByBird;
+  return state;
+}
+
+function getBirdClassPerks(birdKey){
+  const state=migrateLegacyClassPerkState(G, G.player);
+  const normalizedKey=String(birdKey || G.player?.birdKey || '').trim();
+  return normalizeClassPerkIdList(state.classPerks[normalizedKey]||[]);
+}
+
+function hasClassPerk(birdKey, perkId){
+  return getBirdClassPerks(birdKey).includes(String(perkId||''));
+}
+
+function getClassPerkGrantCountForMode(mode){
+  const key=(mode==='endless') ? 'endless' : 'story';
+  const granted=(G.runClassPerks||[]).filter(entry=>{
+    const source=String(entry?.source||'');
+    const cfg=CLASS_PERK_SOURCE_RULES[source];
+    return cfg ? cfg.mode===key : key==='story';
+  }).length;
+  return granted;
+}
+
+function getClassPerkCapForMode(mode){
+  return mode==='endless' ? 2 : 1;
+}
+
+function getAvailableClassPerksForBird(birdKey){
+  const normalizedBirdKey=String(birdKey || G.player?.birdKey || '').trim();
+  const role=getBirdClassRoleByKey(normalizedBirdKey);
+  const owned=new Set(getBirdClassPerks(normalizedBirdKey));
+  return (CLASS_PERK_BY_CLASS[role]||[]).filter(perk=>perk && perk.id && !owned.has(perk.id));
+}
+
+function applyClassPerksToStats(birdKey, player=G.player){
+  if(!player || !birdKey) return player;
+  const owned=new Set(getBirdClassPerks(birdKey));
+  if(!player._appliedClassPerkIds || typeof player._appliedClassPerkIds!=='object') player._appliedClassPerkIds={};
+  const applied=player._appliedClassPerkIds;
+  (CLASS_PERK_BY_CLASS[getBirdClassRoleByKey(birdKey)]||[]).forEach(perk=>{
+    if(!owned.has(perk.id) || applied[perk.id]) return;
+    perk.apply?.(player);
+    applied[perk.id]=true;
+  });
+  return player;
+}
+
+function applyClassPerksToCombatContext(birdKey, context={}){
+  const owned=new Set(getBirdClassPerks(birdKey));
+  const out={...context};
+  out.piercingTempo = owned.has('piercingTempo');
+  out.openingRush = owned.has('openingRush');
+  out.predatorRhythm = owned.has('predatorRhythm');
+  out.crushingForce = owned.has('crushingForce');
+  out.warBody = owned.has('warBody');
+  out.ironMomentum = owned.has('ironMomentum');
+  out.ironCore = owned.has('ironCore');
+  out.holdTheLine = owned.has('holdTheLine');
+  out.slipstream = owned.has('slipstream');
+  out.falseOpening = owned.has('falseOpening');
+  out.quickTheft = owned.has('quickTheft');
+  out.markedForDeath = owned.has('markedForDeath');
+  out.patientHunter = owned.has('patientHunter');
+  out.executionLine = owned.has('executionLine');
+  out.arcFocus = owned.has('arcFocus');
+  out.songline = owned.has('songline');
+  out.restorativeRhythm = owned.has('restorativeRhythm');
+  out.buffDurationBonus = (out.songline ? 1 : 0);
+  out.songHealFlat = (out.restorativeRhythm ? 3 : 0);
+  return out;
+}
+
+function recomputeClassPerkEffects(){
+  migrateLegacyClassPerkState(G, G.player);
+  if(!G.player?.birdKey) return;
+  applyClassPerksToStats(G.player.birdKey, G.player);
+}
+
+function getPlayerClassPerkBuffDurationBonus(){
+  const ctx=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  return ctx.buffDurationBonus||0;
+}
+
+function getPlayerClassPerkSongHealFlat(){
+  const ctx=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  return ctx.songHealFlat||0;
+}
+
+function grantClassPerk(birdKey, perkDef, source=''){
+  const normalizedBirdKey=String(birdKey || G.player?.birdKey || '').trim();
+  const perkId=String(perkDef?.id || '').trim();
+  if(!normalizedBirdKey || !perkId || hasClassPerk(normalizedBirdKey, perkId)) return false;
+  const state=ensureClassPerkState(G);
+  if(!Array.isArray(state.classPerks[normalizedBirdKey])) state.classPerks[normalizedBirdKey]=[];
+  state.classPerks[normalizedBirdKey].push(perkId);
+  state.classPerks[normalizedBirdKey]=normalizeClassPerkIdList(state.classPerks[normalizedBirdKey]);
+  state.runClassPerks.push({birdKey:normalizedBirdKey,classPerkId:perkId,source:String(source||'manual-class-perk')});
+  if(source && CLASS_PERK_SOURCE_RULES[source]){
+    G._classPerkChoicesGranted=Math.max(G._classPerkChoicesGranted||0,getClassPerkGrantCountForMode(CLASS_PERK_SOURCE_RULES[source].mode));
+  }
+  recomputeClassPerkEffects();
+  logMsg(`🧬 Class Perk acquired: ${perkDef?.name||perkId}.`,'exp-gain');
+  saveRun();
+  return true;
+}
 
 // Drop rate weights (non-boss) — [grey,green,blue,purple,gold]
 const NORMAL_WEIGHTS = [42,34,17,7,0];
@@ -1690,7 +1925,7 @@ const ABILITY_TEMPLATES_LEARNABLE = {
 
   spellLance:{
     id:'spellLance', name:'Spell Lance', type:'spell', btnType:'spell',
-    desc:'Focused magical thrust. Mage/Bard specialty.',
+    desc:'Focused magical thrust. Singer specialty.',
     cooldownByLevel:[2,2,2,1],
     levels:[
       {lv:1, desc:'125% M.ATK, 10% miss, Weaken 20%.' , newAilment:'weaken', ailChance:20},
@@ -1701,7 +1936,7 @@ const ABILITY_TEMPLATES_LEARNABLE = {
   },
   guardianCry:{
     id:'guardianCry', name:'Guardian Cry', type:'utility', btnType:'utility',
-    desc:'Knight/Tank ward: DEF up and cleanse one debuff.',
+    desc:'Bruiser/Tank ward: DEF up and cleanse one debuff.',
     cooldownByLevel:[3,3,2,2],
     levels:[
       {lv:1, desc:'DEF +4 for 2t, cleanse 1 debuff'},
@@ -1712,7 +1947,7 @@ const ABILITY_TEMPLATES_LEARNABLE = {
   },
   shadowFeint:{
     id:'shadowFeint', name:'Shadow Feint', type:'physical', btnType:'physical',
-    desc:'Assassin/Ranger feint strike with confuse pressure.',
+    desc:'Predator/Trickster feint strike with confuse pressure.',
     baseMissChance:12, baseDmgMult:1.05,
     levels:[
       {lv:1, desc:'105% dmg, 12% miss, Confuse 20%', newAilment:'confused', ailChance:20},
@@ -1830,7 +2065,7 @@ const ABILITY_TEMPLATES_LEARNABLE = {
     id:'wingStorm', name:'Wing Storm', type:'spell', btnType:'spell',
     isNeutral:false, allowedClasses:['trickster'],
     energyByLevel:[2,2,2,3], cooldownByLevel:[3,3,4,4],
-    desc:'Summoner gale magic. Control-oriented spell with modest damage and SPD gain.',
+    desc:'Trickster gale magic. Control-oriented spell with modest damage and SPD gain.',
     levels:[
       {lv:1, desc:'85% M.ATK. 15% Stun. Gain +2 SPD for 2t.'},
       {lv:2, desc:'95% M.ATK. 20% Stun. Gain +3 SPD for 2t.'},
@@ -2180,7 +2415,7 @@ const ABILITY_TEMPLATES_EXTRA = {
   },
   shadowPounce:{
     id:'shadowPounce', name:'Shadow Pounce', type:'physical', btnType:'physical',
-    desc:'Assassin leap strike with crit scaling and finisher bonus.',
+    desc:'Predator leap strike with crit scaling and finisher bonus.',
     baseMissChance:10, baseDmgMult:1.15,
     levels:[
       {lv:1, desc:'115% dmg, 10% miss. +20% crit chance this hit.'},
@@ -2201,7 +2436,7 @@ const ABILITY_TEMPLATES_EXTRA = {
   },
   astralRefrain:{
     id:'astralRefrain', name:'Astral Refrain', type:'spell', btnType:'spell',
-    desc:'Mage/Bard pulse that damages and destabilizes enemy focus.',
+    desc:'Singer pulse that damages and destabilizes enemy focus.',
     cooldownByLevel:[3,3,2,2],
     levels:[
       {lv:1, desc:'95% M.ATK dmg + ACC −10% for 2t.'},
@@ -2214,7 +2449,7 @@ const ABILITY_TEMPLATES_EXTRA = {
     id:'murderMurmuration', name:'Murder Murmuration', type:'spell', btnType:'spell',
     isNeutral:false, allowedClasses:['trickster'],
     energyByLevel:[2,2,3,3], cooldownByLevel:[5,5,4,4],
-    desc:'Summoner flock surge. Multi-hit control spell, lower damage than direct nukes.',
+    desc:'Trickster flock surge. Multi-hit control spell, lower damage than direct nukes.',
     levels:[
       {lv:1, desc:'3 hits ×35% M.ATK. 10% Confuse chance.'},
       {lv:2, desc:'4 hits ×38% M.ATK. 15% Confuse chance + Fear 1t.'},
@@ -2686,7 +2921,7 @@ function getGrowthStageForLevel(lv){
   return GROWTH.FLETCHLING;
 }
 const MAX_PLAYER_ACTIONS_PER_TURN=6;
-const MAX_ENEMY_ACTIONS_PER_TURN=6;
+const MAX_ENEMY_ACTIONS_PER_TURN=3;
 const MAX_ENERGY_GAIN_PER_TURN=2;
 
 // ============================================================
@@ -2806,7 +3041,7 @@ let G = {
   _pendingStorkShop:false,
   _pendingShopMode:null,
   runClassPerks:[],
-  classPerksByBird:{},
+  classPerks:{},
   _classPerkChoicesGranted:0,
   autoQueuedAbilityId:null,
   abilityCooldowns:{},
@@ -3023,6 +3258,18 @@ function openNest() {
   if(bd&&bd.passive){
     html+=`<div class="nest-passive"><div class="nest-passive-title">★ PASSIVE: ${bd.passive.name}</div>${bd.passive.desc}</div>`;
   }
+  const ownedClassPerks=getBirdClassPerks(p.birdKey);
+  if(ownedClassPerks.length){
+    const role=getBirdClassRoleByKey(p.birdKey);
+    const perkCards=ownedClassPerks.map(perkId=>{
+      const perk=(CLASS_PERK_BY_CLASS[role]||[]).find(entry=>entry.id===perkId);
+      if(!perk) return '';
+      return `<div class="nest-reward-row"><span class="nest-reward-icon">🧬</span><span class="nest-reward-name">${perk.name}</span><span class="nest-reward-desc">${perk.desc}</span></div>`;
+    }).join('');
+    if(perkCards){
+      html+=`<div class="nest-section"><div class="nest-section-title">🧬 Class Perks · ${idToClassLabel(role)}</div><div class="nest-rewards-list">${perkCards}</div></div>`;
+    }
+  }
   // Stats
   const s=p.stats;
   // Compute effective in-battle stats
@@ -3049,15 +3296,16 @@ function openNest() {
     <div class="nest-stat-card" title="Magic Defence — resists enemy spells and ailments"><div class="nest-stat-val" style="color:#6ae8e8">${s.mdef||8}</div><div class="nest-stat-lbl" style="color:#4ab8c0">✦ M.DEF</div></div>
   </div></div>`;
   // Abilities
-  html+=`<div class="nest-section"><div class="nest-section-title">⚔ Abilities (${p.abilities.length}/4)</div><div class="nest-abilities-grid">`;
+  html+=`<div class="nest-section"><div class="nest-section-title">⚔ Abilities (${p.abilities.length})</div><div class="nest-abilities-grid">`;
   p.abilities.forEach(ab=>{
     const tmpl=ABILITY_TEMPLATES[ab.id];
     const lv=Math.min(ab.level,4);
-    const desc=tmpl?tmpl.levels[lv-1].desc:'';
+    const desc=tmpl?.levels?.[lv-1]?.desc || tmpl?.desc || ab?.desc || 'No description available.';
     const path=tmpl?formatAbilityLevelPathway(tmpl):'';
+    const abType=String(ab.type||ab.btnType||tmpl?.type||tmpl?.btnType||'ability');
     html+=`<div class="nest-ab-card">
-      <div class="nest-ab-name ${ab.type}">${ab.name}</div>
-      <div class="nest-ab-lv">Level ${ab.level} · ${ab.type}</div>
+      <div class="nest-ab-name ${abType}">${ab.name}</div>
+      <div class="nest-ab-lv">Level ${ab.level} · ${abType}</div>
       <div class="nest-ab-desc">${desc}</div>
       ${path?`<div class="nest-ab-path">${path.replace(/\n/g,'<br>')}</div>`:''}
     </div>`;
@@ -3113,6 +3361,8 @@ function saveRun() {
       stage: G.stage, bossKills: G.bossKills,
       endlessMode: G.endlessMode, endlessBattle: G.endlessBattle,
       collectedRewards: G.collectedRewards||[],
+      classPerks: JSON.parse(JSON.stringify((G.classPerks||{}))),
+      runClassPerks: JSON.parse(JSON.stringify((G.runClassPerks||[]))),
       runUpgradesPurchased: [...(G.runUpgradesPurchased||new Set())],
       codex: JSON.parse(JSON.stringify(G.codex||{abilities:{},enemies:{},birds:{},artifacts:{},statuses:{}})),
       ui: JSON.parse(JSON.stringify(ensureUIState())),
@@ -3156,6 +3406,13 @@ function continueRun() {
   G.collectedRewards=save.collectedRewards||[];
   G.player=save.player;
   G.player.class = resolveFinalClass(G.player?.class, G.player?.birdKey);
+  G.classPerks = JSON.parse(JSON.stringify(save.classPerks||save.classPerksByBird||{}));
+  G.runClassPerks = JSON.parse(JSON.stringify(save.runClassPerks||[]));
+  migrateLegacyClassPerkState(G, G.player);
+  G._classPerkChoicesGranted = Math.max(getClassPerkGrantCountForMode('story'), getClassPerkGrantCountForMode('endless'));
+  if(!G.player._appliedClassPerkIds || typeof G.player._appliedClassPerkIds!=='object'){
+    G.player._appliedClassPerkIds=Object.fromEntries(getBirdClassPerks(G.player?.birdKey).map(id=>[id,true]));
+  }
   if(!Array.isArray(G.player.endlessRewards)) G.player.endlessRewards=[];
   ensurePassiveEvolutionState(G.player);
   G.runUpgradesPurchased=new Set(save.runUpgradesPurchased||[]);
@@ -3167,6 +3424,7 @@ function continueRun() {
   removeMimicEverywhere();
   normalizeAbilityCooldownsForPlayer(G.player);
   enforceAbilityCosts(G.player);
+  recomputeClassPerkEffects();
   // Migration: ensure mdodge and card stats exist
   if(G.player.stats.mdodge===undefined) G.player.stats.mdodge = G.player.stats.dodge||20;
   if(G.player.cardDodge===undefined) G.player.cardDodge=0;
@@ -3175,6 +3433,8 @@ function continueRun() {
   const bsave=save.battle;
   if(save.inBattle&&bsave&&bsave.enemy){
     G.enemy=bsave.enemy;
+    G.enemy.class = resolveFinalClass(G.enemy?.class || G.enemy?.enemyClass, G.enemy?.birdKey || G.enemy?.portraitKey || G.enemy?.id || '');
+    G.enemy.enemyClass = resolveFinalClass(G.enemy?.enemyClass || G.enemy?.class, G.enemy?.birdKey || G.enemy?.portraitKey || G.enemy?.id || '');
     G.enemyNextAction=bsave.enemyNextAction||planEnemyAction();
     G.playerStatus=bsave.playerStatus||{};
     G.enemyStatus=bsave.enemyStatus||{};
@@ -3230,6 +3490,8 @@ let shopPurchaseMade = false;
 
 function initSelection() {
   const ui=ensureUIState();
+  ui.selectionView='all';
+  if(!ui.lockFilter) ui.lockFilter='all';
   migrateLegacySelectionView(ui);
   if(!ui.expandedBird && G.selected) ui.expandedBird=G.selected;
   applyUIStateToDOM();
@@ -3250,6 +3512,7 @@ function initSelection() {
 
   // Build bird grid
   buildSelectionViewButtons();
+  buildLockFilterButtons();
   buildGameModeToggle();
   buildBirdGrid();
   renderHighscoreBoard();
@@ -3259,8 +3522,41 @@ function buildSelectionViewButtons(){
   const host=document.getElementById('view-toggle');
   if(!host) return;
   const ui=ensureUIState();
-  const btns=[['all','All'],['size','By Size'],...ROLE_ORDER.map(c=>[`role:${c}`,idToClassLabel(c)])];
+  const btns=ROLE_ORDER.map(c=>[`role:${c}`,idToClassLabel(c)]);
   host.innerHTML=btns.map(([id,label])=>`<button class="view-toggle-btn ${ui.selectionView===id?'active':''}" onclick="setSelView('${id}',this)">${label}</button>`).join('');
+}
+
+function buildLockFilterButtons(){
+  const host=document.getElementById('lock-toggle');
+  if(!host) return;
+  const ui=ensureUIState();
+  if(!ui.lockFilter) ui.lockFilter='all';
+  const isAllBirds = ui.selectionView==='all' && ui.lockFilter==='all';
+  const isBySize = ui.selectionView==='size' && ui.lockFilter==='all';
+  const buttons = [
+    `<button class="view-toggle-btn ${isAllBirds?'active':''}" onclick="setRosterMode('all')">All Birds</button>`,
+    `<button class="view-toggle-btn ${isBySize?'active':''}" onclick="setRosterMode('size')">By Size</button>`,
+    `<button class="view-toggle-btn ${ui.lockFilter==='unlocked'?'active':''}" onclick="setLockFilter('unlocked',this)">Unlocked</button>`,
+    `<button class="view-toggle-btn ${ui.lockFilter==='locked'?'active':''}" onclick="setLockFilter('locked',this)">Locked</button>`,
+  ];
+  host.innerHTML=buttons.join('');
+}
+
+function setRosterMode(mode){
+  const ui=ensureUIState();
+  ui.lockFilter='all';
+  ui.selectionView = (mode==='size') ? 'size' : 'all';
+  buildSelectionViewButtons();
+  buildLockFilterButtons();
+  buildBirdGrid();
+}
+
+function setLockFilter(mode,btn){
+  const ui=ensureUIState();
+  ui.lockFilter = ['all','unlocked','locked'].includes(mode) ? mode : 'all';
+  if(ui.selectionView==='size' || ui.selectionView==='all') ui.selectionView='all';
+  buildLockFilterButtons();
+  buildBirdGrid();
 }
 
 function buildGameModeToggle(){
@@ -3353,7 +3649,15 @@ function initSelectionSafe(){
 
     // If init did not throw but produced no cards (mobile/content:// edge), recover anyway.
     const cards=document.querySelectorAll('.bird-card').length;
-    if(cards===0){
+    if(cards<=1){
+      const ui=ensureUIState();
+      ui.selectionView='all';
+      buildSelectionViewButtons();
+      buildLockFilterButtons();
+      buildBirdGrid();
+    }
+    const postRepairCards=document.querySelectorAll('.bird-card').length;
+    if(postRepairCards===0){
       renderStarterFallbackGrid('initSelectionSafe empty grid');
       failsafeAdvance('initSelectionSafe empty grid');
     }
@@ -3396,18 +3700,21 @@ function selectDifficulty(id) {
 
 function setSelView(view, btn) {
   const ui=ensureUIState();
-  ui.selectionView = String(view||'size');
+  ui.selectionView = String(view||'all');
   migrateLegacySelectionView(ui);
   buildSelectionViewButtons();
+  buildLockFilterButtons();
   buildBirdGrid();
 }
 
 function buildBirdGrid() {
   const ui=ensureUIState();
+  if(!ui.selectionView) ui.selectionView='all';
   migrateLegacySelectionView(ui);
   const selectedView=ui.selectionView;
-  const view = String(selectedView).startsWith('role:') ? 'all' : selectedView;
+  const view = String(selectedView).startsWith('role:') ? 'all' : (selectedView==='size' ? 'size' : 'all');
   const classFilter = String(selectedView).startsWith('role:') ? (String(selectedView).split(':')[1]||'all') : 'all';
+  const lockFilter = ['all','unlocked','locked'].includes(ui.lockFilter) ? ui.lockFilter : 'all';
 
   const grid = document.getElementById('bird-grid');
   if(!grid) return;
@@ -3417,22 +3724,22 @@ function buildBirdGrid() {
     return !!(b && b.stats && Number.isFinite(b.stats.hp) && Number.isFinite(b.stats.atk) && Number.isFinite(b.stats.def));
   });
   if(classFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([key,b])=>classToRoleId(b.class,key)===classFilter);
-  const fallbackStarters = ['sparrow','goose','blackbird','crow','macaw','robin'];
-
-  // Compute global max stats for bars
-  const globalMax={HP:1,ATK:1,DEF:1,SPD:1,Dodge:1,MDodge:1,ACC:1,Crit:1,MATK:1,MDEF:1};
-  safeBirdEntries.forEach(([,b])=>{
-    if(b.stats.hp>globalMax.HP)globalMax.HP=b.stats.hp;
-    if(b.stats.atk>globalMax.ATK)globalMax.ATK=b.stats.atk;
-    if(b.stats.def>globalMax.DEF)globalMax.DEF=b.stats.def;
-    if(b.stats.spd>globalMax.SPD)globalMax.SPD=b.stats.spd;
-    if(b.stats.dodge>globalMax.Dodge)globalMax.Dodge=b.stats.dodge;
-    if((b.stats.dodge||0)>globalMax.MDodge)globalMax.MDodge=b.stats.dodge;
-    if(b.stats.acc>globalMax.ACC)globalMax.ACC=b.stats.acc;
-    if(b.stats.critChance&&b.stats.critChance>globalMax.Crit)globalMax.Crit=b.stats.critChance;
-    if(b.stats.matk&&b.stats.matk>globalMax.MATK)globalMax.MATK=b.stats.matk;
-    if(b.stats.mdef&&b.stats.mdef>globalMax.MDEF)globalMax.MDEF=b.stats.mdef;
+  if(lockFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([,bird])=>{
+    const locked = bird.unlockRequires && !isUnlocked(bird.unlockRequires);
+    return lockFilter==='locked' ? !!locked : !locked;
   });
+
+  // Hard recovery: if strict stat validation gets stripped by legacy patch code,
+  // render from the full roster model instead of collapsing to Sparrow-only.
+  if(safeBirdEntries.length<=1){
+    safeBirdEntries = Object.entries(BIRDS).filter(([,b])=>!!(b && typeof b==='object' && b.name));
+    if(classFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([key,b])=>classToRoleId(b.class,key)===classFilter);
+    if(lockFilter!=='all') safeBirdEntries = safeBirdEntries.filter(([,bird])=>{
+      const locked = bird.unlockRequires && !isUnlocked(bird.unlockRequires);
+      return lockFilter==='locked' ? !!locked : !locked;
+    });
+  }
+  const fallbackStarters = ['sparrow','goose','blackbird','crow','macaw','robin'];
 
   const groups = {};
   const orderedKeys = view==='size' ? SIZE_ORDER : ROLE_ORDER;
@@ -3460,7 +3767,7 @@ function buildBirdGrid() {
       totalBirds++;
       const locked = bird.unlockRequires && !isUnlocked(bird.unlockRequires);
       if(!locked) totalUnlocked++;
-      row.appendChild(buildBirdCard(key,bird,locked,globalMax));
+      row.appendChild(buildBirdCard(key,bird,locked));
     });
     section.appendChild(row);
     grid.appendChild(section);
@@ -3488,7 +3795,7 @@ function buildBirdGrid() {
       totalBirds++;
       const locked = bird.unlockRequires && !isUnlocked(bird.unlockRequires);
       if(!locked) totalUnlocked++;
-      const card = buildBirdCard(key, bird, locked, globalMax);
+      const card = buildBirdCard(key, bird, locked);
       row.appendChild(card);
     });
 
@@ -3497,7 +3804,13 @@ function buildBirdGrid() {
   });
 
   const label = document.getElementById('bird-count-label');
-  if(label) label.textContent = `${totalUnlocked}/${totalBirds} available${classFilter!=='all' ? ` · ${idToClassLabel(classFilter)}`:''}`;
+  if(label){
+    const lockTag = lockFilter==='all' ? '' : (lockFilter==='locked' ? ' · Locked' : ' · Unlocked');
+    label.textContent = `${totalUnlocked}/${totalBirds} available${classFilter!=='all' ? ` · ${idToClassLabel(classFilter)}`:''}${lockTag}`;
+  }
+
+  const focusKey=ui.expandedBird||G.selected||safeBirdEntries?.[0]?.[0]||'';
+  if(focusKey) updateAscentPanel(focusKey);
 
   const focusKey=ui.expandedBird||G.selected||safeBirdEntries?.[0]?.[0]||'';
   if(focusKey) updateAscentPanel(focusKey);
@@ -3512,7 +3825,7 @@ function buildBirdGrid() {
     fallbackStarters.forEach(key=>{
       const bird=BIRDS[key];
       if(!bird||!bird.stats) return;
-      row.appendChild(buildBirdCard(key,bird,false,globalMax));
+      row.appendChild(buildBirdCard(key,bird,false));
     });
     section.appendChild(row);
     grid.appendChild(section);
@@ -3528,30 +3841,7 @@ document.addEventListener('click', (e)=>{
 });
 
 
-function buildBirdExpandedContent(key, bird){
-  const cls = classToRoleId(bird.class);
-  const sizeClass = getUISizeClass(bird, 'panel');
-  const tags = (bird.startAbilities||[]).map(id=>`<span class="ascent-ab-tag">${ABILITY_TEMPLATES[id]?ABILITY_TEMPLATES[id].name:id}</span>`).join('');
-  const startAbilityDetails=(bird.startAbilities||[]).map(id=>{
-    const t=ABILITY_TEMPLATES[id];
-    if(!t) return `• <span style='color:var(--text)'>${id}</span>`;
-    const baseDesc=t.desc||'No description available.';
-    const lv1=(t.levels&&t.levels[0]&&t.levels[0].desc)?t.levels[0].desc:'No effect data.';
-    return `• <span style='color:var(--text)'>${t.name||id}</span><br><span style='color:var(--text-dim)'>Attack: ${baseDesc}</span><br><span style='color:var(--gold-light)'>Effect/Dmg (Lv1): ${lv1}</span>`;
-  }).join('<br><br>');
-  return `
-    <div class="bird-card-expanded">
-      <div class="ascent-panel-tagline">${bird.tagline||''}</div>
-      <div class="ascent-panel-class"><span class="class-badge class-${cls}">${idToClassLabel(cls).toUpperCase()}</span> · ${SIZE_LABELS[bird.size||'medium']||bird.size}</div>
-      ${bird.passive?`<div class="ascent-panel-passive"><strong>★ ${bird.passive.name}:</strong> ${bird.passive.desc}</div>`:''}
-      <div class="ascent-abilities">${tags}</div>
-      <div style="text-align:left;font-size:.72rem;color:var(--text);background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px;margin:8px 0;"><strong>Full Stats:</strong> HP ${bird.stats.hp} · ATK ${bird.stats.atk} · DEF ${bird.stats.def} · SPD ${bird.stats.spd} · ACC ${bird.stats.acc}% · Dodge ${bird.stats.dodge}% · MATK ${bird.stats.matk||0} · MDEF ${bird.stats.mdef||0} · Crit ${bird.stats.critChance||0}%</div>
-      <div style="text-align:left;font-size:.7rem;color:var(--text-dim);margin:6px 0 10px;"><strong style="color:var(--gold-light)">Starting Attacks:</strong><br>${startAbilityDetails}</div>
-      <button class="cta" onclick="event.stopPropagation();startGame()">🪽 Take Flight as ${bird.name}</button>
-    </div>`;
-}
-
-function buildBirdCard(key, bird, locked, globalMax) {
+function buildBirdCard(key, bird, locked) {
   const card = document.createElement('div');
   const ui=ensureUIState();
   card.className = 'bird-card' + (locked ? ' bird-locked' : '') + (ui.expandedBird===key?' selected':'');
@@ -3559,24 +3849,6 @@ function buildBirdCard(key, bird, locked, globalMax) {
 
   const cls = classToRoleId(bird.class);
   const sizeClass = getUISizeClass(bird, 'select');
-
-  const keyStats = [
-    {k:'HP', v:bird.stats.hp, max:globalMax.HP, suffix:''},
-    {k:'ATK', v:bird.stats.atk, max:globalMax.ATK, suffix:''},
-    {k:'DEF', v:bird.stats.def, max:globalMax.DEF, suffix:''},
-    {k:'SPD', v:bird.stats.spd, max:globalMax.SPD, suffix:''},
-    {k:'Dodge', v:bird.stats.dodge, max:globalMax.Dodge, suffix:'%'},
-    {k:'MDodge', v:(bird.stats.mdodge??bird.stats.dodge??0), max:globalMax.MDodge, suffix:'%'},
-    {k:'ACC', v:bird.stats.acc, max:globalMax.ACC, suffix:'%'},
-    {k:'MATK', v:(bird.stats.matk||0), max:globalMax.MATK, suffix:''},
-    {k:'MDEF', v:(bird.stats.mdef||0), max:globalMax.MDEF, suffix:''},
-    {k:'Crit', v:(bird.stats.critChance||0), max:Math.max(globalMax.Crit||1,1), suffix:'%'},
-  ];
-  const bars = keyStats.map(({k,v,max,suffix})=>{
-    const pct=Math.min(100,(v/Math.max(max||1,1))*100);
-    const fill=locked?'#333':(k==='Dodge'||k==='MDodge'||k==='ACC'||k==='Crit'?'#c9a84c':(bird.color||'#6a8ae8'));
-    return `<div class="stat-row compact"><div class="stat-lbl">${k}</div><div class="stat-bg"><div class="stat-fill" style="width:${pct}%;background:${fill}"></div></div><div class="stat-val" style="${locked?'color:#444':''}">${v}${suffix}</div></div>`;
-  }).join('');
 
   const unlockLabel = bird.unlockHint || '🔒 Locked';
 
@@ -3606,8 +3878,9 @@ function selectBird(key, el) {
   const ui=ensureUIState();
   G.selected = key;
   ui.expandedBird = key;
-  // Re-render cards so the selected card expands inline (no side panel/auto-scroll).
-  initSelectionSafe();
+  document.querySelectorAll('#bird-grid .bird-card.selected').forEach(n=>n.classList.remove('selected'));
+  if(el && el.classList) el.classList.add('selected');
+  updateAscentPanel(key);
 }
 
 
@@ -3668,6 +3941,8 @@ function updateAscentPanel(key) {
     panel.innerHTML='<div class="ascent-empty">← Select a bird to begin your ascent</div>';
     return;
   }
+
+  G.selected = key;
 
   const cls = classToRoleId(bird.class);
   const sizeClass = getUISizeClass(bird, 'panel');
@@ -3736,6 +4011,12 @@ function updateAscentPanel(key) {
 
 
 
+
+function startSelectedBird(key){
+  if(key && BIRDS[key]) G.selected = key;
+  return startGame();
+}
+
 function beginRun(){ return startGame(); }
 // ============================================================
 //  GAME FLOW
@@ -3793,7 +4074,7 @@ function startGame() {
   G.codex = {abilities:{},enemies:{},birds:{},artifacts:{},statuses:{}};
   G.shinyObjects = 0;
   G.runClassPerks = [];
-  G.classPerksByBird = {};
+  G.classPerks = {};
   G._classPerkChoicesGranted = 0;
   saveRun();
   G.phase='PLAYER';
@@ -3965,6 +4246,7 @@ function loadStage() {
   applyBiomeModifiers();
   // Remove stat bonuses before resetting flags (avoid accumulating across battles)
   resetForNewBattle();
+  recomputeClassPerkEffects();
   // Reset Goose bruise accumulator per battle
   if(G.player._bruiseAcc!==undefined) G.player._bruiseAcc=0;
   // Reset battle stats
@@ -4039,6 +4321,12 @@ function refreshBattleUI() {
   document.getElementById('player-name').textContent = G.player.name;
   document.getElementById('player-avatar').innerHTML = renderEntityAvatarHTML(G.player, 'battle');
   setHpBar('player', p.hp, p.maxHp);
+  setEnergyBar('player', G.player.energy, G.player.energyMax);
+  const pclsEl=document.getElementById('player-class-label');
+  if(pclsEl){
+    const pcls=idToClassLabel(resolveFinalClass(G.player.class||BIRDS[G.player.birdKey]?.class||'striker',G.player.birdKey));
+    pclsEl.textContent=`${pcls}`;
+  }
 
   document.getElementById('enemy-name').innerHTML = G.enemy.name + (G.enemy.isBoss?`<span class="boss-crown">👑</span>`:'');
   const ep = getPanel('enemy');
@@ -4057,10 +4345,17 @@ function refreshBattleUI() {
     document.getElementById('enemy-avatar').style.fontSize='3.8rem';
   }
   setHpBar('enemy', G.enemy.stats.hp, G.enemy.stats.maxHp);
+  setEnergyBar('enemy', G.enemy.energy, G.enemy.energyMax||3);
+  const eclsEl=document.getElementById('enemy-class-label');
+  if(eclsEl){
+    const ecls=idToClassLabel(resolveFinalClass(G.enemy.class||inferEnemyClassFromStyle(G.enemy)||'predator',G.enemy.birdKey||''));
+    eclsEl.textContent = `${G.enemy.isBoss?'Boss · ':''}${ecls}`;
+  }
 
   document.getElementById('level-label').textContent = `STAGE ${G.stage}`;
   document.getElementById('turn-label').textContent = G.turn==='player'?`🟢 Your Turn · EN ${G.player.energy}/${G.player.energyMax}`:'🔴 Enemy Turn';
   document.getElementById('bird-lv-label').textContent = `Lv.${G.player.birdLevel}`;
+  const shinyEl=document.getElementById('battle-shiny-count'); if(shinyEl) shinyEl.textContent=String(G.shinyObjects||0);
 
   // EXP bar
   const needed = expForLevel(G.player.birdLevel+1);
@@ -4099,9 +4394,9 @@ function refreshBattleUI() {
 
   document.getElementById('player-stats-mini').innerHTML =
     `${statCell('stat-atk','ATK',_effAtk,{title:_statNote('ATK',_effAtk-(p.atk||0),_atkNote,'Debuffs reducing ATK effect.'),trend:_trendTag(_effAtk-(p.atk||0))})}
-     ${statCell('stat-matk','M.ATK',_effMatk,{title:'Magic Attack — improves spell/ailment potency',trend:_trendTag(_effMatk-(p.matk||8))})}
+     ${statCell('stat-matk','MATK',_effMatk,{title:'Magic Attack — improves spell/ailment potency',trend:_trendTag(_effMatk-(p.matk||8))})}
      ${statCell('stat-def','DEF',_effDef,{title:_statNote('DEF',_effDef-(p.def||0),'Battle Hymn increased DEF.','Debuffs reducing DEF.'),trend:_trendTag(_effDef-p.def)})}
-     ${statCell('stat-mdef','M.DEF',_effMdef,{title:'Magic Defence — resists enemy spells and ailments',trend:_trendTag(_effMdef-(p.mdef||8))})}
+     ${statCell('stat-mdef','MDEF',_effMdef,{title:'Magic Defence — resists enemy spells and ailments',trend:_trendTag(_effMdef-(p.mdef||8))})}
      ${statCell('stat-dodge','Dodge',_effDodge,{suffix:'%',title:`Physical Dodge. ${_statNote('Dodge',_effDodge-(p.dodge||0),'Evasion buffs active.','Debuffs reduced dodge.')}`,trend:_trendTag(_effDodge-p.dodge)})}
      ${statCell('stat-mdodge','M.Dodge',_effMDodge,{suffix:'%',title:'Magic Dodge — deflects enemy spells',trend:_trendTag(_effMDodge-getBaseMdodge(G.player))})}
      ${statCell('stat-acc','ACC',_effAcc,{suffix:'%',title:_statNote('ACC',_effAcc-(p.acc||0),'Battle Hymn increased ACC.','Blind/ruffle reduced ACC.'),trend:_trendTag(_effAcc-p.acc)})}
@@ -4117,9 +4412,9 @@ function refreshBattleUI() {
     `<div class="est ${klass}" title="${title}"><span class="stat-k">${label}</span><span class="stat-v">${val}${suffix}</span></div>`;
   document.getElementById('enemy-stats-mini').innerHTML =
     `${enemyCell('stat-atk','ATK',ep2.atk,{title:'Physical attack'})}
-     ${enemyCell('stat-matk','M.ATK',ep2.matk||6,{title:'Magic attack'})}
+     ${enemyCell('stat-matk','MATK',ep2.matk||6,{title:'Magic attack'})}
      ${enemyCell('stat-def','DEF',ep2.def,{title:'Physical defence'})}
-     ${enemyCell('stat-mdef','M.DEF',ep2.mdef||8,{title:'Magic defence'})}
+     ${enemyCell('stat-mdef','MDEF',ep2.mdef||8,{title:'Magic defence'})}
      ${enemyCell('stat-dodge','Dodge',ep2.dodge||0,{suffix:'%',title:'Physical dodge'})}
      ${enemyCell('stat-mdodge','M.Dodge',ep2.mdodge??ep2.dodge??0,{suffix:'%',title:'Magic dodge'})}
      ${enemyCell('stat-acc','ACC',ep2.acc||70,{suffix:'%',title:'Accuracy'})}
@@ -4299,6 +4594,15 @@ function renderStatuses(id, statuses) {
 
 
 
+function setEnergyBar(side,cur,max){
+  const fill=document.getElementById(`${side}-en-bar`);
+  const txt=document.getElementById(`${side}-en-text`);
+  const c=Math.max(0, Number(cur)||0);
+  const m=Math.max(1, Number(max)||1);
+  if(fill) fill.style.width = `${Math.max(0,Math.min(100,(c/m)*100))}%`;
+  if(txt) txt.textContent = `${c}/${m}`;
+}
+
 function renderEnergyOrbs(){
   const el=document.getElementById('energy-orbs');
   if(!el||!G?.player) return;
@@ -4360,16 +4664,20 @@ function renderEnemyPlan(){
   const used=(G.turnPhase===TURN.ENEMY) ? Math.max(0,(G.enemyActionsThisTurn||0)) : 0;
   let label='🤔 Thinking...';
   let title='';
+  let intentCategory='Plan';
   if(G.enemyNextAction){
     label=G.enemyNextAction.label||'Enemy Plan';
     if(G.enemyNextAction.type==='plan'){
+      intentCategory='Pressure';
       const arr=(G.enemyNextAction.actions||[]).slice(0,2).map(a=>a.type==='ability'?(ENEMY_ABILITY_POOL[a.abilityId]?.name||a.abilityId):(a.label||a.type)).join(' → ');
       title=`Planned: ${arr}${(G.enemyNextAction.actions||[]).length>2?' +':''}`;
     } else if(G.enemyNextAction.type==='ability'){
+      intentCategory='Control';
       const eab=ENEMY_ABILITY_POOL[G.enemyNextAction.abilityId];
       title=eab?`${eab.name} — ${eab.desc||'Enemy ability'}
 Estimated effect: ${eab.dmg||'special'}`:'';
     } else if(G.enemyNextAction.type==='strike'){
+      intentCategory='Attack';
       const low=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.8));
       const high=Math.max(low,Math.floor((G.enemy.stats.atk||8)*1.2));
       title=`Basic Attack — physical hit
@@ -4383,7 +4691,7 @@ Estimated damage: ${low}-${high}`;
     return `<span class="intent-chip${i<used?' spent':''}">${icon} ${nm}<span class="intent-cost-sm">${cost}AP</span></span>`;
   }).join('') : '<span class="intent-chip wait">🤔 Planning</span>';
   const headCost=(plan[0] && Number.isFinite(plan[0].energyCost)) ? plan[0].energyCost : (plan[0] ? getEnemyActionEnergyCost(plan[0]) : 0);
-  host.innerHTML=`<div class="intent-row"><span class="intent-name">${label}</span><span class="intent-meta">${headCost?`<span class="intent-cost">${headCost} AP</span>`:''}<span class="intent-ap">EN ${curE}/${maxE}</span></span></div><div class="intent-list">${chips}</div>`;
+  host.innerHTML=`<div class="intent-row"><span class="intent-name">${label}</span><span class="intent-meta"><span class="intent-type">${intentCategory}</span>${headCost?`<span class="intent-cost">${headCost} AP</span>`:''}<span class="intent-ap">EN ${curE}/${maxE}</span></span></div><div class="intent-list">${chips}</div>`;
   host.title=title;
   if(title){
     host.onmouseenter=(e)=>showTooltip(e,title,e.clientX+10,e.clientY+10);
@@ -4676,17 +4984,9 @@ function renderActions() {
     const aq=G.player.abilities.find(x=>x.id===autoQueued);
     if(!aq||!canUseAbility(G.player,aq)){G.autoQueuedAbilityId=null;autoQueued=null;}
   }
-  let _prevType=null;
   allAbilities.forEach((ab,idx)=>{
-    if(_prevType!==ab.btnType){
-      const h=document.createElement('div');h.style.cssText='grid-column:1/-1;font-size:.68rem;letter-spacing:.08em;color:var(--text-dim);margin:2px 0 0;padding-top:6px;border-top:1px dashed rgba(120,140,170,.25)';
-      h.textContent=(ab.btnType==='physical'?'— PHYSICAL —':ab.btnType==='ranged'?'— RANGED —':ab.btnType==='spell'?'— MAGIC —':'— UTILITY —');
-      grid.appendChild(h);
-    }
     const btn=document.createElement('button');
     btn.className=`action-btn ${ab.btnType}`;
-    if(_prevType!==null&&_prevType!==ab.btnType) btn.classList.add('type-sep');
-    _prevType=ab.btnType;
     btn.setAttribute('data-ab-idx',idx);
     btn.setAttribute('data-ab-id',ab.id||'');
     const energyCost=syncAbilityEnergyCost(ab);
@@ -4733,10 +5033,12 @@ function renderActions() {
       if(G.playerStatus?.battleHymn) mods.push('⬆ Hymn buff');
       if(mods.length) modTxt=`<span class=\"btn-mod\" title=\"${mods.join(' | ')}\">${mods.join(' · ')}</span>`;
     }
+    const shortDesc=((ab.levels&&ab.levels[(ab.level||1)-1]?.desc)||ab.desc||'').replace(/<[^>]+>/g,'').slice(0,88);
     btn.innerHTML=`
       <span class="btn-name">${ab.name}</span>
       <span class="btn-type">${getAbilityDisplayTags(ab).map(t=>`[${t}]`).join('')}</span>
       <span class="btn-cost">${btnCostText}</span>
+      <span class="btn-desc">${shortDesc}</span>
       ${modTxt}
       ${ab.level>1?`<span class="ab-lv-badge">Lv${ab.level}</span>`:''}
       ${ailDots?`<div class="ailment-icons">${ailDots}</div>`:''}
@@ -4931,10 +5233,10 @@ function getClassCooldownAdjustment(ab, player){
   const kind=String(t.type||t.btnType||ab.type||ab.btnType||'').toLowerCase();
 
   // Class rhythm:
-  // Mage/Bard: smoother spell cycles later
-  // Summoner: summon/flood spells stay longer cooldown
-  // Tank/Knight: defensive/utility tools smooth out later
-  // Assassin/Ranger: attack buttons mostly keep their pace
+  // Singer/Trickster: smoother spell cycles later
+  // Trickster swarm patterns: summon/flood spells stay longer cooldown
+  // Tank/Bruiser: defensive/utility tools smooth out later
+  // Predator/Striker: attack buttons mostly keep their pace
   if(kind==='spell'){
     if((cls==='singer' || cls==='trickster') && lv>=8) return -1;
     if(cls==='trickster' && /murmuration|swarm|summon|flock|wing\s*storm|wingStorm|mobSwarm/i.test(t.id||t.name||'')) return 1;
@@ -5020,8 +5322,9 @@ function getPlayerPiercePctForAbility(ab){
   const t=ABILITY_TEMPLATES?.[ab?.id]||ab||{};
   const txt=`${t.name||''} ${t.desc||''}`.toLowerCase();
   const isHeavy=txt.includes('heavy')||txt.includes('smash')||txt.includes('slam')||txt.includes('crusher');
-  let perk=(G.player?.perkPiercePct||0);
-  if(isHeavy) perk+=(G.player?.perkHeavyPierce||0);
+  const classPerks=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  let perk=(classPerks.piercingTempo?0.10:0);
+  if(isHeavy && classPerks.crushingForce) perk+=0.10;
   return Math.max(0, base+perk);
 }
 
@@ -5029,43 +5332,77 @@ function getPlayerClassRole(player=G.player){
   const cls=(player?.class || BIRDS[player?.birdKey]?.class || '').toLowerCase();
   return classToRoleId(cls, player?.birdKey) || 'striker';
 }
-function getOwnedPerkIds(){
-  return new Set([...(G.runClassPerks||[]), ...((G.classPerksByBird||{})[G.player?.birdKey]||[])]);
+function getClassPerkTriggerForCurrentStage(){
+  const mode=(G.ui?.gameMode||'story')==='endless' ? 'endless' : 'story';
+  if(mode==='story'){
+    if((G.stage||0)!==11) return null;
+    if((G.runClassPerks||[]).length>=getClassPerkCapForMode('story')) return null;
+    if((G.runClassPerks||[]).some(entry=>entry?.source==='story-class-perk-10')) return null;
+    return 'story-class-perk-10';
+  }
+  if((G.endlessBattle||0)!==30) return null;
+  if((G.runClassPerks||[]).length>=getClassPerkCapForMode('endless')) return null;
+  if((G.runClassPerks||[]).some(entry=>entry?.source==='endless-class-perk-30')) return null;
+  return 'endless-class-perk-30';
 }
-function applyClassPerk(perkId){
-  const role=getPlayerClassRole();
-  const perk=(CLASS_PERK_DEFS[role]||[]).find(p=>p.id===perkId);
-  if(!perk || getOwnedPerkIds().has(perkId)) return false;
-  if(!Array.isArray(G.runClassPerks)) G.runClassPerks=[];
-  if(!G.classPerksByBird || typeof G.classPerksByBird!=='object') G.classPerksByBird={};
-  if(!Array.isArray(G.classPerksByBird[G.player.birdKey])) G.classPerksByBird[G.player.birdKey]=[];
-  G.runClassPerks.push(perkId);
-  G.classPerksByBird[G.player.birdKey].push(perkId);
-  perk.apply?.(G.player);
-  logMsg(`🧬 Class Perk: ${perk.name}`,'exp-gain');
-  saveRun();
-  return true;
-}
-function maybeOfferClassPerkChoice(){
-  const isStory=(G.ui?.gameMode||'story')==='story';
-  const role=getPlayerClassRole();
-  const owned=getOwnedPerkIds();
-  const pool=(CLASS_PERK_DEFS[role]||[]).filter(p=>!owned.has(p.id));
-  if(!pool.length) return false;
-  const dueEarly=isStory && G._classPerkChoicesGranted<1 && G.stage>=4;
-  const dueEndless=!isStory && G._classPerkChoicesGranted<2 && (G.endlessBattle||0)>=8;
-  if(!dueEarly && !dueEndless) return false;
 
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
-  const cards=pool.slice(0,3).map(p=>`<button data-perk="${p.id}" style="text-align:left;background:rgba(28,22,12,.96);border:1px solid rgba(201,168,76,.35);color:var(--text);border-radius:10px;padding:12px;cursor:pointer;"><div style="font-family:Cinzel,serif;color:var(--gold-light)">${p.name}</div><div style="font-size:.82rem;color:var(--text-dim)">${p.desc}</div></button>`).join('');
-  overlay.innerHTML=`<div style="width:min(760px,94vw);background:rgba(16,12,8,.98);border:1px solid var(--gold);border-radius:14px;padding:16px;"><div style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:10px;">Choose a ${role.toUpperCase()} Class Perk</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">${cards}</div></div>`;
-  overlay.querySelectorAll('button[data-perk]').forEach(btn=>btn.addEventListener('click',()=>{
-    applyClassPerk(btn.getAttribute('data-perk'));
-    G._classPerkChoicesGranted=(G._classPerkChoicesGranted||0)+1;
-    overlay.remove();
-  }));
-  document.body.appendChild(overlay);
+function continueStageTransitionAfterRewards(){
+  if(maybeOfferPassiveEvolutionChoice()) return;
+  if(maybeOfferClassPerkChoice()) return;
+
+  const lastEnemyWasBoss = G.enemy && G.enemy.isBoss;
+  const safeHP = G.player.stats.hp > G.player.stats.maxHp * 0.2;
+  if(!lastEnemyWasBoss && safeHP && Math.random() < 0.1){
+    setTimeout(()=>showGroveEvent(), 350);
+    return;
+  }
+
+  G.phase='PLAYER';
+  loadStage();
+}
+
+function openClassPerkChoice(options=[], source=''){
+  const sourceConfig=CLASS_PERK_SOURCE_RULES[source] || CLASS_PERK_SOURCE_RULES['story-class-perk-10'];
+  const role=getPlayerClassRole();
+  const roleLabel=idToClassLabel(role);
+  G._rewardScreenMode='class-perk';
+  G._pendingClassPerkChoice={source, options, role};
+  G._pendingReward=null;
+  showScreen('screen-reward');
+  document.getElementById('reward-title').textContent=sourceConfig.title;
+  document.getElementById('reward-sub').textContent=`${sourceConfig.subtitle} ${roleLabel ? `Active Class: ${roleLabel}.` : ''}`;
+  renderBattleSummary();
+  const confirmBtn=document.getElementById('reward-confirm-btn');
+  confirmBtn.textContent='✓ Claim Class Perk';
+  confirmBtn.className='confirm-btn';
+  const grid=document.getElementById('reward-grid');
+  grid.innerHTML='';
+  options.forEach(perk=>{
+    const tags=(perk.tags||[]).map(tag=>`<span class="reward-tag">${tag}</span>`).join('');
+    const c=document.createElement('div');
+    c.className='reward-card reward-card-class-perk tier-purple';
+    c.innerHTML=`
+      <div class="reward-tier-label">Class Perk</div>
+      <span class="reward-icon">🧬</span>
+      <div class="reward-name">${perk.name}</div>
+      <div class="reward-desc">${perk.desc}</div>
+      <div class="reward-class-row"><span class="class-badge class-${role}">${roleLabel}</span>${tags}</div>`;
+    c.onclick=()=>{
+      document.querySelectorAll('#reward-grid .reward-card').forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+      G._pendingReward=perk;
+      confirmBtn.className='confirm-btn visible';
+    };
+    grid.appendChild(c);
+  });
+}
+
+function maybeOfferClassPerkChoice(){
+  const source=getClassPerkTriggerForCurrentStage();
+  if(!source || !G.player?.birdKey) return false;
+  const available=getAvailableClassPerksForBird(G.player.birdKey);
+  if(!available.length) return false;
+  openClassPerkChoice(available.slice(0,3), source);
   return true;
 }
 
@@ -5120,19 +5457,16 @@ function maybeOfferPassiveEvolutionChoice(){
   overlay.querySelectorAll('button[data-path]').forEach(btn=>btn.addEventListener('click',()=>{
     applyPassiveEvolutionChoice(tierToOffer, btn.getAttribute('data-path'));
     overlay.remove();
-    if(maybeOfferPassiveEvolutionChoice()) return;
-    if(maybeOfferClassPerkChoice()) return;
-    G.phase='PLAYER';
-    loadStage();
+    continueStageTransitionAfterRewards();
   }));
   document.body.appendChild(overlay);
   return true;
 }
 
-function applyRangerPassiveOnTurnStart(){
+function applyOpeningStrikePassiveOnTurnStart(){
   const cls=(G.player?.class||BIRDS[G.player?.birdKey]?.class||'').toLowerCase();
   if(!['striker','trickster'].includes(cls)) return;
-  G.playerStatus.rangerFirstAttack=1;
+  G.playerStatus.openingStrikePierce=1;
 }
 
 function getCrowDefendCooldown(ab) {
@@ -5145,7 +5479,10 @@ function logMsg(msg,cls='') {
   const log=document.getElementById('battle-log');
   const d=document.createElement('div');
   d.className=`log-entry ${cls}`; d.textContent=msg;
-  log.appendChild(d); log.scrollTop=log.scrollHeight;
+  log.appendChild(d);
+  const entries=log.querySelectorAll('.log-entry');
+  if(entries.length>5){ for(let i=0;i<entries.length-5;i++) entries[i].remove(); }
+  log.scrollTop=log.scrollHeight;
 }
 
 // ============================================================
@@ -5570,9 +5907,10 @@ function applyPlayerSlow(spdPenalty,dodgePenalty,turns){
 function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
   let dmg=Math.max(1,amount);
   const passiveEvoBonus=getPassiveEvolutionBonuses(G.player);
+  const classPerkCtx=applyClassPerksToCombatContext(G.player?.birdKey,{});
   const activeAb=srcAbility||G._activePlayerAbility||null;
   const activeType=String(activeAb?.btnType||activeAb?.type||ABILITY_TEMPLATES?.[activeAb?.id]?.btnType||ABILITY_TEMPLATES?.[activeAb?.id]?.type||'').toLowerCase();
-  if(target==='enemy' && !isMagic && !isCrit && G.player?.perkSecondAttackCrit && (G.playerActionsThisTurn||0)===2 && chance(10)) isCrit=true;
+  if(target==='enemy' && !isMagic && !isCrit && classPerkCtx.predatorRhythm && (G.playerActionsThisTurn||0)===2 && chance(10)) isCrit=true;
   const critMult=(G.player.goldCritMult||1.5) + (isCrit?(G.player?.critDamageBonusPct||0):0);
   if (isCrit) dmg=Math.floor(dmg*critMult);
   if(target==='enemy'){
@@ -5599,14 +5937,14 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     if(isAttack && (G.player?.augAttackVsBleedPct||0)>0 && G.enemyStatus?.bleed?.stacks>0) dmg=Math.floor(dmg*(1+G.player.augAttackVsBleedPct));
     if(isAttack && (G.player?.augFirstAttackBattlePct||0)>0 && !G._firstAttackUsed) dmg=Math.floor(dmg*(1+G.player.augFirstAttackBattlePct));
     if(isAttack && (G.player?.augAttackExecutePct||0)>0 && G.enemy.stats.hp<=Math.floor((G.enemy.stats.maxHp||1)*0.5)) dmg=Math.floor(dmg*(1+G.player.augAttackExecutePct));
-    if((G.player?.perkWarBody||false) && (G.player.stats.hp||1)<=Math.floor((G.player.stats.maxHp||1)*0.5)) dmg=Math.floor(dmg*1.10);
-    if((G.player?.perkOpeningRush||false) && isAttack && !G._firstAttackUsed) dmg=Math.floor(dmg*1.15);
-    if((G.player?.perkVsFearPct||0)>0 && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*(1+G.player.perkVsFearPct));
+    if(classPerkCtx.warBody && (G.player.stats.hp||1)<=Math.floor((G.player.stats.maxHp||1)*0.5)) dmg=Math.floor(dmg*1.10);
+    if(classPerkCtx.openingRush && isAttack && !G._firstAttackUsed) dmg=Math.floor(dmg*1.15);
+    if(classPerkCtx.markedForDeath && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.15);
     if(G.player?.birdKey==='raven' && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.12);
     if(G.player?.birdKey==='harpy' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.18);
     if(G.player?.birdKey==='seagull' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.6)) dmg=Math.floor(dmg*1.20);
-    if((G.player?.perkExecutePct||0)>0 && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*(1+G.player.perkExecutePct));
-    if((G.player?.perkFirstVsFull||false) && !G._perkFirstVsFullUsed && (G.enemy.stats.hp||0)>=(G.enemy.stats.maxHp||1)){
+    if(classPerkCtx.executionLine && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.20);
+    if(classPerkCtx.patientHunter && !G._perkFirstVsFullUsed && (G.enemy.stats.hp||0)>=(G.enemy.stats.maxHp||1)){
       dmg=Math.floor(dmg*1.15);
       G._perkFirstVsFullUsed=true;
     }
@@ -5678,7 +6016,7 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
         G.player.stats.hp=Math.min(G.player.stats.maxHp,G.player.stats.hp+heal);
         spawnFloat('player',`+${heal}`,'fn-heal');
       }
-      if(G.player?.perkSlipstream){
+      if(classPerkCtx.slipstream){
         G.playerStatus.perkSlipstream=1;
       }
       return {dmgDealt:0,wasDodged:true,wasBlocked:false,isCrit};
@@ -5758,9 +6096,9 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     if(!isMagic){
       const a=srcAbility||G._activePlayerAbility||null;
       let pierce=getPlayerPiercePctForAbility(a);
-      if(G.playerStatus.rangerFirstAttack){
+      if(G.playerStatus.openingStrikePierce){
         pierce=Math.max(pierce,0.45);
-        delete G.playerStatus.rangerFirstAttack;
+        delete G.playerStatus.openingStrikePierce;
       }
       const enemyDef=(G.enemy.stats.def||0);
       const effDef=Math.floor(enemyDef*(1-pierce));
@@ -5843,10 +6181,6 @@ function pdmg(mult=1,ab=null) {
     // Kiwi Probe Master: high HP bonus
     if(G.player.birdKey==='kiwi'&&G.enemy.stats.hp/G.enemy.stats.maxHp>0.75) base=Math.floor(base*1.10);
   } else {
-    if((G.player?.perkIronCore||false) && !G._perkIronCoreUsed){
-      dmg=Math.floor(dmg*0.85);
-      G._perkIronCoreUsed=true;
-    }
     G._currentPiercePct=0;
   }
   return base;
@@ -5902,6 +6236,7 @@ function rollEnemyCritDamage(baseDamage){
 function getPlayerMissChance(ab) {
   const tmpl=ABILITY_TEMPLATES[ab.id];
   if (!tmpl) return 15;
+  const classPerkCtx=applyClassPerksToCombatContext(G.player?.birdKey,{});
   const lv=Math.min(ab.level,4);
   const baseMiss=tmpl.baseMissChance!==undefined?tmpl.baseMissChance:15;
   const perLvReduction=(tmpl.type==='physical')?0:4;
@@ -5925,12 +6260,12 @@ function getPlayerMissChance(ab) {
   const isSpell=(kind==='spell');
   if(isAttack) extra+=(G.player?.augAttackAcc||0);
   if(isSpell) extra+=(G.player?.augSpellAcc||0);
-  if(isSpell) extra+=(G.player?.perkSpellAcc||0);
+  if(isSpell && classPerkCtx.arcFocus) extra+=8;
   if((G.playerStatus?.perkUtilityAcc||0)>0){ extra+=8; delete G.playerStatus.perkUtilityAcc; }
-  if((G.player?.perkVsDebuffedAcc||0)>0){
+  if(classPerkCtx.falseOpening){
     const es=G.enemyStatus||{};
     const debuffed=!!(es.poison||es.bleed||es.burning||es.weaken||es.feared||es.confused||es.paralyzed||es.slow||es.accDebuff>0);
-    if(debuffed) extra += G.player.perkVsDebuffedAcc;
+    if(debuffed) extra += 6;
   }
   if((G.player?.augPostDefAcc||0)>0 && G.playerStatus?.postDefAccNext){ extra += G.player.augPostDefAcc; delete G.playerStatus.postDefAccNext; }
   if(G.player?.relHawkLedger && isEndlessRunActive()){ const eb=G.endlessBattle||0; if(eb>=10) extra+=8; if(eb>=20) extra+=8; if(eb>=30) extra+=8; }
@@ -7191,7 +7526,7 @@ const ACTIONS = {
     const lv=ab.level;
     const defBonus=[2,4,5,7][lv-1];
     const dodBonus=[0,10,15,20][lv-1]; // no ACC buff - removed
-    const turns=lv>=2?3:5; // 1 buff=5t, 2 buffs=3t
+    const turns=(lv>=2?3:5) + getPlayerClassPerkBuffDurationBonus(); // 1 buff=5t, 2 buffs=3t
     if(G.playerStatus.battleHymn){G.player.stats.def-=G.playerStatus.battleHymn.defBonus;}
     G.battleHymnActive=true; G.battleHymnDEF=defBonus; G.battleHymnACC=0; // no ACC
     G.player.stats.def+=defBonus;
@@ -7203,7 +7538,7 @@ const ACTIONS = {
   },
   async reveille(ab) {
     const lv=ab.level;
-    const turns=[3,3,4,4][lv-1];
+    const turns=[3,3,4,4][lv-1] + getPlayerClassPerkBuffDurationBonus();
     const totalPct=[.15,.21,.30,.40][lv-1];
     const pctPerTurn=totalPct/turns;
     G.regenTurns=turns; G.regenPct=pctPerTurn;
@@ -7218,7 +7553,7 @@ const ACTIONS = {
   async victoryChant(ab) {
     const lv=ab.level;
     const healPct=[.20,.28,.35,.45][lv-1];
-    const heal=Math.floor(G.player.stats.maxHp*healPct);
+    const heal=Math.floor(G.player.stats.maxHp*healPct) + getPlayerClassPerkSongHealFlat();
     G.player.stats.hp=Math.min(G.player.stats.hp+heal,G.player.stats.maxHp);
     await doHeal('player',heal);
     setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);
@@ -7568,14 +7903,15 @@ async function playerAction(ab,fromQueue=false) {
   if(G.enemy?.id==='duke_blakiston') dukeTrackDecree(ab.id);
   G._activePlayerAbility=ab;
   const _abKindNow=String(ab?.btnType||ab?.type||ABILITY_TEMPLATES?.[ab?.id]?.btnType||ABILITY_TEMPLATES?.[ab?.id]?.type||'').toLowerCase();
-  if(_abKindNow==='utility' && G.player?.perkUtilityRefund && !G._perkUtilityRefundUsed){
+  const classPerkCtx=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  if(_abKindNow==='utility' && classPerkCtx.quickTheft && !G._perkUtilityRefundUsed){
     gainEnergy(G.player,1);
     G._perkUtilityRefundUsed=true;
   }
   if((_abKindNow==='utility' || _abKindNow==='buff' || _abKindNow==='defend') && G.player?.perkUtilityAcc){
     G.playerStatus.perkUtilityAcc=1;
   }
-  if(G.player?.perkHoldTheLine && /guard|defend|shield|crowdefend/i.test(ab.id||'')){
+  if(classPerkCtx.holdTheLine && /guard|defend|shield|crowdefend/i.test(ab.id||'')){
     G.playerStatus.holdTheLineBoost=1;
   }
   G.playerActionsThisTurn=(G.playerActionsThisTurn||0)+1;
@@ -7602,7 +7938,7 @@ async function playerAction(ab,fromQueue=false) {
     await ACTIONS[ab.id](ab);
   }
   const _abKind=String(ab?.btnType||ab?.type||ABILITY_TEMPLATES?.[ab?.id]?.btnType||ABILITY_TEMPLATES?.[ab?.id]?.type||'').toLowerCase();
-  if((_abKind==='physical'||_abKind==='ranged') && G.player?.perkIronMomentum && /heavy|slam|crusher|smash/i.test((ab.name||ab.id||'').toLowerCase())){
+  if((_abKind==='physical'||_abKind==='ranged') && classPerkCtx.ironMomentum && /heavy|slam|crusher|smash/i.test((ab.name||ab.id||'').toLowerCase())){
     addStatus(G.playerStatus,'defending',1,999);
   }
   if(_abKind==='physical'||_abKind==='ranged') G._firstAttackUsed=true;
@@ -7650,7 +7986,7 @@ function startPlayerTurn(player){
   G.turnPhase=TURN.PLAYER;
   G.phase='PLAYER';
   G.animLock=false;
-  applyRangerPassiveOnTurnStart();
+  applyOpeningStrikePassiveOnTurnStart();
   renderEnergyOrbs();
   renderActions();
   lockActionUI(false);
@@ -7844,8 +8180,8 @@ Object.assign(ACTIONS, {
   async skyHymn(ab){
     const lv=Math.max(1,Math.min(ab.level||1,4));
     await doSpell('player', '🎵');
-    G.playerStatus.humDodge={bonus:10+(lv-1)*5, turns:2};
-    const heal = Math.max(3, Math.floor(G.player.stats.maxHp*(0.04 + (lv-1)*0.008)));
+    G.playerStatus.humDodge={bonus:10+(lv-1)*5, turns:2 + getPlayerClassPerkBuffDurationBonus()};
+    const heal = Math.max(3, Math.floor(G.player.stats.maxHp*(0.04 + (lv-1)*0.008))) + getPlayerClassPerkSongHealFlat();
     G.player.stats.hp = Math.min(G.player.stats.hp + heal, G.player.stats.maxHp);
     spawnFloat('player', `+${heal}❤️`, 'fn-heal');
     renderStatuses('player-status', G.playerStatus);
@@ -8806,7 +9142,6 @@ function checkDeath() {
       if(_kookBd&&_kookBd.passive&&_kookBd.passive.id==='ambushMaster') _kookBd.passive.onBossKill(G.player);
     }
     logMsg(`✨ ${G.enemy.name} defeated!`,'crit');
-    showBattleCaption('Bird Slain');
     setTimeout(postCombat,700);return true;
   }
   if(G.player.stats.hp<=0){
@@ -9057,6 +9392,7 @@ function rollTier(isBoss) {
 
 function showRewardScreen(hasLevelUp) {
   showScreen('screen-reward');
+  G._rewardScreenMode='normal';
   G._pendingLevelUp=hasLevelUp;
   G._pendingReward=null;
   const isBoss=G.enemy.isBoss;
@@ -9067,6 +9403,7 @@ function showRewardScreen(hasLevelUp) {
   const grid=document.getElementById('reward-grid'); grid.innerHTML='';
   renderBattleSummary();
   const confirmBtn=document.getElementById('reward-confirm-btn');
+  confirmBtn.textContent='✓ Take This Reward';
   confirmBtn.className='confirm-btn';
   pool.forEach(rw=>{
     const c=document.createElement('div');
@@ -9088,6 +9425,22 @@ function showRewardScreen(hasLevelUp) {
 
 function confirmReward() {
   if(!G._pendingReward) return;
+  if(G._rewardScreenMode==='class-perk'){
+    const source=String(G._pendingClassPerkChoice?.source||'');
+    const perkDef=G._pendingReward;
+    const birdKey=G.player?.birdKey;
+    G._pendingReward=null;
+    G._rewardScreenMode='normal';
+    G._pendingClassPerkChoice=null;
+    document.getElementById('reward-confirm-btn').className='confirm-btn';
+    document.getElementById('reward-confirm-btn').textContent='✓ Take This Reward';
+    if(grantClassPerk(birdKey, perkDef, source)){
+      continueStageTransitionAfterRewards();
+    }else{
+      continueStageTransitionAfterRewards();
+    }
+    return;
+  }
   if(document.getElementById('gold-replace-ui')) return;
   if(G._pendingReward.tier==='gold'&&getGoldCardCount()>=getGoldCardLimit()){
     showGoldReplaceUI(G._pendingReward);
@@ -9613,19 +9966,7 @@ function advanceStage() {
     logMsg('🔓 Legendary birds unlocked: Shoebill Stork & Harpy Eagle!','boss');
   }
   saveRun();
-  if(maybeOfferPassiveEvolutionChoice()) return;
-  if(maybeOfferClassPerkChoice()) return;
-
-  // ── Whispering Grove: ~10% after non-boss victories, player must be >20% HP
-  const lastEnemyWasBoss = G.enemy && G.enemy.isBoss;
-  const safeHP = G.player.stats.hp > G.player.stats.maxHp * 0.2;
-  if(!lastEnemyWasBoss && safeHP && Math.random() < 0.1){
-    setTimeout(()=>showGroveEvent(), 350);
-    return; // halt progression until grove resolves
-  }
-
-  G.phase='PLAYER';
-  loadStage();
+  continueStageTransitionAfterRewards();
 }
 
 // ============================================================
@@ -9639,12 +9980,14 @@ function isBossStage(stage){
 function showGroveEvent(){
   G._groveOutcomes = null;
   G._groveResolved = false;
+  G._groveNestReward = null;
   // Reset UI
   const trees = document.getElementById('grove-trees');
   trees.style.display = 'none';
   document.getElementById('grove-result-msg').textContent = '';
   document.getElementById('grove-reward-section').style.display = 'none';
   document.getElementById('grove-continue-btn').style.display = 'none';
+  document.getElementById('grove-continue-btn').textContent = 'Continue →';
   document.getElementById('grove-opt-row').style.display = 'flex';
   document.getElementById('grove-intro-text').style.display = '';
 
@@ -9810,6 +10153,13 @@ function showGroveNestRewards(){
     picks.push(rw);
   }
 
+  if(!picks.length){
+    grid.innerHTML='<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:10px 0;">The nest is empty this time. Continue onward.</div>';
+    document.getElementById('grove-continue-btn').style.display='inline-block';
+    document.getElementById('grove-continue-btn').textContent='Continue →';
+    return;
+  }
+
   picks.forEach(rw=>{
     const c=document.createElement('div');
     c.className=`reward-card tier-${rw.tier}`;
@@ -9833,7 +10183,7 @@ function groveFinish(){
   // If a nest reward was selected, apply it
   if(G._groveNestReward){
     const rw=G._groveNestReward;
-    rw.apply(G.player);
+    applyUpgradeWithMaxHpHealing(G.player, ()=>rw.apply(G.player), rw.name||'Grove Nest Reward');
     if(!G.collectedRewards)G.collectedRewards=[];
     G.collectedRewards.push({icon:rw.icon,tier:rw.tier,name:rw.name,desc:rw.desc});
     codexMark('artifacts', rw.id||rw.name, 'seen');
@@ -10198,7 +10548,7 @@ const ABILITIES_REFERENCE = {
   stormCall:{desc:'High-impact spell cast.',effect:'Heavy magic damage with setup payoff.'},
   dirgeOfDread:{desc:'Control song pattern.',effect:'Fear and weaken pressure over short windows.'},
   pinionVolley:{desc:'Predator multi-hit tool.',effect:'Repeated hits with armor-piercing pressure.'},
-  bleakBeak:{desc:'Support spell/basic hybrid.',effect:'Reliable low-cost spell chip and setup.'},
+  bleakBeak:{desc:'Singer spell/basic hybrid.',effect:'Reliable low-cost spell chip and setup.'},
 };
 
 const ENEMY_BIRD_DATA = [
@@ -10327,7 +10677,7 @@ function buildRefGuide() {
 
   const mechanics=`<div class="ref-skills-grid">
     ${card('Energy & Cooldowns','Main attacks are free unless spells. Abilities spend energy and many skills have cooldowns.',true,'core')}
-    ${card('Role Taxonomy','Birds are grouped by roles: Striker, Bruiser, Tank, Trickster, Predator, Support.',true,'roles')}
+    ${card('Role Taxonomy','Birds are grouped by roles: Striker, Bruiser, Tank, Trickster, Predator, Singer.',true,'roles')}
     ${card('Passive Evolution (Endless)','In Endless mode, passives evolve at milestones with offensive vs utility choices.',true,'endless')}
     ${card('Enemy AI Profiles','Enemy personalities (aggressive, tactical, control, tank, predator, etc.) bias action planning.',true,'ai')}
     ${card('Codex Unlocks','Entries unlock when seen/used during runs. Use search and Show Locked to browse all.',true,'codex')}

@@ -74,7 +74,7 @@ header p{color:var(--text-dim);font-style:italic;font-size:1rem;margin-top:4px;}
 .sel-right{position:sticky;top:10px;}
 
 /* VIEW TOGGLE */
-.view-toggle{display:flex;gap:0;justify-content:flex-start;margin-bottom:12px;border-radius:8px;overflow-x:auto;overflow-y:hidden;border:1px solid rgba(80,70,50,.4);width:min(100%,1100px);margin:0 auto 14px;scrollbar-width:thin;}
+.view-toggle{display:flex;flex-wrap:wrap;gap:0;justify-content:flex-start;border-radius:8px;overflow:visible;border:1px solid rgba(80,70,50,.4);width:100%;scrollbar-width:thin;}
 .view-toggle-btn{padding:6px 18px;background:rgba(20,15,5,.7);color:var(--text-dim);font-size:.75rem;font-family:'Cinzel',serif;letter-spacing:.05em;cursor:pointer;border:none;transition:all .2s;flex:0 0 auto;white-space:nowrap;}
 .view-toggle-btn.active{background:rgba(80,60,18,.95);color:var(--gold);}
 .class-filter-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
@@ -501,6 +501,10 @@ body.ui-mobile-mode #screen-battle .level-badge{font-size:.7rem;}
 .tier-purple .reward-name{color:var(--tier-purple);}
 .tier-gold .reward-name{color:var(--tier-gold);}
 .reward-desc{font-size:.82rem;color:var(--text-dim);line-height:1.5;}
+.reward-class-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-top:12px;}
+.reward-tag{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1px solid rgba(201,168,76,.28);background:rgba(255,255,255,.04);color:var(--text-dim);}
+.reward-card-class-perk{background:linear-gradient(180deg,rgba(38,20,56,.96),rgba(20,12,34,.96));border-color:rgba(180,108,255,.55);box-shadow:0 0 24px rgba(148,90,255,.18);}
+.reward-card-class-perk::before{background:linear-gradient(90deg,#8e5cff,#d3a4ff);}
 
 /* Skill upgrade cards */
 .skill-upgrade-card{background:var(--surface);border:2px solid rgba(122,76,201,.4);border-radius:12px;padding:18px 14px;cursor:pointer;transition:all .3s;}
@@ -1407,19 +1411,6 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
   height:84px !important;
 }
 
-
-/* Inline expanded selector cards (replaces right-side select panel) */
-.sel-layout{grid-template-columns:1fr !important;}
-.sel-right{display:none !important;}
-#ascent-panel{display:none !important;}
-.bird-card{position:relative;}
-.bird-card-expanded{
-  margin-top:10px;
-  border-top:1px solid rgba(201,168,76,.25);
-  padding-top:10px;
-  text-align:center;
-}
-.bird-card-expanded .cta{width:100%;max-width:360px;margin:10px auto 0;display:block;}
 
 /* Mobile landscape support */
 @media (max-width: 960px) and (orientation: landscape){
