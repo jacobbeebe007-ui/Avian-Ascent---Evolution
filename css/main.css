@@ -501,6 +501,10 @@ body.ui-mobile-mode #screen-battle .level-badge{font-size:.7rem;}
 .tier-purple .reward-name{color:var(--tier-purple);}
 .tier-gold .reward-name{color:var(--tier-gold);}
 .reward-desc{font-size:.82rem;color:var(--text-dim);line-height:1.5;}
+.reward-class-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-top:12px;}
+.reward-tag{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1px solid rgba(201,168,76,.28);background:rgba(255,255,255,.04);color:var(--text-dim);}
+.reward-card-class-perk{background:linear-gradient(180deg,rgba(38,20,56,.96),rgba(20,12,34,.96));border-color:rgba(180,108,255,.55);box-shadow:0 0 24px rgba(148,90,255,.18);}
+.reward-card-class-perk::before{background:linear-gradient(90deg,#8e5cff,#d3a4ff);}
 
 /* Skill upgrade cards */
 .skill-upgrade-card{background:var(--surface);border:2px solid rgba(122,76,201,.4);border-radius:12px;padding:18px 14px;cursor:pointer;transition:all .3s;}

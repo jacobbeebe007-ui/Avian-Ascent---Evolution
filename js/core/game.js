@@ -1672,6 +1672,198 @@ const CLASS_PERK_DEFS = {
     {id:'restorativeRhythm',name:'Restorative Rhythm',desc:'Healing skills restore +3 HP.',apply:p=>{p.perkHealFlat=(p.perkHealFlat||0)+3;}},
   ],
 };
+const CLASS_PERK_BY_CLASS = Object.freeze(CLASS_PERK_DEFS);
+const CLASS_PERK_SOURCE_RULES = Object.freeze({
+  'story-class-perk-10':{
+    mode:'story',
+    maxChoices:1,
+    title:'Choose a Class Perk',
+    subtitle:'Your fighting style begins to take shape.',
+  },
+  'endless-class-perk-30':{
+    mode:'endless',
+    maxChoices:2,
+    title:'Evolve Your Class',
+    subtitle:'Your role sharpens in the long hunt.',
+  },
+});
+
+function ensureClassPerkState(target=G){
+  if(!target || typeof target!=='object') return {classPerks:{}, runClassPerks:[]};
+  if(!target.classPerks || typeof target.classPerks!=='object') target.classPerks={};
+  if(!Array.isArray(target.runClassPerks)) target.runClassPerks=[];
+  return target;
+}
+
+function normalizeClassPerkIdList(list=[]){
+  return [...new Set((Array.isArray(list)?list:[]).map(id=>String(id||'').trim()).filter(Boolean))];
+}
+
+function getBirdClassRoleByKey(birdKey=''){
+  return resolveFinalClass(BIRDS?.[birdKey]?.class || '', birdKey);
+}
+
+function migrateLegacyClassPerkState(target=G, playerRef=null){
+  if(!target || typeof target!=='object') return ensureClassPerkState(target);
+  const state=ensureClassPerkState(target);
+  const legacyMap=(target.classPerksByBird && typeof target.classPerksByBird==='object') ? target.classPerksByBird : {};
+  const playerBirdKey=playerRef?.birdKey || target.player?.birdKey || '';
+
+  Object.entries(legacyMap).forEach(([birdKey, perkIds])=>{
+    const normalizedKey=String(birdKey||'');
+    if(!normalizedKey) return;
+    const merged=normalizeClassPerkIdList([...(state.classPerks[normalizedKey]||[]), ...normalizeClassPerkIdList(perkIds)]);
+    if(merged.length) state.classPerks[normalizedKey]=merged;
+  });
+
+  const migratedRunPerks=[];
+  (Array.isArray(target.runClassPerks)?target.runClassPerks:[]).forEach(entry=>{
+    if(!entry) return;
+    if(typeof entry==='string'){
+      if(!playerBirdKey) return;
+      migratedRunPerks.push({
+        birdKey:playerBirdKey,
+        classPerkId:entry,
+        source:'legacy-class-perk',
+      });
+      return;
+    }
+    const birdKey=String(entry.birdKey || playerBirdKey || '').trim();
+    const classPerkId=String(entry.classPerkId || entry.perkId || entry.id || '').trim();
+    if(!birdKey || !classPerkId) return;
+    migratedRunPerks.push({
+      birdKey,
+      classPerkId,
+      source:String(entry.source||'legacy-class-perk'),
+    });
+  });
+  state.runClassPerks=migratedRunPerks.filter((entry, idx, arr)=>(
+    arr.findIndex(other=>other.birdKey===entry.birdKey && other.classPerkId===entry.classPerkId && other.source===entry.source)===idx
+  ));
+
+  Object.entries(state.classPerks).forEach(([birdKey, perkIds])=>{
+    state.classPerks[birdKey]=normalizeClassPerkIdList(perkIds).filter(perkId=>{
+      const role=getBirdClassRoleByKey(birdKey);
+      return (CLASS_PERK_BY_CLASS[role]||[]).some(perk=>perk.id===perkId);
+    });
+    if(!state.classPerks[birdKey].length) delete state.classPerks[birdKey];
+  });
+
+  Object.entries(state.classPerks).forEach(([birdKey, perkIds])=>{
+    perkIds.forEach(perkId=>{
+      const exists=state.runClassPerks.some(entry=>entry.birdKey===birdKey && entry.classPerkId===perkId);
+      if(!exists){
+        state.runClassPerks.push({birdKey,classPerkId:perkId,source:'legacy-class-perk'});
+      }
+    });
+  });
+
+  delete target.classPerksByBird;
+  return state;
+}
+
+function getBirdClassPerks(birdKey){
+  const state=migrateLegacyClassPerkState(G, G.player);
+  const normalizedKey=String(birdKey || G.player?.birdKey || '').trim();
+  return normalizeClassPerkIdList(state.classPerks[normalizedKey]||[]);
+}
+
+function hasClassPerk(birdKey, perkId){
+  return getBirdClassPerks(birdKey).includes(String(perkId||''));
+}
+
+function getClassPerkGrantCountForMode(mode){
+  const key=(mode==='endless') ? 'endless' : 'story';
+  const granted=(G.runClassPerks||[]).filter(entry=>{
+    const source=String(entry?.source||'');
+    const cfg=CLASS_PERK_SOURCE_RULES[source];
+    return cfg ? cfg.mode===key : key==='story';
+  }).length;
+  return granted;
+}
+
+function getClassPerkCapForMode(mode){
+  return mode==='endless' ? 2 : 1;
+}
+
+function getAvailableClassPerksForBird(birdKey){
+  const normalizedBirdKey=String(birdKey || G.player?.birdKey || '').trim();
+  const role=getBirdClassRoleByKey(normalizedBirdKey);
+  const owned=new Set(getBirdClassPerks(normalizedBirdKey));
+  return (CLASS_PERK_BY_CLASS[role]||[]).filter(perk=>perk && perk.id && !owned.has(perk.id));
+}
+
+function applyClassPerksToStats(birdKey, player=G.player){
+  if(!player || !birdKey) return player;
+  const owned=new Set(getBirdClassPerks(birdKey));
+  if(!player._appliedClassPerkIds || typeof player._appliedClassPerkIds!=='object') player._appliedClassPerkIds={};
+  const applied=player._appliedClassPerkIds;
+  (CLASS_PERK_BY_CLASS[getBirdClassRoleByKey(birdKey)]||[]).forEach(perk=>{
+    if(!owned.has(perk.id) || applied[perk.id]) return;
+    perk.apply?.(player);
+    applied[perk.id]=true;
+  });
+  return player;
+}
+
+function applyClassPerksToCombatContext(birdKey, context={}){
+  const owned=new Set(getBirdClassPerks(birdKey));
+  const out={...context};
+  out.piercingTempo = owned.has('piercingTempo');
+  out.openingRush = owned.has('openingRush');
+  out.predatorRhythm = owned.has('predatorRhythm');
+  out.crushingForce = owned.has('crushingForce');
+  out.warBody = owned.has('warBody');
+  out.ironMomentum = owned.has('ironMomentum');
+  out.ironCore = owned.has('ironCore');
+  out.holdTheLine = owned.has('holdTheLine');
+  out.slipstream = owned.has('slipstream');
+  out.falseOpening = owned.has('falseOpening');
+  out.quickTheft = owned.has('quickTheft');
+  out.markedForDeath = owned.has('markedForDeath');
+  out.patientHunter = owned.has('patientHunter');
+  out.executionLine = owned.has('executionLine');
+  out.arcFocus = owned.has('arcFocus');
+  out.songline = owned.has('songline');
+  out.restorativeRhythm = owned.has('restorativeRhythm');
+  out.buffDurationBonus = (out.songline ? 1 : 0);
+  out.songHealFlat = (out.restorativeRhythm ? 3 : 0);
+  return out;
+}
+
+function recomputeClassPerkEffects(){
+  migrateLegacyClassPerkState(G, G.player);
+  if(!G.player?.birdKey) return;
+  applyClassPerksToStats(G.player.birdKey, G.player);
+}
+
+function getPlayerClassPerkBuffDurationBonus(){
+  const ctx=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  return ctx.buffDurationBonus||0;
+}
+
+function getPlayerClassPerkSongHealFlat(){
+  const ctx=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  return ctx.songHealFlat||0;
+}
+
+function grantClassPerk(birdKey, perkDef, source=''){
+  const normalizedBirdKey=String(birdKey || G.player?.birdKey || '').trim();
+  const perkId=String(perkDef?.id || '').trim();
+  if(!normalizedBirdKey || !perkId || hasClassPerk(normalizedBirdKey, perkId)) return false;
+  const state=ensureClassPerkState(G);
+  if(!Array.isArray(state.classPerks[normalizedBirdKey])) state.classPerks[normalizedBirdKey]=[];
+  state.classPerks[normalizedBirdKey].push(perkId);
+  state.classPerks[normalizedBirdKey]=normalizeClassPerkIdList(state.classPerks[normalizedBirdKey]);
+  state.runClassPerks.push({birdKey:normalizedBirdKey,classPerkId:perkId,source:String(source||'manual-class-perk')});
+  if(source && CLASS_PERK_SOURCE_RULES[source]){
+    G._classPerkChoicesGranted=Math.max(G._classPerkChoicesGranted||0,getClassPerkGrantCountForMode(CLASS_PERK_SOURCE_RULES[source].mode));
+  }
+  recomputeClassPerkEffects();
+  logMsg(`🧬 Class Perk acquired: ${perkDef?.name||perkId}.`,'exp-gain');
+  saveRun();
+  return true;
+}
 
 // Drop rate weights (non-boss) — [grey,green,blue,purple,gold]
 const NORMAL_WEIGHTS = [42,34,17,7,0];
@@ -2849,7 +3041,7 @@ let G = {
   _pendingStorkShop:false,
   _pendingShopMode:null,
   runClassPerks:[],
-  classPerksByBird:{},
+  classPerks:{},
   _classPerkChoicesGranted:0,
   autoQueuedAbilityId:null,
   abilityCooldowns:{},
@@ -3066,6 +3258,18 @@ function openNest() {
   if(bd&&bd.passive){
     html+=`<div class="nest-passive"><div class="nest-passive-title">★ PASSIVE: ${bd.passive.name}</div>${bd.passive.desc}</div>`;
   }
+  const ownedClassPerks=getBirdClassPerks(p.birdKey);
+  if(ownedClassPerks.length){
+    const role=getBirdClassRoleByKey(p.birdKey);
+    const perkCards=ownedClassPerks.map(perkId=>{
+      const perk=(CLASS_PERK_BY_CLASS[role]||[]).find(entry=>entry.id===perkId);
+      if(!perk) return '';
+      return `<div class="nest-reward-row"><span class="nest-reward-icon">🧬</span><span class="nest-reward-name">${perk.name}</span><span class="nest-reward-desc">${perk.desc}</span></div>`;
+    }).join('');
+    if(perkCards){
+      html+=`<div class="nest-section"><div class="nest-section-title">🧬 Class Perks · ${idToClassLabel(role)}</div><div class="nest-rewards-list">${perkCards}</div></div>`;
+    }
+  }
   // Stats
   const s=p.stats;
   // Compute effective in-battle stats
@@ -3092,15 +3296,16 @@ function openNest() {
     <div class="nest-stat-card" title="Magic Defence — resists enemy spells and ailments"><div class="nest-stat-val" style="color:#6ae8e8">${s.mdef||8}</div><div class="nest-stat-lbl" style="color:#4ab8c0">✦ M.DEF</div></div>
   </div></div>`;
   // Abilities
-  html+=`<div class="nest-section"><div class="nest-section-title">⚔ Abilities (${p.abilities.length}/4)</div><div class="nest-abilities-grid">`;
+  html+=`<div class="nest-section"><div class="nest-section-title">⚔ Abilities (${p.abilities.length})</div><div class="nest-abilities-grid">`;
   p.abilities.forEach(ab=>{
     const tmpl=ABILITY_TEMPLATES[ab.id];
     const lv=Math.min(ab.level,4);
-    const desc=tmpl?tmpl.levels[lv-1].desc:'';
+    const desc=tmpl?.levels?.[lv-1]?.desc || tmpl?.desc || ab?.desc || 'No description available.';
     const path=tmpl?formatAbilityLevelPathway(tmpl):'';
+    const abType=String(ab.type||ab.btnType||tmpl?.type||tmpl?.btnType||'ability');
     html+=`<div class="nest-ab-card">
-      <div class="nest-ab-name ${ab.type}">${ab.name}</div>
-      <div class="nest-ab-lv">Level ${ab.level} · ${ab.type}</div>
+      <div class="nest-ab-name ${abType}">${ab.name}</div>
+      <div class="nest-ab-lv">Level ${ab.level} · ${abType}</div>
       <div class="nest-ab-desc">${desc}</div>
       ${path?`<div class="nest-ab-path">${path.replace(/\n/g,'<br>')}</div>`:''}
     </div>`;
@@ -3156,6 +3361,8 @@ function saveRun() {
       stage: G.stage, bossKills: G.bossKills,
       endlessMode: G.endlessMode, endlessBattle: G.endlessBattle,
       collectedRewards: G.collectedRewards||[],
+      classPerks: JSON.parse(JSON.stringify((G.classPerks||{}))),
+      runClassPerks: JSON.parse(JSON.stringify((G.runClassPerks||[]))),
       runUpgradesPurchased: [...(G.runUpgradesPurchased||new Set())],
       codex: JSON.parse(JSON.stringify(G.codex||{abilities:{},enemies:{},birds:{},artifacts:{},statuses:{}})),
       ui: JSON.parse(JSON.stringify(ensureUIState())),
@@ -3199,6 +3406,13 @@ function continueRun() {
   G.collectedRewards=save.collectedRewards||[];
   G.player=save.player;
   G.player.class = resolveFinalClass(G.player?.class, G.player?.birdKey);
+  G.classPerks = JSON.parse(JSON.stringify(save.classPerks||save.classPerksByBird||{}));
+  G.runClassPerks = JSON.parse(JSON.stringify(save.runClassPerks||[]));
+  migrateLegacyClassPerkState(G, G.player);
+  G._classPerkChoicesGranted = Math.max(getClassPerkGrantCountForMode('story'), getClassPerkGrantCountForMode('endless'));
+  if(!G.player._appliedClassPerkIds || typeof G.player._appliedClassPerkIds!=='object'){
+    G.player._appliedClassPerkIds=Object.fromEntries(getBirdClassPerks(G.player?.birdKey).map(id=>[id,true]));
+  }
   if(!Array.isArray(G.player.endlessRewards)) G.player.endlessRewards=[];
   ensurePassiveEvolutionState(G.player);
   G.runUpgradesPurchased=new Set(save.runUpgradesPurchased||[]);
@@ -3210,6 +3424,7 @@ function continueRun() {
   removeMimicEverywhere();
   normalizeAbilityCooldownsForPlayer(G.player);
   enforceAbilityCosts(G.player);
+  recomputeClassPerkEffects();
   // Migration: ensure mdodge and card stats exist
   if(G.player.stats.mdodge===undefined) G.player.stats.mdodge = G.player.stats.dodge||20;
   if(G.player.cardDodge===undefined) G.player.cardDodge=0;
@@ -3902,7 +4117,7 @@ function startGame() {
   G.codex = {abilities:{},enemies:{},birds:{},artifacts:{},statuses:{}};
   G.shinyObjects = 0;
   G.runClassPerks = [];
-  G.classPerksByBird = {};
+  G.classPerks = {};
   G._classPerkChoicesGranted = 0;
   saveRun();
   G.phase='PLAYER';
@@ -4074,6 +4289,7 @@ function loadStage() {
   applyBiomeModifiers();
   // Remove stat bonuses before resetting flags (avoid accumulating across battles)
   resetForNewBattle();
+  recomputeClassPerkEffects();
   // Reset Goose bruise accumulator per battle
   if(G.player._bruiseAcc!==undefined) G.player._bruiseAcc=0;
   // Reset battle stats
@@ -5149,8 +5365,9 @@ function getPlayerPiercePctForAbility(ab){
   const t=ABILITY_TEMPLATES?.[ab?.id]||ab||{};
   const txt=`${t.name||''} ${t.desc||''}`.toLowerCase();
   const isHeavy=txt.includes('heavy')||txt.includes('smash')||txt.includes('slam')||txt.includes('crusher');
-  let perk=(G.player?.perkPiercePct||0);
-  if(isHeavy) perk+=(G.player?.perkHeavyPierce||0);
+  const classPerks=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  let perk=(classPerks.piercingTempo?0.10:0);
+  if(isHeavy && classPerks.crushingForce) perk+=0.10;
   return Math.max(0, base+perk);
 }
 
@@ -5158,43 +5375,77 @@ function getPlayerClassRole(player=G.player){
   const cls=(player?.class || BIRDS[player?.birdKey]?.class || '').toLowerCase();
   return classToRoleId(cls, player?.birdKey) || 'striker';
 }
-function getOwnedPerkIds(){
-  return new Set([...(G.runClassPerks||[]), ...((G.classPerksByBird||{})[G.player?.birdKey]||[])]);
+function getClassPerkTriggerForCurrentStage(){
+  const mode=(G.ui?.gameMode||'story')==='endless' ? 'endless' : 'story';
+  if(mode==='story'){
+    if((G.stage||0)!==11) return null;
+    if((G.runClassPerks||[]).length>=getClassPerkCapForMode('story')) return null;
+    if((G.runClassPerks||[]).some(entry=>entry?.source==='story-class-perk-10')) return null;
+    return 'story-class-perk-10';
+  }
+  if((G.endlessBattle||0)!==30) return null;
+  if((G.runClassPerks||[]).length>=getClassPerkCapForMode('endless')) return null;
+  if((G.runClassPerks||[]).some(entry=>entry?.source==='endless-class-perk-30')) return null;
+  return 'endless-class-perk-30';
 }
-function applyClassPerk(perkId){
-  const role=getPlayerClassRole();
-  const perk=(CLASS_PERK_DEFS[role]||[]).find(p=>p.id===perkId);
-  if(!perk || getOwnedPerkIds().has(perkId)) return false;
-  if(!Array.isArray(G.runClassPerks)) G.runClassPerks=[];
-  if(!G.classPerksByBird || typeof G.classPerksByBird!=='object') G.classPerksByBird={};
-  if(!Array.isArray(G.classPerksByBird[G.player.birdKey])) G.classPerksByBird[G.player.birdKey]=[];
-  G.runClassPerks.push(perkId);
-  G.classPerksByBird[G.player.birdKey].push(perkId);
-  perk.apply?.(G.player);
-  logMsg(`🧬 Class Perk: ${perk.name}`,'exp-gain');
-  saveRun();
-  return true;
-}
-function maybeOfferClassPerkChoice(){
-  const isStory=(G.ui?.gameMode||'story')==='story';
-  const role=getPlayerClassRole();
-  const owned=getOwnedPerkIds();
-  const pool=(CLASS_PERK_DEFS[role]||[]).filter(p=>!owned.has(p.id));
-  if(!pool.length) return false;
-  const dueEarly=isStory && G._classPerkChoicesGranted<1 && G.stage>=4;
-  const dueEndless=!isStory && G._classPerkChoicesGranted<2 && (G.endlessBattle||0)>=8;
-  if(!dueEarly && !dueEndless) return false;
 
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
-  const cards=pool.slice(0,3).map(p=>`<button data-perk="${p.id}" style="text-align:left;background:rgba(28,22,12,.96);border:1px solid rgba(201,168,76,.35);color:var(--text);border-radius:10px;padding:12px;cursor:pointer;"><div style="font-family:Cinzel,serif;color:var(--gold-light)">${p.name}</div><div style="font-size:.82rem;color:var(--text-dim)">${p.desc}</div></button>`).join('');
-  overlay.innerHTML=`<div style="width:min(760px,94vw);background:rgba(16,12,8,.98);border:1px solid var(--gold);border-radius:14px;padding:16px;"><div style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:10px;">Choose a ${role.toUpperCase()} Class Perk</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">${cards}</div></div>`;
-  overlay.querySelectorAll('button[data-perk]').forEach(btn=>btn.addEventListener('click',()=>{
-    applyClassPerk(btn.getAttribute('data-perk'));
-    G._classPerkChoicesGranted=(G._classPerkChoicesGranted||0)+1;
-    overlay.remove();
-  }));
-  document.body.appendChild(overlay);
+function continueStageTransitionAfterRewards(){
+  if(maybeOfferPassiveEvolutionChoice()) return;
+  if(maybeOfferClassPerkChoice()) return;
+
+  const lastEnemyWasBoss = G.enemy && G.enemy.isBoss;
+  const safeHP = G.player.stats.hp > G.player.stats.maxHp * 0.2;
+  if(!lastEnemyWasBoss && safeHP && Math.random() < 0.1){
+    setTimeout(()=>showGroveEvent(), 350);
+    return;
+  }
+
+  G.phase='PLAYER';
+  loadStage();
+}
+
+function openClassPerkChoice(options=[], source=''){
+  const sourceConfig=CLASS_PERK_SOURCE_RULES[source] || CLASS_PERK_SOURCE_RULES['story-class-perk-10'];
+  const role=getPlayerClassRole();
+  const roleLabel=idToClassLabel(role);
+  G._rewardScreenMode='class-perk';
+  G._pendingClassPerkChoice={source, options, role};
+  G._pendingReward=null;
+  showScreen('screen-reward');
+  document.getElementById('reward-title').textContent=sourceConfig.title;
+  document.getElementById('reward-sub').textContent=`${sourceConfig.subtitle} ${roleLabel ? `Active Class: ${roleLabel}.` : ''}`;
+  renderBattleSummary();
+  const confirmBtn=document.getElementById('reward-confirm-btn');
+  confirmBtn.textContent='✓ Claim Class Perk';
+  confirmBtn.className='confirm-btn';
+  const grid=document.getElementById('reward-grid');
+  grid.innerHTML='';
+  options.forEach(perk=>{
+    const tags=(perk.tags||[]).map(tag=>`<span class="reward-tag">${tag}</span>`).join('');
+    const c=document.createElement('div');
+    c.className='reward-card reward-card-class-perk tier-purple';
+    c.innerHTML=`
+      <div class="reward-tier-label">Class Perk</div>
+      <span class="reward-icon">🧬</span>
+      <div class="reward-name">${perk.name}</div>
+      <div class="reward-desc">${perk.desc}</div>
+      <div class="reward-class-row"><span class="class-badge class-${role}">${roleLabel}</span>${tags}</div>`;
+    c.onclick=()=>{
+      document.querySelectorAll('#reward-grid .reward-card').forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+      G._pendingReward=perk;
+      confirmBtn.className='confirm-btn visible';
+    };
+    grid.appendChild(c);
+  });
+}
+
+function maybeOfferClassPerkChoice(){
+  const source=getClassPerkTriggerForCurrentStage();
+  if(!source || !G.player?.birdKey) return false;
+  const available=getAvailableClassPerksForBird(G.player.birdKey);
+  if(!available.length) return false;
+  openClassPerkChoice(available.slice(0,3), source);
   return true;
 }
 
@@ -5249,10 +5500,7 @@ function maybeOfferPassiveEvolutionChoice(){
   overlay.querySelectorAll('button[data-path]').forEach(btn=>btn.addEventListener('click',()=>{
     applyPassiveEvolutionChoice(tierToOffer, btn.getAttribute('data-path'));
     overlay.remove();
-    if(maybeOfferPassiveEvolutionChoice()) return;
-    if(maybeOfferClassPerkChoice()) return;
-    G.phase='PLAYER';
-    loadStage();
+    continueStageTransitionAfterRewards();
   }));
   document.body.appendChild(overlay);
   return true;
@@ -5702,9 +5950,10 @@ function applyPlayerSlow(spdPenalty,dodgePenalty,turns){
 function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
   let dmg=Math.max(1,amount);
   const passiveEvoBonus=getPassiveEvolutionBonuses(G.player);
+  const classPerkCtx=applyClassPerksToCombatContext(G.player?.birdKey,{});
   const activeAb=srcAbility||G._activePlayerAbility||null;
   const activeType=String(activeAb?.btnType||activeAb?.type||ABILITY_TEMPLATES?.[activeAb?.id]?.btnType||ABILITY_TEMPLATES?.[activeAb?.id]?.type||'').toLowerCase();
-  if(target==='enemy' && !isMagic && !isCrit && G.player?.perkSecondAttackCrit && (G.playerActionsThisTurn||0)===2 && chance(10)) isCrit=true;
+  if(target==='enemy' && !isMagic && !isCrit && classPerkCtx.predatorRhythm && (G.playerActionsThisTurn||0)===2 && chance(10)) isCrit=true;
   const critMult=(G.player.goldCritMult||1.5) + (isCrit?(G.player?.critDamageBonusPct||0):0);
   if (isCrit) dmg=Math.floor(dmg*critMult);
   if(target==='enemy'){
@@ -5731,14 +5980,14 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     if(isAttack && (G.player?.augAttackVsBleedPct||0)>0 && G.enemyStatus?.bleed?.stacks>0) dmg=Math.floor(dmg*(1+G.player.augAttackVsBleedPct));
     if(isAttack && (G.player?.augFirstAttackBattlePct||0)>0 && !G._firstAttackUsed) dmg=Math.floor(dmg*(1+G.player.augFirstAttackBattlePct));
     if(isAttack && (G.player?.augAttackExecutePct||0)>0 && G.enemy.stats.hp<=Math.floor((G.enemy.stats.maxHp||1)*0.5)) dmg=Math.floor(dmg*(1+G.player.augAttackExecutePct));
-    if((G.player?.perkWarBody||false) && (G.player.stats.hp||1)<=Math.floor((G.player.stats.maxHp||1)*0.5)) dmg=Math.floor(dmg*1.10);
-    if((G.player?.perkOpeningRush||false) && isAttack && !G._firstAttackUsed) dmg=Math.floor(dmg*1.15);
-    if((G.player?.perkVsFearPct||0)>0 && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*(1+G.player.perkVsFearPct));
+    if(classPerkCtx.warBody && (G.player.stats.hp||1)<=Math.floor((G.player.stats.maxHp||1)*0.5)) dmg=Math.floor(dmg*1.10);
+    if(classPerkCtx.openingRush && isAttack && !G._firstAttackUsed) dmg=Math.floor(dmg*1.15);
+    if(classPerkCtx.markedForDeath && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.15);
     if(G.player?.birdKey==='raven' && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.12);
     if(G.player?.birdKey==='harpy' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.18);
     if(G.player?.birdKey==='seagull' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.6)) dmg=Math.floor(dmg*1.20);
-    if((G.player?.perkExecutePct||0)>0 && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*(1+G.player.perkExecutePct));
-    if((G.player?.perkFirstVsFull||false) && !G._perkFirstVsFullUsed && (G.enemy.stats.hp||0)>=(G.enemy.stats.maxHp||1)){
+    if(classPerkCtx.executionLine && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.20);
+    if(classPerkCtx.patientHunter && !G._perkFirstVsFullUsed && (G.enemy.stats.hp||0)>=(G.enemy.stats.maxHp||1)){
       dmg=Math.floor(dmg*1.15);
       G._perkFirstVsFullUsed=true;
     }
@@ -5810,7 +6059,7 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
         G.player.stats.hp=Math.min(G.player.stats.maxHp,G.player.stats.hp+heal);
         spawnFloat('player',`+${heal}`,'fn-heal');
       }
-      if(G.player?.perkSlipstream){
+      if(classPerkCtx.slipstream){
         G.playerStatus.perkSlipstream=1;
       }
       return {dmgDealt:0,wasDodged:true,wasBlocked:false,isCrit};
@@ -5975,10 +6224,6 @@ function pdmg(mult=1,ab=null) {
     // Kiwi Probe Master: high HP bonus
     if(G.player.birdKey==='kiwi'&&G.enemy.stats.hp/G.enemy.stats.maxHp>0.75) base=Math.floor(base*1.10);
   } else {
-    if((G.player?.perkIronCore||false) && !G._perkIronCoreUsed){
-      dmg=Math.floor(dmg*0.85);
-      G._perkIronCoreUsed=true;
-    }
     G._currentPiercePct=0;
   }
   return base;
@@ -6034,6 +6279,7 @@ function rollEnemyCritDamage(baseDamage){
 function getPlayerMissChance(ab) {
   const tmpl=ABILITY_TEMPLATES[ab.id];
   if (!tmpl) return 15;
+  const classPerkCtx=applyClassPerksToCombatContext(G.player?.birdKey,{});
   const lv=Math.min(ab.level,4);
   const baseMiss=tmpl.baseMissChance!==undefined?tmpl.baseMissChance:15;
   const perLvReduction=(tmpl.type==='physical')?0:4;
@@ -6057,12 +6303,12 @@ function getPlayerMissChance(ab) {
   const isSpell=(kind==='spell');
   if(isAttack) extra+=(G.player?.augAttackAcc||0);
   if(isSpell) extra+=(G.player?.augSpellAcc||0);
-  if(isSpell) extra+=(G.player?.perkSpellAcc||0);
+  if(isSpell && classPerkCtx.arcFocus) extra+=8;
   if((G.playerStatus?.perkUtilityAcc||0)>0){ extra+=8; delete G.playerStatus.perkUtilityAcc; }
-  if((G.player?.perkVsDebuffedAcc||0)>0){
+  if(classPerkCtx.falseOpening){
     const es=G.enemyStatus||{};
     const debuffed=!!(es.poison||es.bleed||es.burning||es.weaken||es.feared||es.confused||es.paralyzed||es.slow||es.accDebuff>0);
-    if(debuffed) extra += G.player.perkVsDebuffedAcc;
+    if(debuffed) extra += 6;
   }
   if((G.player?.augPostDefAcc||0)>0 && G.playerStatus?.postDefAccNext){ extra += G.player.augPostDefAcc; delete G.playerStatus.postDefAccNext; }
   if(G.player?.relHawkLedger && isEndlessRunActive()){ const eb=G.endlessBattle||0; if(eb>=10) extra+=8; if(eb>=20) extra+=8; if(eb>=30) extra+=8; }
@@ -7323,7 +7569,7 @@ const ACTIONS = {
     const lv=ab.level;
     const defBonus=[2,4,5,7][lv-1];
     const dodBonus=[0,10,15,20][lv-1]; // no ACC buff - removed
-    const turns=lv>=2?3:5; // 1 buff=5t, 2 buffs=3t
+    const turns=(lv>=2?3:5) + getPlayerClassPerkBuffDurationBonus(); // 1 buff=5t, 2 buffs=3t
     if(G.playerStatus.battleHymn){G.player.stats.def-=G.playerStatus.battleHymn.defBonus;}
     G.battleHymnActive=true; G.battleHymnDEF=defBonus; G.battleHymnACC=0; // no ACC
     G.player.stats.def+=defBonus;
@@ -7335,7 +7581,7 @@ const ACTIONS = {
   },
   async reveille(ab) {
     const lv=ab.level;
-    const turns=[3,3,4,4][lv-1];
+    const turns=[3,3,4,4][lv-1] + getPlayerClassPerkBuffDurationBonus();
     const totalPct=[.15,.21,.30,.40][lv-1];
     const pctPerTurn=totalPct/turns;
     G.regenTurns=turns; G.regenPct=pctPerTurn;
@@ -7350,7 +7596,7 @@ const ACTIONS = {
   async victoryChant(ab) {
     const lv=ab.level;
     const healPct=[.20,.28,.35,.45][lv-1];
-    const heal=Math.floor(G.player.stats.maxHp*healPct);
+    const heal=Math.floor(G.player.stats.maxHp*healPct) + getPlayerClassPerkSongHealFlat();
     G.player.stats.hp=Math.min(G.player.stats.hp+heal,G.player.stats.maxHp);
     await doHeal('player',heal);
     setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);
@@ -7700,14 +7946,15 @@ async function playerAction(ab,fromQueue=false) {
   if(G.enemy?.id==='duke_blakiston') dukeTrackDecree(ab.id);
   G._activePlayerAbility=ab;
   const _abKindNow=String(ab?.btnType||ab?.type||ABILITY_TEMPLATES?.[ab?.id]?.btnType||ABILITY_TEMPLATES?.[ab?.id]?.type||'').toLowerCase();
-  if(_abKindNow==='utility' && G.player?.perkUtilityRefund && !G._perkUtilityRefundUsed){
+  const classPerkCtx=applyClassPerksToCombatContext(G.player?.birdKey,{});
+  if(_abKindNow==='utility' && classPerkCtx.quickTheft && !G._perkUtilityRefundUsed){
     gainEnergy(G.player,1);
     G._perkUtilityRefundUsed=true;
   }
   if((_abKindNow==='utility' || _abKindNow==='buff' || _abKindNow==='defend') && G.player?.perkUtilityAcc){
     G.playerStatus.perkUtilityAcc=1;
   }
-  if(G.player?.perkHoldTheLine && /guard|defend|shield|crowdefend/i.test(ab.id||'')){
+  if(classPerkCtx.holdTheLine && /guard|defend|shield|crowdefend/i.test(ab.id||'')){
     G.playerStatus.holdTheLineBoost=1;
   }
   G.playerActionsThisTurn=(G.playerActionsThisTurn||0)+1;
@@ -7734,7 +7981,7 @@ async function playerAction(ab,fromQueue=false) {
     await ACTIONS[ab.id](ab);
   }
   const _abKind=String(ab?.btnType||ab?.type||ABILITY_TEMPLATES?.[ab?.id]?.btnType||ABILITY_TEMPLATES?.[ab?.id]?.type||'').toLowerCase();
-  if((_abKind==='physical'||_abKind==='ranged') && G.player?.perkIronMomentum && /heavy|slam|crusher|smash/i.test((ab.name||ab.id||'').toLowerCase())){
+  if((_abKind==='physical'||_abKind==='ranged') && classPerkCtx.ironMomentum && /heavy|slam|crusher|smash/i.test((ab.name||ab.id||'').toLowerCase())){
     addStatus(G.playerStatus,'defending',1,999);
   }
   if(_abKind==='physical'||_abKind==='ranged') G._firstAttackUsed=true;
@@ -7976,8 +8223,8 @@ Object.assign(ACTIONS, {
   async skyHymn(ab){
     const lv=Math.max(1,Math.min(ab.level||1,4));
     await doSpell('player', '🎵');
-    G.playerStatus.humDodge={bonus:10+(lv-1)*5, turns:2};
-    const heal = Math.max(3, Math.floor(G.player.stats.maxHp*(0.04 + (lv-1)*0.008)));
+    G.playerStatus.humDodge={bonus:10+(lv-1)*5, turns:2 + getPlayerClassPerkBuffDurationBonus()};
+    const heal = Math.max(3, Math.floor(G.player.stats.maxHp*(0.04 + (lv-1)*0.008))) + getPlayerClassPerkSongHealFlat();
     G.player.stats.hp = Math.min(G.player.stats.hp + heal, G.player.stats.maxHp);
     spawnFloat('player', `+${heal}❤️`, 'fn-heal');
     renderStatuses('player-status', G.playerStatus);
@@ -9188,6 +9435,7 @@ function rollTier(isBoss) {
 
 function showRewardScreen(hasLevelUp) {
   showScreen('screen-reward');
+  G._rewardScreenMode='normal';
   G._pendingLevelUp=hasLevelUp;
   G._pendingReward=null;
   const isBoss=G.enemy.isBoss;
@@ -9198,6 +9446,7 @@ function showRewardScreen(hasLevelUp) {
   const grid=document.getElementById('reward-grid'); grid.innerHTML='';
   renderBattleSummary();
   const confirmBtn=document.getElementById('reward-confirm-btn');
+  confirmBtn.textContent='✓ Take This Reward';
   confirmBtn.className='confirm-btn';
   pool.forEach(rw=>{
     const c=document.createElement('div');
@@ -9219,6 +9468,22 @@ function showRewardScreen(hasLevelUp) {
 
 function confirmReward() {
   if(!G._pendingReward) return;
+  if(G._rewardScreenMode==='class-perk'){
+    const source=String(G._pendingClassPerkChoice?.source||'');
+    const perkDef=G._pendingReward;
+    const birdKey=G.player?.birdKey;
+    G._pendingReward=null;
+    G._rewardScreenMode='normal';
+    G._pendingClassPerkChoice=null;
+    document.getElementById('reward-confirm-btn').className='confirm-btn';
+    document.getElementById('reward-confirm-btn').textContent='✓ Take This Reward';
+    if(grantClassPerk(birdKey, perkDef, source)){
+      continueStageTransitionAfterRewards();
+    }else{
+      continueStageTransitionAfterRewards();
+    }
+    return;
+  }
   if(document.getElementById('gold-replace-ui')) return;
   if(G._pendingReward.tier==='gold'&&getGoldCardCount()>=getGoldCardLimit()){
     showGoldReplaceUI(G._pendingReward);
@@ -9744,19 +10009,7 @@ function advanceStage() {
     logMsg('🔓 Legendary birds unlocked: Shoebill Stork & Harpy Eagle!','boss');
   }
   saveRun();
-  if(maybeOfferPassiveEvolutionChoice()) return;
-  if(maybeOfferClassPerkChoice()) return;
-
-  // ── Whispering Grove: ~10% after non-boss victories, player must be >20% HP
-  const lastEnemyWasBoss = G.enemy && G.enemy.isBoss;
-  const safeHP = G.player.stats.hp > G.player.stats.maxHp * 0.2;
-  if(!lastEnemyWasBoss && safeHP && Math.random() < 0.1){
-    setTimeout(()=>showGroveEvent(), 350);
-    return; // halt progression until grove resolves
-  }
-
-  G.phase='PLAYER';
-  loadStage();
+  continueStageTransitionAfterRewards();
 }
 
 // ============================================================
@@ -9770,12 +10023,14 @@ function isBossStage(stage){
 function showGroveEvent(){
   G._groveOutcomes = null;
   G._groveResolved = false;
+  G._groveNestReward = null;
   // Reset UI
   const trees = document.getElementById('grove-trees');
   trees.style.display = 'none';
   document.getElementById('grove-result-msg').textContent = '';
   document.getElementById('grove-reward-section').style.display = 'none';
   document.getElementById('grove-continue-btn').style.display = 'none';
+  document.getElementById('grove-continue-btn').textContent = 'Continue →';
   document.getElementById('grove-opt-row').style.display = 'flex';
   document.getElementById('grove-intro-text').style.display = '';
 
@@ -9941,6 +10196,13 @@ function showGroveNestRewards(){
     picks.push(rw);
   }
 
+  if(!picks.length){
+    grid.innerHTML='<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:10px 0;">The nest is empty this time. Continue onward.</div>';
+    document.getElementById('grove-continue-btn').style.display='inline-block';
+    document.getElementById('grove-continue-btn').textContent='Continue →';
+    return;
+  }
+
   picks.forEach(rw=>{
     const c=document.createElement('div');
     c.className=`reward-card tier-${rw.tier}`;
@@ -9964,7 +10226,7 @@ function groveFinish(){
   // If a nest reward was selected, apply it
   if(G._groveNestReward){
     const rw=G._groveNestReward;
-    rw.apply(G.player);
+    applyUpgradeWithMaxHpHealing(G.player, ()=>rw.apply(G.player), rw.name||'Grove Nest Reward');
     if(!G.collectedRewards)G.collectedRewards=[];
     G.collectedRewards.push({icon:rw.icon,tier:rw.tier,name:rw.name,desc:rw.desc});
     codexMark('artifacts', rw.id||rw.name, 'seen');

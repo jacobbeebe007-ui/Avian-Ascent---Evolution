@@ -310,27 +310,7 @@
   const _oldGenerateShopItemsPolish = globalThis.generateShopItems;
   if(typeof _oldGenerateShopItemsPolish === 'function'){
     globalThis.generateShopItems = function(){
-      _shopItems = [];
-      const used = new Set();
-      // top row abilities
-      for(let i=0;i<4;i++) _shopItems.push(makeAbilityOffer(true));
-      // middle row grey upgrades
-      for(let i=0;i<4;i++){
-        const pick = pickUniqueRewardByTier('grey', used) || pickUniqueRewardByTier('green', used) || pickUniqueRewardByTier('blue', used);
-        if(pick) _shopItems.push(pick);
-      }
-      // bottom row rare/artifacts
-      for(let i=0;i<4;i++){
-        if(Math.random() < 0.20){
-          const art = ARTIFACTS[Math.floor(Math.random()*ARTIFACTS.length)];
-          _shopItems.push({...art});
-          continue;
-        }
-        const tier = rollShopTier({blue:56,purple:34,gold:10});
-        const pick = pickUniqueRewardByTier(tier, used) || pickUniqueRewardByTier('purple', used) || pickUniqueRewardByTier('blue', used) || pickUniqueRewardByTier('grey', used);
-        if(pick) _shopItems.push(pick);
-      }
-      renderShopItems();
+      return _oldGenerateShopItemsPolish.apply(this, arguments);
     };
   }
 
@@ -344,11 +324,24 @@
         const cards=[...grid.querySelectorAll('.shop-item')];
         // row labels
         if(!grid.querySelector('.shop-row-label')){
-          const labels = [
-            {idx:0, text:'ABILITIES'},
-            {idx:4, text:'UPGRADES'},
-            {idx:8, text:'RARE / ARTIFACTS'}
-          ];
+          const items=(globalThis._shopItems||[]);
+          const labels = [];
+          const firstHealingIdx=items.findIndex(item=>item?.isHealingShopItem);
+          if(firstHealingIdx!==-1){
+            labels.push({idx:firstHealingIdx, text:'HEALING'});
+          }
+          const firstAbilityIdx=items.findIndex(item=>String(item?.id||'').startsWith('shop_ab_'));
+          if(firstAbilityIdx!==-1){
+            labels.push({idx:firstAbilityIdx, text:'ABILITIES'});
+          }
+          const firstUtilityIdx=items.findIndex(item=>String(item?.id||'').startsWith('shop_util_'));
+          if(firstUtilityIdx!==-1){
+            labels.push({idx:firstUtilityIdx, text:'UTILITY'});
+          }
+          const firstRewardIdx=items.findIndex(item=>!item?.isHealingShopItem && !String(item?.id||'').startsWith('shop_ab_') && !String(item?.id||'').startsWith('shop_util_'));
+          if(firstRewardIdx!==-1){
+            labels.push({idx:firstRewardIdx, text:'UPGRADES'});
+          }
           labels.reverse().forEach(l=>{
             if(cards[l.idx]){
               const div=document.createElement('div');
