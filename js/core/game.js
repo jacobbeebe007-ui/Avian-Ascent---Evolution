@@ -2729,26 +2729,12 @@ const ABILITY_POOL_MAGIC = [
 const ABILITY_POOL_UTILITY = Object.values(ABILITY_TEMPLATES)
   .filter(t=>t&&(t.btnType||t.type)==='utility')
   .map(t=>t.id);
-// Default: all pools
-const LEARNABLE_ABILITIES = [
-  ...ABILITY_POOL_PHYSICAL, ...ABILITY_POOL_RANGED, ...ABILITY_POOL_BUFF, ...ABILITY_POOL_DEBUFF, ...ABILITY_POOL_MAGIC
-];
-LEARNABLE_ABILITIES.push(
-  'bleakBeak','shadowJab',
-  'pinionVolley','talonRake',
-  'shieldWing','ironHonk',
-  'dirgeOfDread','skyHymn',
-  'marshHex','stormCall','nightChill'
-);
 
 
 function removeMimicEverywhere(){
   const GG = globalThis.G;
   if(typeof ABILITY_TEMPLATES!=='undefined') delete ABILITY_TEMPLATES.mimic;
   if('ACTIONS' in globalThis && globalThis.ACTIONS) delete globalThis.ACTIONS.mimic;
-  if(typeof LEARNABLE_ABILITIES!=='undefined'&&Array.isArray(LEARNABLE_ABILITIES)){
-    for(let i=LEARNABLE_ABILITIES.length-1;i>=0;i--){ if(LEARNABLE_ABILITIES[i]==='mimic') LEARNABLE_ABILITIES.splice(i,1); }
-  }
   if(GG?.player?.abilities) GG.player.abilities=GG.player.abilities.filter(a=>a.id!=='mimic');
   if(typeof BIRDS!=='undefined') Object.values(BIRDS).forEach(b=>{ if(Array.isArray(b.extraAbilities)) b.extraAbilities=b.extraAbilities.filter(id=>id!=='mimic'); });
 }
@@ -2758,9 +2744,6 @@ function removeMimicEverywhere(){
   const GG = globalThis.G;
   if(typeof ABILITY_TEMPLATES!=='undefined') delete ABILITY_TEMPLATES.mimic;
   if('ACTIONS' in globalThis && globalThis.ACTIONS) delete globalThis.ACTIONS.mimic;
-  if(typeof LEARNABLE_ABILITIES!=='undefined'&&Array.isArray(LEARNABLE_ABILITIES)){
-    for(let i=LEARNABLE_ABILITIES.length-1;i>=0;i--){ if(LEARNABLE_ABILITIES[i]==='mimic') LEARNABLE_ABILITIES.splice(i,1); }
-  }
   if(GG?.player?.abilities) GG.player.abilities=GG.player.abilities.filter(a=>a.id!=='mimic');
   if(typeof BIRDS!=='undefined') Object.values(BIRDS).forEach(b=>{ if(Array.isArray(b.extraAbilities)) b.extraAbilities=b.extraAbilities.filter(id=>id!=='mimic'); });
 }
@@ -3352,6 +3335,27 @@ function codexMark(type, id, field='seen'){
 //  SAVE / LOAD SYSTEM (localStorage)
 // ============================================================
 const SAVE_KEY='avianAscent_save_v1';
+function ensureFamilyEvolutionState(player){
+  if(!player || typeof player!=='object') return null;
+  if(!player.familyEvolutionState || typeof player.familyEvolutionState!=='object'){
+    player.familyEvolutionState = {
+      version: 1,
+      birdKey: String(player.birdKey || ''),
+      rootTemplate: String(player.birdKey || ''),
+      unlockedNodes: [],
+      selectedPath: [],
+      loadoutSources: [],
+    };
+  }
+  const state = player.familyEvolutionState;
+  state.version = Number.isFinite(state.version) ? state.version : 1;
+  state.birdKey = String(state.birdKey || player.birdKey || '');
+  state.rootTemplate = String(state.rootTemplate || player.birdKey || state.birdKey || '');
+  if(!Array.isArray(state.unlockedNodes)) state.unlockedNodes = [];
+  if(!Array.isArray(state.selectedPath)) state.selectedPath = [];
+  if(!Array.isArray(state.loadoutSources)) state.loadoutSources = [];
+  return state;
+}
 function saveRun() {
   if(!G.player) return;
   try {
@@ -3380,6 +3384,7 @@ function saveRun() {
     };
     // Strip un-serializable passive fns from player
     delete save.player.passive;
+    ensureFamilyEvolutionState(save.player);
     localStorage.setItem(SAVE_KEY, JSON.stringify(save));
   } catch(e){ console.warn('Save failed',e); }
 }
@@ -3406,6 +3411,7 @@ function continueRun() {
   G.collectedRewards=save.collectedRewards||[];
   G.player=save.player;
   G.player.class = resolveFinalClass(G.player?.class, G.player?.birdKey);
+  ensureFamilyEvolutionState(G.player);
   G.classPerks = JSON.parse(JSON.stringify(save.classPerks||save.classPerksByBird||{}));
   G.runClassPerks = JSON.parse(JSON.stringify(save.runClassPerks||[]));
   migrateLegacyClassPerkState(G, G.player);
@@ -4094,6 +4100,7 @@ function startGame() {
     energyRegen: 0,
     passiveEvolution:{tier:0,choices:{},pathHistory:[]},
   };
+  ensureFamilyEvolutionState(G.player);
   G.player.class = bd.class;
   G.player.size = bd.size||'medium';
   G.player.energyMax = computePlayerMaxEnergy();
@@ -9789,18 +9796,6 @@ function buildLevelUpStatChoices(){
   return picks.map((x,i)=>({...x,choiceId:`${x.id}_${i}_${Date.now()}`}));
 }
 
-function getBirdExclusiveLearnPool(birdKey){
-  const bd=BIRDS[birdKey];
-  if(!bd) return LEARNABLE_ABILITIES;
-  const birdClass=bd.class||'';
-  const uniqueFromStarts=(bd.startAbilities||[]).filter(id=>id!=='mainAttack'&&id!=='skipTurn'&&id!=='sittingDuck');
-  let classSpecific=[];
-  if(birdClass==='trickster') classSpecific=[...ABILITY_POOL_RANGED];
-  else if(MAGIC_CLASSES.has(birdClass)) classSpecific=[...ABILITY_POOL_MAGIC];
-  else classSpecific=[...ABILITY_POOL_PHYSICAL];
-  return [...new Set([...uniqueFromStarts,...classSpecific,...ABILITY_POOL_UTILITY])];
-}
-
 function ensureMainAttackAndLoadoutRules(){
   if(!G.player) return;
   const bd=BIRDS[G.player.birdKey]||{};
@@ -9845,7 +9840,6 @@ function ensureMainAttackAndLoadoutRules(){
     G.player.abilities=[...(mainAb?[mainAb]:[]),...kept];
   }
 
-  bd.exclusiveLearnPool=getBirdExclusiveLearnPool(G.player.birdKey);
   removeMimicEverywhere();
   normalizeAbilityCooldownsForPlayer(G.player);
   enforceAbilityCosts(G.player);
@@ -10788,7 +10782,7 @@ function enterStorkShopScreen(){
   showScreen('screen-stork-shop');
   const buyBtn=document.getElementById('shop-buy-btn'); if(buyBtn) buyBtn.disabled=true;
   const log=document.getElementById('shop-purchase-log');
-  if(log) log.textContent=(G._shopMode==='grey'?'Stork Market: 1 ability offer, 2 cards, 1 utility.':'Boss Market: 1 high-tier ability, 3 elite cards, 1 utility.');
+  if(log) log.textContent=(G._shopMode==='grey'?'Stork Market: 3 healing supplies, 2 cards, 1 utility.':'Boss Market: 3 healing supplies, 3 elite cards, 1 utility.');
   renderShopItems();
 }
 
@@ -10823,50 +10817,6 @@ function makeUtilityOffer(kind='regular'){
   const pick=arr[Math.floor(Math.random()*arr.length)];
   return {...pick};
 }
-const ABILITY_RARITY_WEIGHTS = { common:70, rare:22, epic:7, legendary:1 };
-function rollByRarity(list){
-  const weighted=[];
-  for(const t of list){
-    const w=ABILITY_RARITY_WEIGHTS[t.rarity]??1;
-    for(let i=0;i<w;i++) weighted.push(t);
-  }
-  return weighted.length?weighted[Math.floor(Math.random()*weighted.length)]:null;
-}
-
-function makeAbilityOffer(highQuality=false){
-  const bd=BIRDS[G.player.birdKey]||{};
-  const birdClass=bd.class||'';
-  const existing=new Set((G.player.abilities||[]).map(a=>a.id));
-  const classPool=(bd.exclusiveLearnPool&&bd.exclusiveLearnPool.length?bd.exclusiveLearnPool:Object.keys(ABILITY_TEMPLATES_LEARNABLE));
-  const candidates=classPool.filter(id=>{
-    const t=ABILITY_TEMPLATES[id];
-    return canOfferAbilityInShop(G.player,t);
-  });
-  const unknown=candidates.filter(id=>!existing.has(id));
-  if(unknown.length){
-    const picks=unknown.map(id=>ABILITY_TEMPLATES[id]).filter(Boolean);
-    const tmpl=rollByRarity(picks)||ABILITY_TEMPLATES[unknown[Math.floor(Math.random()*unknown.length)]];
-    const id=tmpl.id;
-    const tier=highQuality?'blue':'green';
-    return {
-      id:`shop_ab_learn_${id}`,
-      tier,
-      icon:highQuality?'📘':'📗',
-      name:`Learn: ${tmpl.name}`,
-      desc:`Gain ${tmpl.name} at Lv.1${highQuality?' (premium offer)':''}.`,
-      apply:p=>{
-        // NOTE: shopBuySelected() will handle replacement UI if you're at the non-main cap.
-        p.abilities.push({...tmpl,level:1,ailmentIds:[]});
-      }
-    };
-  }
-  const upgradable=(G.player.abilities||[]).filter(a=>!isMainAttackAbility(a)&&(a.level||1)<4);
-  if(upgradable.length){
-    const pick=upgradable[Math.floor(Math.random()*upgradable.length)];
-    return {id:`shop_ab_upgrade_${pick.id}`,tier:highQuality?'purple':'blue',icon:'🪶',name:`Train: ${pick.name}`,desc:`Upgrade ${pick.name} by +1 level (max 4).`,apply:p=>{const a=p.abilities.find(x=>x.id===pick.id);if(a)a.level=Math.min(4,(a.level||1)+1);}};
-  }
-  return {id:'shop_ab_focus',tier:'green',icon:'🧠',name:'Combat Drill',desc:'ATK +2, MATK +2, ACC +3',apply:p=>{p.stats.atk+=2;p.stats.matk=(p.stats.matk||0)+2;p.stats.acc=(p.stats.acc||80)+3;}};
-}
 function generateShopItems() {
   _shopItems=[];
   const used=new Set();
@@ -10887,8 +10837,7 @@ function generateShopItems() {
   _shopItems.push(...healOffers);
 
   if(mode==='grey'){
-    // Regular shop: abilities/cards/utility after healing shelf
-    _shopItems.push(makeAbilityOffer(false));
+    // Regular shop: cards/utility after healing shelf
     for(let i=0;i<2;i++){
       const tier=goldCapReached?rollShopTier({grey:52,green:30,blue:16,purple:2}):rollShopTier({grey:50,green:28,blue:16,purple:5,gold:1});
       const pick=pickUniqueRewardByTier(tier,used)||pickUniqueRewardByTier('green',used)||pickUniqueRewardByTier('grey',used);
@@ -10896,8 +10845,7 @@ function generateShopItems() {
     }
     _shopItems.push(makeUtilityOffer('regular'));
   } else {
-    // Boss shop: abilities/cards/utility after healing shelf
-    _shopItems.push(makeAbilityOffer(true));
+    // Boss shop: cards/utility after healing shelf
     for(let i=0;i<3;i++){
       const tier=goldCapReached?rollShopTier({blue:56,purple:44}):rollShopTier({blue:50,purple:38,gold:12});
       const pick=pickUniqueRewardByTier(tier,used)||pickUniqueRewardByTier('purple',used)||pickUniqueRewardByTier('blue',used);
@@ -10908,20 +10856,6 @@ function generateShopItems() {
   renderShopItems();
 }
 const SHOP_COSTS={grey:24,green:36,blue:58,purple:78,gold:105};
-
-const SHOP_BANNED_IDS = new Set(['skipTurn','sittingDuck','endTurn','mimic']);
-function canOfferAbilityInShop(p, tmpl){
-  if(!tmpl || !tmpl.id) return false;
-  if(SHOP_BANNED_IDS.has(tmpl.id)) return false;
-  const cls=((p.class||BIRDS[p.birdKey]?.class||'').toLowerCase());
-  if(Array.isArray(tmpl.allowedClasses) && tmpl.allowedClasses.length) return tmpl.allowedClasses.includes(cls);
-  if(tmpl.isNeutral) return true;
-  const bt=tmpl.btnType||tmpl.type;
-  if(bt==='ranged') return ['striker','trickster'].includes(cls);
-  if(bt==='spell') return MAGIC_CLASSES.has(cls);
-  if(bt==='physical') return !MAGIC_CLASSES.has(cls);
-  return bt==='utility';
-}
 
 const SHOP_STATE = {
   purchaseMadeThisVisit:false,
@@ -10943,45 +10877,6 @@ function shopLockVisitState(){
 }
 function getShopRefreshCost(){
   return 10 + 6*Math.max(0,G._shopRefreshCount||0);
-}
-function shopTooltipNode(){
-  let tt=document.getElementById('shop-ability-tooltip');
-  if(!tt){
-    tt=document.createElement('div');
-    tt.id='shop-ability-tooltip';
-    document.body.appendChild(tt);
-  }
-  return tt;
-}
-function showShopTooltip(text, ev){
-  if(!text) return;
-  const tt=shopTooltipNode();
-  tt.textContent=text;
-  tt.style.display='block';
-  tt.style.left=(((ev&&ev.clientX)||0)+14)+'px';
-  tt.style.top=(((ev&&ev.clientY)||0)+14)+'px';
-}
-function hideShopTooltip(){
-  const tt=document.getElementById('shop-ability-tooltip');
-  if(tt) tt.style.display='none';
-}
-function resolveShopAbilityTemplate(item){
-  if(!item||!item.id) return null;
-  let learnId=null;
-  if(item.id.startsWith('shop_ab_learn_')) learnId=item.id.replace('shop_ab_learn_','');
-  else if(item.id.startsWith('shop_ab_upgrade_')) learnId=item.id.replace('shop_ab_upgrade_','');
-  if(!learnId) return null;
-  return (ABILITY_TEMPLATES && ABILITY_TEMPLATES[learnId]) || null;
-}
-
-function buildShopItemTooltip(item){
-  const tmpl=resolveShopAbilityTemplate(item);
-  if(!tmpl) return item?.desc || item?.description || '';
-  const lv1=(Array.isArray(tmpl.levels) && tmpl.levels[0]?.desc) ? tmpl.levels[0].desc : '';
-  const parts=[];
-  if(tmpl.desc) parts.push(`Base: ${tmpl.desc}`);
-  if(lv1) parts.push(`Effects: ${lv1}`);
-  return parts.join('\n');
 }
 
 function renderShopItems() {
@@ -11006,7 +10901,6 @@ function renderShopItems() {
     const isHealingItem=!!item.isHealingShopItem;
     const alreadyBoughtHeal=!!(isHealingItem && SHOP_STATE.healingPurchasesThisVisit?.has(item.id));
     const canSelect=canAfford && !alreadyBoughtHeal && (!SHOP_STATE.purchaseMadeThisVisit || isHealingItem);
-    const tooltip=buildShopItemTooltip(item);
 
     const div=document.createElement('div');
     div.className=`shop-item tier-${item.tier} ${canAfford?'':'cant-afford'} ${(SHOP_STATE.purchaseMadeThisVisit&&!isHealingItem)?'shop-locked-visit':''} ${alreadyBoughtHeal?'shop-locked-visit':''}`;
@@ -11015,14 +10909,10 @@ function renderShopItems() {
       <div class="reward-tier-label">${REWARD_TIERS[item.tier].label}</div>
       <span class="reward-icon">${item.icon}</span>
       <div class="reward-name">${item.name}</div>
-      <div class="reward-desc">${tooltip || item.desc}</div>`;
-    if(tooltip) div.title=tooltip;
+      <div class="reward-desc">${item.desc}</div>`;
+    if(item.desc) div.title=item.desc;
 
-    div.addEventListener('mouseenter', e=>showShopTooltip(tooltip, e));
-    div.addEventListener('mousemove', e=>showShopTooltip(tooltip, e));
-    div.addEventListener('mouseleave', hideShopTooltip);
-    div.addEventListener('click', e=>{
-      showShopTooltip(tooltip, e);
+    div.addEventListener('click', ()=>{
       if(!canSelect) return;
       document.querySelectorAll('.shop-item').forEach(x=>x.classList.remove('selected'));
       div.classList.add('selected');
@@ -11033,73 +10923,6 @@ function renderShopItems() {
 
     grid.appendChild(div);
   });
-}
-
-function nonMainAbilities(p){
-  return (p.abilities||[]).filter(a=>!isMainAttackAbility(a));
-}
-
-function ensureShopSwapModal(){
-  if(document.getElementById('shop-swap-modal')) return;
-
-  const modal=document.createElement('div');
-  modal.id='shop-swap-modal';
-  modal.style.cssText=`
-    display:none; position:fixed; inset:0; z-index:9999;
-    background:rgba(0,0,0,.65); align-items:center; justify-content:center;
-  `;
-  modal.innerHTML=`
-    <div style="width:min(520px,92vw); background:rgba(20,15,5,.97); border:1px solid var(--gold);
-                border-radius:12px; padding:16px; box-shadow:0 10px 40px rgba(0,0,0,.55);">
-      <div style="font-family:Cinzel,serif; color:var(--gold); letter-spacing:.08em; margin-bottom:8px;">
-        🪶 SKILL SLOTS FULL — Choose a skill to replace
-      </div>
-      <div id="shop-swap-sub" style="color:var(--text-dim); font-size:.82rem; margin-bottom:12px;"></div>
-      <div id="shop-swap-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-      <button id="shop-swap-cancel"
-        style="margin-top:12px; background:rgba(40,35,25,.25); border:1px solid var(--border);
-               color:var(--text-dim); padding:7px 14px; border-radius:8px; cursor:pointer;">
-        ✕ Cancel
-      </button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-function openShopSwapModal(newTmpl, onPick, onCancel){
-  ensureShopSwapModal();
-  const modal=document.getElementById('shop-swap-modal');
-  const sub=document.getElementById('shop-swap-sub');
-  const list=document.getElementById('shop-swap-list');
-  const cancel=document.getElementById('shop-swap-cancel');
-
-  sub.innerHTML = `Replace one non-main skill with <strong style="color:var(--gold)">${newTmpl.name}</strong>.`;
-  list.innerHTML='';
-
-  const p=G.player;
-  const pool=nonMainAbilities(p);
-
-  pool.forEach(ab=>{
-    const btn=document.createElement('button');
-    btn.style.cssText=`
-      background:rgba(201,168,76,.08); border:1px solid rgba(201,168,76,.25);
-      border-radius:10px; padding:10px 12px; cursor:pointer; color:var(--text);
-      text-align:left; display:flex; gap:10px; align-items:flex-start;
-    `;
-    btn.innerHTML=`
-      <div style="font-size:1.05rem; line-height:1;">${ab.icon||'🪶'}</div>
-      <div>
-        <div style="font-weight:800;">${ab.name} <span style="color:var(--text-dim); font-weight:600;">(Lv.${ab.level||1})</span></div>
-        <div style="font-size:.78rem; color:var(--text-dim); line-height:1.25;">${ab.desc||''}</div>
-      </div>
-    `;
-    btn.onclick=()=>{ modal.style.display='none'; onPick(ab.id); };
-    list.appendChild(btn);
-  });
-
-  cancel.onclick=()=>{ modal.style.display='none'; if(onCancel) onCancel(); };
-
-  modal.style.display='flex';
 }
 
 async function shopBuySelected() {
@@ -11126,63 +10949,9 @@ async function shopBuySelected() {
   const cost=Math.max(0,baseCost-discount);
   if(G.shinyObjects<cost){ logMsg('Not enough shiny objects!','miss'); return false; }
 
-  // Special handling: learning a new ability when non-main slots are full
-  if(item.id && item.id.startsWith('shop_ab_learn_')){
-    const learnId=item.id.replace('shop_ab_learn_','');
-    const tmpl=ABILITY_TEMPLATES[learnId];
-    if(!tmpl){ logMsg('Skill template missing.','miss'); return false; }
-
-    const nm=nonMainAbilities(G.player);
-    if(nm.length>=4){
-      openShopSwapModal(
-        tmpl,
-        (replaceId)=>{
-          if(SHOP_STATE.purchaseMadeThisVisit) return;
-          G.shinyObjects-=cost;
-          if(discount>0) G._nextShopDiscount=0;
-
-          const idx=G.player.abilities.findIndex(a=>a.id===replaceId);
-          if(idx>=0) G.player.abilities.splice(idx,1,{...tmpl,level:1,ailmentIds:[]});
-          else G.player.abilities.push({...tmpl,level:1,ailmentIds:[]});
-
-          if(!G.collectedRewards) G.collectedRewards=[];
-          G.collectedRewards.push({icon:item.icon,tier:item.tier,name:item.name,desc:item.desc});
-
-          logMsg(`🌟 Purchased: ${item.name}!`,'exp-gain');
-          const log=document.getElementById('shop-purchase-log');
-          if(log) log.textContent=`✓ Bought: ${item.icon} ${item.name} · One item per visit`;
-
-          if(item.stackable===false){ if(!(G.runUpgradesPurchased instanceof Set)) G.runUpgradesPurchased=new Set(); G.runUpgradesPurchased.add(item.id); }
-          _shopItems.splice(selected,1);
-          refreshPlayerAbilityAilments();
-          enforceAbilityCosts(G.player);
-          shopLockVisitState();
-          saveRun();
-          renderShopItems();
-        },
-        ()=>{}
-      );
-      return true;
-    }
-  }
-
   G.shinyObjects-=cost;
   if(discount>0) G._nextShopDiscount=0;
-  if(item.id && item.id.startsWith('shop_ab_upgrade_')){
-    const abId=item.id.replace('shop_ab_upgrade_','');
-    const a=G.player.abilities.find(x=>x.id===abId);
-    if(a){
-      const prevLevel=a.level||1;
-      a.level=Math.min(4,(a.level||1)+1);
-      const tmpl=ABILITY_TEMPLATES[a.id];
-      if(tmpl && prevLevel<4 && a.level===4 && (tmpl.type==='physical'||tmpl.type==='ranged') && ailmentSlotsForLevel(tmpl,4)>ailmentSlotsForLevel(tmpl,3)){
-        const choice=await openAbilityModificationChoice(a, tmpl);
-        if(choice) a.modAilmentChoice=choice;
-      }
-    }
-  } else {
-    applyUpgradeWithMaxHpHealing(G.player, ()=>item.apply(G.player), item.name||'Shop Item');
-  }
+  applyUpgradeWithMaxHpHealing(G.player, ()=>item.apply(G.player), item.name||'Shop Item');
   refreshPlayerAbilityAilments();
   enforceAbilityCosts(G.player);
 
