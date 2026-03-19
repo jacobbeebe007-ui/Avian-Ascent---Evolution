@@ -140,6 +140,20 @@ const AILMENTS = {
 // ailments = list of ailment ids the ability can apply (for display)
 const ABILITY_TEMPLATES = {
   // ---- SPARROW ----
+  multiPeck:{
+    id:'multiPeck', name:'Multi Peck', isBasic:true, type:'physical', btnType:'physical',
+    desc:'Neutral sparrow flurry. Repeated pecks before you commit to a branch.',
+    baseMissChance:9, baseDmgMult:0.42, pierceDef:0,
+    energyByLevel:[1,1,1,1],
+    energyCost:1,
+    levels:[
+      {lv:1, desc:'3 hits, 9% miss each. 42% dmg per hit'},
+      {lv:2, desc:'3 hits, 8% miss each. 46% dmg per hit'},
+      {lv:3, desc:'4 hits, 8% miss each. 46% dmg per hit'},
+      {lv:4, desc:'4 hits, 7% miss each. 50% dmg per hit'},
+    ]
+  },
+
   rapidPeck:{
     id:'rapidPeck', name:'Rapid Peck', isBasic:true, type:'physical', btnType:'physical',
     desc:'Fast striker flurry. 3 reliable pecks with tempo pressure.',
@@ -165,6 +179,19 @@ const ABILITY_TEMPLATES = {
       {lv:2, desc:'115% dmg, 10% miss — Weaken 15%', newAilment:'weaken', ailChance:15},
       {lv:3, desc:'130% dmg, 8% miss — Weaken 20%', ailChance:20},
       {lv:4, desc:'145% dmg, 6% miss — Weaken 25%', ailChance:25},
+    ]
+  },
+
+  trackPrey:{
+    id:'trackPrey', name:'Track Prey', type:'utility', btnType:'utility',
+    desc:'Neutral sparrow setup. Study the target before specializing the hunt.', ailments:[],
+    energyByLevel:[1,1,1,1],
+    energyCost:1,
+    levels:[
+      {lv:1, desc:'Study the target. Your next attack deals +12% damage'},
+      {lv:2, desc:'Study the target. Your next attack deals +15% damage'},
+      {lv:3, desc:'Study the target. Your next attack deals +18% damage'},
+      {lv:4, desc:'Study the target. Your next attack deals +21% damage'},
     ]
   },
 
@@ -677,7 +704,7 @@ const BIRDS = {
     size:'tiny', class:'striker',
     stats:{hp:28,maxHp:28,atk:5,def:2,spd:9,dodge:35,acc:85,mdef:6,matk:6,critChance:10},
     statBars:{HP:28/50,ATK:5/15,SPD:9/10,Dodge:.7,ACC:.85}, color:'#6a8ae8',
-    startAbilities:['rapidPeck','dart','windFeint','markPrey'],
+    startAbilities:['multiPeck','dart','windFeint','trackPrey'],
     passive:{id:'windDancer',name:'Wind Dancer',desc:'Every dodge grants +1% permanent dodge (max +15%).',
       onDodge(p){if(!p._windDancerBonus)p._windDancerBonus=0;if(p._windDancerBonus<15){p._windDancerBonus++;p.stats.dodge=Math.min(p.stats.dodge+1,100);}}},
   },
@@ -2565,6 +2592,19 @@ function makeEvolutionAbilityTemplate(id, name, desc, options={}){
   };
 }
 
+Object.assign(ABILITY_TEMPLATES.multiPeck||{}, {
+  desc:'Rapid-line base skill. Neutral multi-hit pecks before branching.',
+  energyCost:1,
+  energyByLevel:[1,1,1,1],
+  fixedMainAttackCost:true,
+  role:['multiHit'],
+  levels:makeAbilityLevelData([
+    {desc:'3 hits at 42% dmg each.'},
+    {desc:'3 hits at 46% dmg each.'},
+    {desc:'4 hits at 46% dmg each.'},
+    {desc:'4 hits at 50% dmg each.'},
+  ]),
+});
 Object.assign(ABILITY_TEMPLATES.rapidPeck||{}, {
   desc:'Rapid-line burst. Three precise pecks with piercing tempo.',
   energyCost:2,
@@ -2576,6 +2616,17 @@ Object.assign(ABILITY_TEMPLATES.rapidPeck||{}, {
     {desc:'3 hits at 52% dmg each. Pierce 12% DEF.'},
     {desc:'3 hits at 58% dmg each. Pierce 14% DEF.'},
     {desc:'4 hits at 58% dmg each. Pierce 16% DEF.'},
+  ]),
+});
+Object.assign(ABILITY_TEMPLATES.trackPrey||{}, {
+  desc:'Mark-line base skill. Neutral prey-tracking setup before branching.',
+  energyCost:1,
+  energyByLevel:[1,1,1,1],
+  levels:makeAbilityLevelData([
+    {desc:'Study the target. Your next attack deals +12% damage.'},
+    {desc:'Study the target. Your next attack deals +15% damage.'},
+    {desc:'Study the target. Your next attack deals +18% damage.'},
+    {desc:'Study the target. Your next attack deals +21% damage.'},
   ]),
 });
 Object.assign(ABILITY_TEMPLATES.dart||{}, {
@@ -3441,16 +3492,16 @@ function codexMark(type, id, field='seen'){
 }
 
 const SKILL_EVOLUTION_LEVEL_INTERVAL = 3;
-const FAMILY_EVOLUTION_STATE_VERSION = 2;
+const FAMILY_EVOLUTION_STATE_VERSION = 3;
 const SPARROW_SKILL_SLOT_LAYOUT = Object.freeze([
-  {slotIndex:0, familyId:'rapid', abilityId:'rapidPeck'},
+  {slotIndex:0, familyId:'rapid', abilityId:'multiPeck'},
   {slotIndex:1, familyId:'dart', abilityId:'dart'},
   {slotIndex:2, familyId:'wind', abilityId:'windFeint'},
-  {slotIndex:3, familyId:'mark', abilityId:'markPrey'},
+  {slotIndex:3, familyId:'mark', abilityId:'trackPrey'},
 ]);
 const SPARROW_SKILL_FAMILIES = Object.freeze({
   rapid:{
-    familyId:'rapid', displayName:'Rapid Line', baseAbilityId:'rapidPeck', role:'core burst', maxTier:3,
+    familyId:'rapid', displayName:'Rapid Line', baseAbilityId:'multiPeck', role:'core burst', maxTier:3,
     masteries:[
       {id:'power', name:'Rending Tempo', desc:'+10% Rapid-line damage.'},
       {id:'precision', name:'Needle Rhythm', desc:'Rapid-line attacks gain +5 pierce and -3% miss.'},
@@ -3489,7 +3540,7 @@ const SPARROW_SKILL_FAMILIES = Object.freeze({
     },
   },
   mark:{
-    familyId:'mark', displayName:'Mark Line', baseAbilityId:'markPrey', role:'setup / prey targeting', maxTier:3,
+    familyId:'mark', displayName:'Mark Line', baseAbilityId:'trackPrey', role:'setup / prey targeting', maxTier:3,
     masteries:[
       {id:'power', name:'Focused Quarry', desc:'Mark-line damage bonuses gain +8%.'},
       {id:'precision', name:'Cracked Guard', desc:'Mark-line defense-break exposure gains +6%.'},
@@ -3541,6 +3592,16 @@ function getBaseSkillSlotsForBird(birdKey){
   if(String(birdKey||'')!=='sparrow') return [];
   return SPARROW_SKILL_SLOT_LAYOUT.map(slot=>createSkillSlotState(slot.slotIndex, slot.familyId, null, 0, slot.abilityId, 0, []));
 }
+const LEGACY_SPARROW_BASE_ABILITY_IDS = Object.freeze({
+  rapid:{legacy:'rapidPeck', current:'multiPeck'},
+  mark:{legacy:'markPrey', current:'trackPrey'},
+});
+function migrateLegacySparrowBaseAbilityId(abilityId, familyId, pathId=null, tier=0){
+  const id = String(abilityId||'');
+  if(pathId || Number(tier||0)>0) return id;
+  const familyMigration = LEGACY_SPARROW_BASE_ABILITY_IDS[familyId];
+  return familyMigration && id===familyMigration.legacy ? familyMigration.current : id;
+}
 function getSparrowAbilityStateFromId(abilityId){
   return SPARROW_SKILL_ABILITY_LOOKUP[String(abilityId||'')] || null;
 }
@@ -3565,6 +3626,7 @@ function normalizeSkillSlotState(slot, fallback, birdKey='sparrow'){
   const base = fallback || createSkillSlotState(0, null, null, 0, '', 0, []);
   let next = createSkillSlotState(slot?.slotIndex ?? base.slotIndex, slot?.familyId ?? base.familyId, slot?.pathId ?? base.pathId, slot?.tier ?? base.tier, slot?.abilityId ?? base.abilityId, slot?.masteryCount ?? base.masteryCount, slot?.masteries ?? base.masteries);
   if(String(birdKey||'')==='sparrow' && next.abilityId){
+    next.abilityId = migrateLegacySparrowBaseAbilityId(next.abilityId, next.familyId, next.pathId, next.tier);
     const info = getSparrowAbilityStateFromId(next.abilityId);
     if(info && info.familyId===next.familyId){
       next.pathId = next.pathId || info.pathId || null;
@@ -3592,13 +3654,19 @@ function countSkillSlotMastery(slot, masteryId){
 function getSkillEvolutionPathOptions(slot, birdKey='sparrow'){
   const family = getSkillSlotFamilyDef(slot, birdKey);
   if(!family) return [];
-  return Object.values(family.paths||{}).map(path=>({
-    familyId:family.familyId,
-    pathId:path.pathId,
-    displayName:path.displayName,
-    abilityId:path.abilities?.[1] || family.baseAbilityId,
-    abilityTemplate:ABILITY_TEMPLATES?.[path.abilities?.[1] || family.baseAbilityId] || null,
-  }));
+  const seenAbilityIds = new Set();
+  return Object.values(family.paths||{}).flatMap(path=>{
+    const tierOneAbilityId = path.abilities?.[1];
+    if(!tierOneAbilityId || seenAbilityIds.has(tierOneAbilityId)) return [];
+    seenAbilityIds.add(tierOneAbilityId);
+    return [{
+      familyId:family.familyId,
+      pathId:path.pathId,
+      displayName:path.displayName,
+      abilityId:tierOneAbilityId,
+      abilityTemplate:ABILITY_TEMPLATES?.[tierOneAbilityId] || null,
+    }];
+  });
 }
 function slotNeedsPathChoice(slot){
   return !!(slot && slot.familyId && !slot.pathId);
@@ -3692,7 +3760,7 @@ function ensureFamilyEvolutionState(player){
     const rawSlots = Array.isArray(state.skillSlots) && state.skillSlots.length
       ? state.skillSlots
       : baseSlots.map((slot, idx)=>{
-          const currentId = player.abilities?.[idx]?.id;
+          const currentId = migrateLegacySparrowBaseAbilityId(player.abilities?.[idx]?.id, slot.familyId, null, 0);
           const info = getSparrowAbilityStateFromId(currentId);
           if(info && info.familyId===slot.familyId){
             return createSkillSlotState(slot.slotIndex, info.familyId, info.pathId, info.tier, info.abilityId, 0, []);
@@ -8214,6 +8282,7 @@ async function executeSparrowMarkExecuteAction(ab, config){
   logMsg(`${config.log} next attack +${Math.round(bonus*100)}% damage${lowHp?' against a weakened foe':''}.`, 'player-action');
 }
 const SPARROW_SKILL_ACTION_OVERRIDES = {
+  multiPeck: ab=>executeSparrowRapidFamilyAction(ab,{name:'Multi Peck',log:'⚡ Multi Peck!',hits:[3,3,4,4],miss:[9,8,8,7],mult:[0.42,0.46,0.46,0.50],pierce:[0,0,0,0]}),
   rapidPeck: ab=>executeSparrowRapidFamilyAction(ab,{name:'Rapid Peck',log:'⚡ Rapid Peck!',hits:[3,3,3,4],miss:[8,7,6,5],mult:[0.45,0.52,0.58,0.58],pierce:[10,12,14,16]}),
   bodkinStrike: ab=>executeSparrowRapidFamilyAction(ab,{name:'Bodkin Strike',log:'🪶 Bodkin Strike!',hits:[3,3,4,4],miss:[7,6,5,4],mult:[0.52,0.58,0.58,0.64],pierce:[18,20,22,24]}),
   bodkinBarrage: ab=>executeSparrowRapidFamilyAction(ab,{name:'Bodkin Barrage',log:'🪶 Bodkin Barrage!',hits:[4,4,5,5],miss:[6,5,4,3],mult:[0.60,0.66,0.66,0.72],pierce:[24,26,28,30]}),
@@ -8243,6 +8312,7 @@ const SPARROW_SKILL_ACTION_OVERRIDES = {
   featherDrift: ab=>executeSparrowWindShroudAction(ab,{log:'🪶 Feather Drift!',acc:[15,18,20,22],turns:[2,2,2,2]}),
   blindingVeil: ab=>executeSparrowWindShroudAction(ab,{log:'🌫 Blinding Veil!',acc:[22,25,28,30],turns:[2,2,2,2],slow:{spd:2,dodge:10}}),
   stormShroud: ab=>executeSparrowWindShroudAction(ab,{log:'🌪 Storm Shroud!',acc:[30,33,36,40],turns:[3,3,3,3],slow:{spd:3,dodge:12}}),
+  trackPrey: ab=>executeSparrowMarkAmpAction(ab,{log:'🪶 Track Prey!',amp:[0.12,0.15,0.18,0.21]}),
   markPrey: ab=>executeSparrowMarkAmpAction(ab,{log:'🎯 Mark Prey!',amp:[0.18,0.22,0.26,0.30]}),
   brandPrey: ab=>executeSparrowMarkAmpAction(ab,{log:'🎯 Brand Prey!',amp:[0.26,0.30,0.34,0.38]}),
   huntersMark: ab=>executeSparrowMarkAmpAction(ab,{log:'🎯 Hunter\'s Mark!',amp:[0.34,0.38,0.42,0.46]}),
@@ -10464,7 +10534,7 @@ function renderSkillEvolutionPathSelection(slot){
   const currentTmpl = ABILITY_TEMPLATES?.[slot.abilityId] || {};
   G._skillEvolutionFlow = {step:'path', slotIndex:slot.slotIndex};
   setLevelUpPanelTitle(`🧬 ${family?.displayName||'Skill Evolution'}`);
-  document.getElementById('lu-sub').textContent=`Choose the first branch for ${currentTmpl.name || family?.displayName || 'this skill'}.`;
+  document.getElementById('lu-sub').textContent=`Choose 1 of 3 tier-1 branches for ${currentTmpl.name || family?.displayName || 'this skill'}.`;
   configureLevelUpConfirm('✓ Evolve Skill', confirmSkillEvolutionChoice, false);
   configureLevelUpSecondary('⟨ Back', renderSkillEvolutionSlotSelection, true);
   grid.innerHTML='';
@@ -11317,7 +11387,8 @@ function renderRunHistory() {
 let _refActiveTab = 0;
 
 const ABILITIES_REFERENCE = {
-  rapidPeck:{desc:'Striker basic opener.',effect:'Multi-hit physical pressure with combo potential.'},
+  multiPeck:{desc:'Sparrow neutral opener.',effect:'Multi-hit physical setup before choosing a branch.'},
+  rapidPeck:{desc:'Striker basic opener.',effect:'Piercing multi-hit pressure after the Rapid branch choice.'},
   dart:{desc:'Reliable basic strike.',effect:'Stable damage with light utility pressure.'},
   honkAttack:{desc:'Bruiser/Tank basic control strike.',effect:'Physical damage with fear or control pressure.'},
   roost:{desc:'Recovery utility.',effect:'Restores HP and supports sustained fights.'},
