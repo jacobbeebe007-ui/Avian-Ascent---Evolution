@@ -879,15 +879,15 @@ const BIRDS = {
       }},
   },
   magpie:{
-    name:'Magpie', portraitKey:'magpie', tagline:'Swooping thief. Calls the murder to mob.',
+    name:'Magpie', portraitKey:'magpie', tagline:'Flashy thief. Swoops in, steals the moment, and slips away.',
     size:'medium', class:'trickster',
     unlockRequires:'unlock_magpie',
     unlockHint:'Defeat Stage 10 with Robin.',
-    stats:{hp:42,maxHp:42,atk:7,def:4,spd:8,dodge:32,acc:84,mdef:9,matk:12,critChance:8},
+    stats:{hp:40,maxHp:40,atk:7,def:4,spd:9,dodge:34,acc:88,mdef:8,matk:9,critChance:10},
     color:'#2a2a2a',
-    startAbilities:['featherFlick','glintJab','mockingSong','stealTempo'],
-    passive:{id:'murderCall',name:'Shiny Collector',desc:'+3 shiny after each victory. Mob attacks gain +10% hit vs low-HP foes. Each kill raises summon cap (max +3).',
-      onBattleStart(p){p._murderBonusCap=0;}},
+    startAbilities:['swoop','steal_shine','feather_flick','dart'],
+    passive:{id:'shinyCollector',name:'Shiny Collector',desc:'+3 shiny after each victory. Once each turn, exploiting a buffed or compromised enemy restores 1 EN.',
+      onBattleStart(p){p._magpieOpeningReady=true;}},
   },
 
 
@@ -3727,6 +3727,78 @@ const crowStartingSkillSlots = CROW_SKILL_SLOT_LAYOUT.map(slot=>Object.freeze({
   abilityId:slot.abilityId,
   masteryCount:0,
 }));
+const MAGPIE_SKILL_FAMILIES = Object.freeze({
+  swoop:{
+    familyId:'swoop', displayName:'Swoop Line', baseAbilityId:'swoop', slotRole:'filler_attack', maxTier:3,
+    tierNames:{1:'Swoop', 2:'Dive', 3:'Flurry'},
+    masteries:[
+      {id:'power', name:'Low Pass', desc:'+10% Swoop-line damage.'},
+      {id:'precision', name:'Flash of White', desc:'Swoop-line attacks gain -4% miss and better payoff into openings.'},
+      {id:'control', name:'Nagging Wings', desc:'Swoop-line bleed/opening riders improve slightly.'},
+    ],
+    paths:{
+      bleed:{pathId:'bleed', displayName:'Bleed', abilities:{1:'raking_swoop', 2:'tearing_dive', 3:'carrion_flurry'}},
+      blindside:{pathId:'blindside', displayName:'Blindside', abilities:{1:'sneak_swoop', 2:'blindside_dive', 3:'cheapshot_flurry'}},
+      shinybite:{pathId:'shinybite', displayName:'Shiny Bite', abilities:{1:'gleam_swoop', 2:'pilfer_dive', 3:'thief_flurry'}},
+    },
+  },
+  steal:{
+    familyId:'steal', displayName:'Steal Line', baseAbilityId:'steal_shine', slotRole:'trickster_utility', maxTier:3,
+    tierNames:{1:'Steal', 2:'Swipe', 3:'Heist'},
+    masteries:[
+      {id:'power', name:'Polished Prize', desc:'Steal-line next-attack payoff improves by +6%.'},
+      {id:'precision', name:'Sticky Fingers', desc:'Steal-line skills strip an extra enemy buff when possible.'},
+      {id:'control', name:'Bent Rhythm', desc:'Steal-line energy/expose pressure improves slightly.'},
+    ],
+    paths:{
+      buff:{pathId:'buff', displayName:'Buff', abilities:{1:'shine_snatch', 2:'bright_swipe', 3:'glitter_heist'}},
+      tempo:{pathId:'tempo', displayName:'Tempo', abilities:{1:'quick_snatch', 2:'tempo_swipe', 3:'momentum_heist'}},
+      weakpoint:{pathId:'weakpoint', displayName:'Weakpoint', abilities:{1:'weakpoint_snatch', 2:'crackswipe', 3:'ruin_heist'}},
+    },
+  },
+  flick:{
+    familyId:'flick', displayName:'Feather Flick Line', baseAbilityId:'feather_flick', slotRole:'harass_control', maxTier:3,
+    tierNames:{1:'Flick', 2:'Toss', 3:'Storm'},
+    masteries:[
+      {id:'power', name:'Eye-Needler', desc:'Flick-line ACC-break and dodge values improve.'},
+      {id:'precision', name:'Side-Step Timing', desc:'Flick-line effects last 1 extra turn when possible.'},
+      {id:'control', name:'Heckler', desc:'Flick-line taunt/opening follow-up gains a little more bite.'},
+    ],
+    paths:{
+      acc_break:{pathId:'acc_break', displayName:'Accuracy Break', abilities:{1:'dust_flick', 2:'blinding_toss', 3:'feather_storm'}},
+      dodge:{pathId:'dodge', displayName:'Dodge', abilities:{1:'feather_slip', 2:'skitter_toss', 3:'phantom_storm'}},
+      taunt:{pathId:'taunt', displayName:'Taunt', abilities:{1:'mock_flick', 2:'jeer_toss', 3:'heckle_storm'}},
+    },
+  },
+  dart:{
+    familyId:'dart', displayName:'Dart Line', baseAbilityId:'dart', slotRole:'precision_payoff', maxTier:3,
+    tierNames:{1:'Dart', 2:'Arrow', 3:'Javelin'},
+    masteries:[
+      {id:'power', name:'Sharp Trinket', desc:'+10% Dart-line damage.'},
+      {id:'precision', name:'Glitter Trajectory', desc:'Dart-line attacks gain -4% miss and +6% pierce.'},
+      {id:'control', name:'Opening Angles', desc:'Dart-line payoff versus compromised targets improves slightly.'},
+    ],
+    paths:{
+      bleed:{pathId:'bleed', displayName:'Bleed', abilities:{1:'broad_dart', 2:'broad_arrow', 3:'broad_javelin'}},
+      pierce:{pathId:'pierce', displayName:'Pierce', abilities:{1:'bodkin_dart', 2:'bodkin_arrow', 3:'bodkin_javelin'}},
+      trickshot:{pathId:'trickshot', displayName:'Trickshot', abilities:{1:'ricochet_dart', 2:'trick_arrow', 3:'phantom_javelin'}},
+    },
+  },
+});
+const MAGPIE_SKILL_SLOT_LAYOUT = Object.freeze([
+  {slotIndex:0, familyId:'swoop', abilityId:'swoop'},
+  {slotIndex:1, familyId:'steal', abilityId:'steal_shine'},
+  {slotIndex:2, familyId:'flick', abilityId:'feather_flick'},
+  {slotIndex:3, familyId:'dart', abilityId:'dart'},
+]);
+const magpieStartingSkillSlots = MAGPIE_SKILL_SLOT_LAYOUT.map(slot=>Object.freeze({
+  slotIndex:slot.slotIndex,
+  familyId:slot.familyId,
+  pathId:null,
+  tier:0,
+  abilityId:slot.abilityId,
+  masteryCount:0,
+}));
 
 function buildFamilySkillAbilityLookup(slotLayout, families){
   const out = Object.create(null);
@@ -3787,6 +3859,18 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
       murder:{legacy:['stickLance', 'murderMurmuration'], current:'murder_murmuration'},
       call:{legacy:['guard', 'dreadCall'], current:'dread_call'},
       focus:{legacy:['battleFocus'], current:'battle_focus'},
+    }),
+  },
+  magpie:{
+    birdKey:'magpie',
+    slotLayout:MAGPIE_SKILL_SLOT_LAYOUT,
+    families:MAGPIE_SKILL_FAMILIES,
+    abilityLookup:buildFamilySkillAbilityLookup(MAGPIE_SKILL_SLOT_LAYOUT, MAGPIE_SKILL_FAMILIES),
+    legacyBaseAbilityIds:Object.freeze({
+      swoop:{legacy:['featherFlick', 'swoopCut', 'swoop'], current:'swoop'},
+      steal:{legacy:['glintJab', 'stealTempo', 'stealShine'], current:'steal_shine'},
+      flick:{legacy:['mockingSong', 'featherFlick'], current:'feather_flick'},
+      dart:{legacy:['stealTempo', 'glintJab', 'dart'], current:'dart'},
     }),
   },
 });
@@ -8580,6 +8664,8 @@ registerAbilityAlias('battleChirp','warcry','Battle Chirp');
 registerAbilityAlias('battleFocus','chargeUp','Battle Focus');
 registerAbilityAlias('stealShine','fishSnatcher','Steal Shine');
 registerAbilityAlias('featherFlick','evade','Feather Flick');
+registerAbilityAlias('steal_shine','stealShine','Steal Shine',{type:'utility',btnType:'utility',desc:'Magpie base theft skill. Swipe a shiny opening before branching.'});
+registerAbilityAlias('feather_flick','featherFlick','Feather Flick',{type:'utility',btnType:'utility',desc:'Magpie base harassment skill. Toss a feather to open space before branching.'});
 registerAbilityAlias('graceStep','evade','Grace Step');
 registerAbilityAlias('guard','crowDefend','Guard');
 registerAbilityAlias('honkTerror','gooseHonk','Honk Terror');
@@ -8753,6 +8839,41 @@ registerAbilityAlias('comboStrike','talonRake','Combo Strike',{type:'physical',b
 registerAbilityAlias('skyfallStrike','deathDive','Skyfall Strike',{type:'physical',btnType:'physical'});
 registerAbilityAlias('mockingSong','dirge','Mocking Song',{type:'utility',btnType:'utility'});
 registerAbilityAlias('stealTempo','stealShine','Steal Tempo',{type:'utility',btnType:'utility'});
+registerAbilityAlias('raking_swoop','swoop','Raking Swoop',{type:'physical',btnType:'physical'});
+registerAbilityAlias('tearing_dive','diveBomb','Tearing Dive',{type:'physical',btnType:'physical'});
+registerAbilityAlias('sneak_swoop','swoop','Sneak Swoop',{type:'physical',btnType:'physical'});
+registerAbilityAlias('blindside_dive','diveBomb','Blindside Dive',{type:'physical',btnType:'physical'});
+registerAbilityAlias('cheapshot_flurry','flurry','Cheapshot Flurry',{type:'physical',btnType:'physical'});
+registerAbilityAlias('gleam_swoop','swoop','Gleam Swoop',{type:'physical',btnType:'physical'});
+registerAbilityAlias('pilfer_dive','diveBomb','Pilfer Dive',{type:'physical',btnType:'physical'});
+registerAbilityAlias('thief_flurry','flurry','Thief Flurry',{type:'physical',btnType:'physical'});
+registerAbilityAlias('shine_snatch','steal_shine','Shine Snatch',{type:'utility',btnType:'utility'});
+registerAbilityAlias('bright_swipe','steal_shine','Bright Swipe',{type:'utility',btnType:'utility'});
+registerAbilityAlias('glitter_heist','steal_shine','Glitter Heist',{type:'utility',btnType:'utility'});
+registerAbilityAlias('quick_snatch','steal_shine','Quick Snatch',{type:'utility',btnType:'utility'});
+registerAbilityAlias('tempo_swipe','steal_shine','Tempo Swipe',{type:'utility',btnType:'utility'});
+registerAbilityAlias('momentum_heist','steal_shine','Momentum Heist',{type:'utility',btnType:'utility'});
+registerAbilityAlias('weakpoint_snatch','steal_shine','Weakpoint Snatch',{type:'utility',btnType:'utility'});
+registerAbilityAlias('crackswipe','steal_shine','Crack Swipe',{type:'utility',btnType:'utility'});
+registerAbilityAlias('ruin_heist','steal_shine','Ruin Heist',{type:'utility',btnType:'utility'});
+registerAbilityAlias('dust_flick','feather_flick','Dust Flick',{type:'utility',btnType:'utility'});
+registerAbilityAlias('blinding_toss','feather_flick','Blinding Toss',{type:'utility',btnType:'utility'});
+registerAbilityAlias('feather_storm','feather_flick','Feather Storm',{type:'utility',btnType:'utility'});
+registerAbilityAlias('feather_slip','feather_flick','Feather Slip',{type:'utility',btnType:'utility'});
+registerAbilityAlias('skitter_toss','feather_flick','Skitter Toss',{type:'utility',btnType:'utility'});
+registerAbilityAlias('phantom_storm','feather_flick','Phantom Storm',{type:'utility',btnType:'utility'});
+registerAbilityAlias('mock_flick','feather_flick','Mock Flick',{type:'utility',btnType:'utility'});
+registerAbilityAlias('jeer_toss','feather_flick','Jeer Toss',{type:'utility',btnType:'utility'});
+registerAbilityAlias('heckle_storm','feather_flick','Heckle Storm',{type:'utility',btnType:'utility'});
+registerAbilityAlias('broad_dart','broadDart','Broad Dart',{type:'physical',btnType:'physical'});
+registerAbilityAlias('broad_arrow','broadArrow','Broad Arrow',{type:'physical',btnType:'physical'});
+registerAbilityAlias('broad_javelin','broadJavelin','Broad Javelin',{type:'physical',btnType:'physical'});
+registerAbilityAlias('bodkin_dart','bodkinDart','Bodkin Dart',{type:'physical',btnType:'physical'});
+registerAbilityAlias('bodkin_arrow','bodkinArrow','Bodkin Arrow',{type:'physical',btnType:'physical'});
+registerAbilityAlias('bodkin_javelin','bodkinJavelin','Bodkin Javelin',{type:'physical',btnType:'physical'});
+registerAbilityAlias('ricochet_dart','dart','Ricochet Dart',{type:'physical',btnType:'physical'});
+registerAbilityAlias('trick_arrow','dart','Trick Arrow',{type:'physical',btnType:'physical'});
+registerAbilityAlias('phantom_javelin','dart','Phantom Javelin',{type:'physical',btnType:'physical'});
 registerAbilityAlias('echoSong','shriekwave','Echo Song',{type:'spell',btnType:'spell'});
 registerAbilityAlias('mimicSong','birdBrain','Mimic Song',{type:'utility',btnType:'utility'});
 registerAbilityAlias('confuseChorus','dirge','Confuse Chorus',{type:'spell',btnType:'spell'});
@@ -9280,6 +9401,219 @@ const __sharedNeedlePeckOriginal=ACTIONS.needle_peck;
 if(__sharedRakingPeckOriginal) BLACKBIRD_SKILL_ACTION_OVERRIDES.raking_peck.__sharedOriginal=__sharedRakingPeckOriginal;
 if(__sharedNeedlePeckOriginal) BLACKBIRD_SKILL_ACTION_OVERRIDES.needle_peck.__sharedOriginal=__sharedNeedlePeckOriginal;
 Object.entries(BLACKBIRD_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
+
+const MAGPIE_TEMPLATE_DEFS = [
+  ['steal_shine','Steal Shine','Magpie base theft skill. Swipe a shiny opening before branching.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% damage.'},{desc:'Next attack +15% damage.'},{desc:'Next attack +18% damage.'},{desc:'Next attack +21% damage.'}]}],
+  ['feather_flick','Feather Flick','Magpie base harassment skill. Toss a feather to open space before branching.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -10% for 2 turns.'},{desc:'Enemy ACC -12% for 2 turns.'},{desc:'Enemy ACC -14% for 2 turns.'},{desc:'Enemy ACC -16% for 2 turns.'}]}],
+  ['raking_swoop','Raking Swoop','Swoop-line bleed branch. Tear through on a low pass.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'110% dmg, never dodged, Bleed 16%.'},{desc:'120% dmg, never dodged, Bleed 18%.'},{desc:'130% dmg, never dodged, Bleed 20%.'},{desc:'140% dmg, never dodged, Bleed 22%.'}]}],
+  ['tearing_dive','Tearing Dive','Swoop-line bleed evolution. Sharper follow-up dive.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'130% dmg, Bleed 20%.'},{desc:'140% dmg, Bleed 22%.'},{desc:'150% dmg, Bleed 24%.'},{desc:'160% dmg, Bleed 26%.'}]}],
+  ['sneak_swoop','Sneak Swoop','Swoop-line blindside branch. Exploit distracted targets.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'108% dmg, bonus vs ACC-debuffed.'},{desc:'118% dmg, bonus vs ACC-debuffed.'},{desc:'128% dmg, bonus vs ACC-debuffed.'},{desc:'138% dmg, bonus vs ACC-debuffed.'}]}],
+  ['blindside_dive','Blindside Dive','Swoop-line blindside evolution. Hit harder from bad angles.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'126% dmg, bonus vs ACC-debuffed.'},{desc:'136% dmg, bonus vs ACC-debuffed.'},{desc:'146% dmg, bonus vs ACC-debuffed.'},{desc:'156% dmg, bonus vs ACC-debuffed.'}]}],
+  ['cheapshot_flurry','Cheapshot Flurry','Swoop-line blindside finisher. Rapid dirty hits.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'2 hits, bonus vs taunted/exposed.'},{desc:'2 hits, bonus vs taunted/exposed.'},{desc:'3 hits, bonus vs taunted/exposed.'},{desc:'3 hits, bonus vs taunted/exposed.'}]}],
+  ['gleam_swoop','Gleam Swoop','Swoop-line shinybite branch. Strike and skim value from the chaos.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'110% dmg, gain tempo.'},{desc:'120% dmg, gain tempo.'},{desc:'130% dmg, gain tempo.'},{desc:'140% dmg, gain tempo.'}]}],
+  ['pilfer_dive','Pilfer Dive','Swoop-line shinybite evolution. Cleaner theft under pressure.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'128% dmg, gain more tempo.'},{desc:'138% dmg, gain more tempo.'},{desc:'148% dmg, gain more tempo.'},{desc:'158% dmg, gain more tempo.'}]}],
+  ['thief_flurry','Thief Flurry','Swoop-line shinybite finisher. A flurry that steals momentum.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'2 hits and gain EN.'},{desc:'2 hits and gain EN.'},{desc:'3 hits and gain EN.'},{desc:'3 hits and gain EN.'}]}],
+  ['shine_snatch','Shine Snatch','Steal-line buff branch. Polish your next strike.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +18% damage.'},{desc:'Next attack +22% damage.'},{desc:'Next attack +26% damage.'},{desc:'Next attack +30% damage.'}]}],
+  ['bright_swipe','Bright Swipe','Steal-line buff evolution. Bigger stolen edge.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +26% damage.'},{desc:'Next attack +30% damage.'},{desc:'Next attack +34% damage.'},{desc:'Next attack +38% damage.'}]}],
+  ['glitter_heist','Glitter Heist','Steal-line buff finisher. Maximum polished payoff.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +34% damage.'},{desc:'Next attack +38% damage.'},{desc:'Next attack +42% damage.'},{desc:'Next attack +46% damage.'}]}],
+  ['quick_snatch','Quick Snatch','Steal-line tempo branch. Swipe momentum outright.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain 1 EN and next attack +8% damage.'},{desc:'Gain 1 EN and next attack +10% damage.'},{desc:'Gain 1 EN and next attack +12% damage.'},{desc:'Gain 1 EN and next attack +14% damage.'}]}],
+  ['tempo_swipe','Tempo Swipe','Steal-line tempo evolution. Better acceleration.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain 1 EN and next attack +14% damage.'},{desc:'Gain 1 EN and next attack +16% damage.'},{desc:'Gain 1 EN and next attack +18% damage.'},{desc:'Gain 2 EN and next attack +20% damage.'}]}],
+  ['momentum_heist','Momentum Heist','Steal-line tempo finisher. Steal the whole turn.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain 2 EN and next attack +20% damage.'},{desc:'Gain 2 EN and next attack +22% damage.'},{desc:'Gain 2 EN and next attack +24% damage.'},{desc:'Gain 2 EN and next attack +28% damage.'}]}],
+  ['weakpoint_snatch','Weakpoint Snatch','Steal-line weakpoint branch. Steal an opening.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Expose enemy +12% for 2 turns.'},{desc:'Expose enemy +14% for 2 turns.'},{desc:'Expose enemy +16% for 2 turns.'},{desc:'Expose enemy +18% for 2 turns.'}]}],
+  ['crackswipe','Crack Swipe','Steal-line weakpoint evolution. Pry defenses apart.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Expose enemy +18% for 2 turns.'},{desc:'Expose enemy +20% for 2 turns.'},{desc:'Expose enemy +22% for 2 turns.'},{desc:'Expose enemy +24% for 3 turns.'}]}],
+  ['ruin_heist','Ruin Heist','Steal-line weakpoint finisher. Engineer a total opening.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Expose enemy +24% for 3 turns.'},{desc:'Expose enemy +26% for 3 turns.'},{desc:'Expose enemy +28% for 3 turns.'},{desc:'Expose enemy +30% for 3 turns.'}]}],
+  ['dust_flick','Dust Flick','Flick-line accuracy-break branch. Dust their eyes.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -16% for 2 turns.'},{desc:'Enemy ACC -18% for 2 turns.'},{desc:'Enemy ACC -20% for 2 turns.'},{desc:'Enemy ACC -22% for 3 turns.'}]}],
+  ['blinding_toss','Blinding Toss','Flick-line accuracy-break evolution. Harsher visual disruption.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -24% for 2 turns.'},{desc:'Enemy ACC -27% for 2 turns.'},{desc:'Enemy ACC -30% for 2 turns.'},{desc:'Enemy ACC -33% for 3 turns.'}]}],
+  ['feather_storm','Feather Storm','Flick-line accuracy-break finisher. Blanket the field in chaos.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -32% for 3 turns.'},{desc:'Enemy ACC -35% for 3 turns.'},{desc:'Enemy ACC -38% for 3 turns.'},{desc:'Enemy ACC -42% for 3 turns.'}]}],
+  ['feather_slip','Feather Slip','Flick-line dodge branch. Skitter out of reach.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +25% dodge for 2 turns.'},{desc:'Gain +30% dodge for 2 turns.'},{desc:'Gain +35% dodge for 2 turns.'},{desc:'Gain +40% dodge for 3 turns.'}]}],
+  ['skitter_toss','Skitter Toss','Flick-line dodge evolution. Better skirmishing tempo.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +35% dodge for 2 turns.'},{desc:'Gain +40% dodge for 2 turns.'},{desc:'Gain +45% dodge for 2 turns.'},{desc:'Gain +50% dodge for 3 turns.'}]}],
+  ['phantom_storm','Phantom Storm','Flick-line dodge finisher. Become hard to pin down.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +45% dodge for 3 turns.'},{desc:'Gain +50% dodge for 3 turns.'},{desc:'Gain +55% dodge for 3 turns.'},{desc:'Gain +60% dodge for 3 turns.'}]}],
+  ['mock_flick','Mock Flick','Flick-line taunt branch. Bait the enemy into mistakes.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt enemy and ACC -10%.'},{desc:'Taunt enemy and ACC -12%.'},{desc:'Taunt enemy and ACC -14%.'},{desc:'Taunt enemy and ACC -16%.'}]}],
+  ['jeer_toss','Jeer Toss','Flick-line taunt evolution. Sharper baiting.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt enemy and ACC -16%.'},{desc:'Taunt enemy and ACC -18%.'},{desc:'Taunt enemy and ACC -20%.'},{desc:'Taunt enemy and ACC -22%.'}]}],
+  ['heckle_storm','Heckle Storm','Flick-line taunt finisher. Total battlefield heckling.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt enemy and ACC -22%.'},{desc:'Taunt enemy and ACC -24%.'},{desc:'Taunt enemy and ACC -26%.'},{desc:'Taunt enemy and ACC -28%.'}]}],
+  ['ricochet_dart','Ricochet Dart','Dart-line trickshot branch. A shot from a dirty angle.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'106% dmg, bonus vs ACC-debuffed.'},{desc:'116% dmg, bonus vs ACC-debuffed.'},{desc:'126% dmg, bonus vs ACC-debuffed.'},{desc:'136% dmg, bonus vs ACC-debuffed.'}]}],
+  ['trick_arrow','Trick Arrow','Dart-line trickshot evolution. Stranger trajectory, cleaner hit.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'120% dmg, bonus vs ACC-debuffed.'},{desc:'130% dmg, bonus vs ACC-debuffed.'},{desc:'140% dmg, bonus vs ACC-debuffed.'},{desc:'150% dmg, bonus vs ACC-debuffed.'}]}],
+  ['phantom_javelin','Phantom Javelin','Dart-line trickshot finisher. A deceptive finishing throw.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'134% dmg, bonus vs ACC-debuffed or exposed.'},{desc:'144% dmg, bonus vs ACC-debuffed or exposed.'},{desc:'154% dmg, bonus vs ACC-debuffed or exposed.'},{desc:'164% dmg, bonus vs ACC-debuffed or exposed.'}]}],
+];
+for(const [id,name,desc,options] of MAGPIE_TEMPLATE_DEFS){
+  Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
+}
+
+function getMagpieMasteryBonuses(ab){
+  const slot=getAbilitySkillSlot(G.player, ab);
+  const m=getSlotMasteryProfile(slot);
+  const familyId=slot?.familyId || null;
+  return {
+    familyId,
+    power:m.power,
+    precision:m.precision,
+    control:m.control,
+    damage:0.10*m.power,
+    miss:4*m.precision,
+    expose:0.02*m.control,
+    amp:0.06*m.power,
+    energy:m.control,
+    accDown:4*m.power,
+    dodge:5*m.power,
+    turns:m.precision,
+    pierce:6*m.precision,
+    opening:0.03*m.control,
+    rider:8*m.control,
+    extraStrip:m.precision,
+  };
+}
+function getMagpieStealableEnemyBuffKeys(){
+  const keys=[];
+  if((G.enemyStatus?.atkBuff||0)>0) keys.push('atkBuff');
+  if((G.enemyStatus?.defending||0)>0) keys.push('defending');
+  if((G.enemyStatus?.wardens||0)>0) keys.push('wardens');
+  return keys;
+}
+function stripMagpieEnemyBuffs(count=1){
+  let stripped=0;
+  for(const key of getMagpieStealableEnemyBuffKeys()){
+    if(stripped>=count) break;
+    if(key==='atkBuff') delete G.enemyStatus.atkBuff;
+    else if(key==='defending') G.enemyStatus.defending=0;
+    else delete G.enemyStatus[key];
+    stripped++;
+  }
+  return stripped;
+}
+function magpieTargetHasOpening(){
+  return !!(
+    getMagpieStealableEnemyBuffKeys().length ||
+    (G.enemyStatus?.accDebuff||0)>0 ||
+    (G.enemyStatus?.exposedGuard?.pct||0)>0 ||
+    (G.enemyStatus?.bleed?.stacks||0)>0 ||
+    (G.enemyStatus?.weaken||0)>0 ||
+    (G.enemyStatus?.feared||0)>0
+  );
+}
+function triggerMagpieOpeningPayoffIfNeeded(){
+  if(G.player?.birdKey!=='magpie' || !magpieTargetHasOpening()) return 0;
+  if(!G.playerTurnFlags || G.playerTurnFlags.magpieOpeningTriggered) return 0;
+  G.playerTurnFlags.magpieOpeningTriggered = true;
+  const gained=gainEnergy(G.player,1);
+  if(gained>0){
+    spawnFloat('player',`+${gained} EN`,'fn-energy');
+    logMsg('✨ Shiny Collector steals the tempo for 1 EN.','system');
+  }
+  return gained;
+}
+async function executeMagpieStrikeAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const mastery=getMagpieMasteryBonuses(ab);
+  const hits=config.hits?.[lv-1] || 1;
+  let total=0;
+  for(let i=0;i<hits;i++){
+    const miss=Math.max(0,(config.miss?.[lv-1] ?? 0) - getPlayerHitBonus(ab) - mastery.miss - ((G.enemyStatus?.accDebuff||0)>0 ? 4 : 0));
+    if(chance(miss)){ await doMiss('player'); continue; }
+    const prox={...ab,pierceDef:(config.pierce?.[lv-1] ?? 0) + mastery.pierce};
+    const oldDodge=config.ignoreDodge ? G.enemy.stats.dodge : null;
+    if(config.ignoreDodge) G.enemy.stats.dodge=0;
+    let mult=(config.mult?.[lv-1] ?? 1) + mastery.damage;
+    if(config.bonusVs==='acc_down' && (G.enemyStatus?.accDebuff||0)>0) mult += (config.bonus?.[lv-1] ?? 0) + mastery.opening;
+    if(config.bonusVs==='exposed' && (G.enemyStatus?.exposedGuard?.pct||0)>0) mult += (config.bonus?.[lv-1] ?? 0) + mastery.opening;
+    if(config.bonusVs==='taunted' && (G.enemyStatus?.taunted||0)>0) mult += (config.bonus?.[lv-1] ?? 0) + mastery.opening;
+    if(config.bonusVs==='wounded' && ((G.enemyStatus?.bleed?.stacks||0)>0 || G.enemy.stats.hp <= Math.floor((G.enemy.stats.maxHp||1)*0.6))) mult += (config.bonus?.[lv-1] ?? 0) + mastery.opening;
+    if(config.bonusVs==='buffed' && getMagpieStealableEnemyBuffKeys().length>0) mult += (config.bonus?.[lv-1] ?? 0) + mastery.opening;
+    const r=dealDamage('enemy',pdmg(mult,prox),chance(getPlayerCritChance(ab)+((G.enemyStatus?.exposedGuard?.pct||0)>0?8:0)),false,prox);
+    if(config.ignoreDodge) G.enemy.stats.dodge=oldDodge;
+    total+=r.dmgDealt;
+    await doAttack('player','enemy',r);
+    setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+    if(G.battleOver) return;
+  }
+  if(config.bleedChance?.[lv-1] && chance(config.bleedChance[lv-1] + mastery.rider)) applyAilment('enemy','bleed',1);
+  const stripCount=(config.stripBuffs?.[lv-1] ?? 0) + mastery.extraStrip;
+  if(stripCount>0){
+    const stripped=stripMagpieEnemyBuffs(stripCount);
+    if(stripped>0) spawnFloat('enemy',`💎 -${stripped} buff`,'fn-status');
+  }
+  if(config.gainEnergy?.[lv-1]){ const gained=gainEnergy(G.player,config.gainEnergy[lv-1]); if(gained>0) spawnFloat('player',`+${gained} EN`,'fn-energy'); }
+  triggerMagpieOpeningPayoffIfNeeded();
+  logMsg(`${config.log||ab?.name||ab?.id}! ${total} dmg.`, 'player-action');
+}
+async function executeMagpieStealAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const mastery=getMagpieMasteryBonuses(ab);
+  const stripCount=(config.stripBuffs?.[lv-1] ?? 0) + mastery.extraStrip;
+  const stripped=stripCount>0 ? stripMagpieEnemyBuffs(stripCount) : 0;
+  if(config.amp?.[lv-1]) G.playerStatus.huntersMarkBonusPct=(config.amp[lv-1]||0)+mastery.amp+(stripped>0?(config.stolenAmp?.[lv-1]||0):0);
+  if(config.energy?.[lv-1]){ const gained=gainEnergy(G.player,(config.energy[lv-1]||0)+mastery.energy); if(gained>0) spawnFloat('player',`+${gained} EN`,'fn-energy'); }
+  if(config.expose?.[lv-1]) G.enemyStatus.exposedGuard={turns:(config.turns?.[lv-1]||2)+mastery.turns,pct:(config.expose[lv-1]||0)+mastery.expose};
+  await doSpell('player', config.fx||'✨');
+  renderStatuses('player-status',G.playerStatus);
+  renderStatuses('enemy-status',G.enemyStatus);
+  if(stripped>0) spawnFloat('enemy',`💎 -${stripped} buff`,'fn-status');
+  triggerMagpieOpeningPayoffIfNeeded();
+  logMsg(`${config.log||ab?.name||ab?.id}! Momentum shifts in your favor${stripped>0?` and ${stripped} buff(s) are stolen.`:'.'}`, 'player-action');
+}
+async function executeMagpieFlickAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const mastery=getMagpieMasteryBonuses(ab);
+  if(config.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+config.accDown[lv-1]+mastery.accDown;
+  if(config.dodge?.[lv-1]) G.playerStatus.humDodge={bonus:(config.dodge[lv-1]||0)+mastery.dodge,turns:(config.turns?.[lv-1]||2)+mastery.turns};
+  if(config.taunt?.[lv-1]){ G.tauntActive=true; G.enemyStatus.taunted=1; }
+  await doSpell('enemy', config.fx||'🪶');
+  renderStatuses('player-status',G.playerStatus);
+  renderStatuses('enemy-status',G.enemyStatus);
+  triggerMagpieOpeningPayoffIfNeeded();
+  logMsg(`${config.log||ab?.name||ab?.id}! The enemy loses composure.`, 'player-action');
+}
+const __magpieSharedDartOriginal=ACTIONS.dart;
+const __magpieSharedBroadDartOriginal=ACTIONS.broad_dart;
+const __magpieSharedBroadArrowOriginal=ACTIONS.broad_arrow;
+const __magpieSharedBroadJavelinOriginal=ACTIONS.broad_javelin;
+const __magpieSharedBodkinDartOriginal=ACTIONS.bodkin_dart;
+const __magpieSharedBodkinArrowOriginal=ACTIONS.bodkin_arrow;
+const __magpieSharedBodkinJavelinOriginal=ACTIONS.bodkin_javelin;
+const __magpieSharedCarrionFlurryOriginal=ACTIONS.carrion_flurry;
+const __magpieSharedSwoopOriginal=ACTIONS.swoop;
+const MAGPIE_SKILL_ACTION_OVERRIDES = {
+  swoop: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Swoop',log:'🦅 Swoop',ignoreDodge:true,miss:[0,0,0,0],mult:[1.00,1.15,1.30,1.50]}) : __magpieSharedSwoopOriginal(ab)),
+  raking_swoop: ab=>executeMagpieStrikeAction(ab,{name:'Raking Swoop',log:'🩸 Raking Swoop',ignoreDodge:true,miss:[0,0,0,0],mult:[1.10,1.20,1.30,1.40],bleedChance:[16,18,20,22]}),
+  tearing_dive: ab=>executeMagpieStrikeAction(ab,{name:'Tearing Dive',log:'🩸 Tearing Dive',ignoreDodge:true,miss:[6,5,4,3],mult:[1.30,1.40,1.50,1.60],bleedChance:[20,22,24,26]}),
+  carrion_flurry: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Carrion Flurry',log:'🩸 Carrion Flurry',ignoreDodge:true,hits:[2,2,3,3],miss:[8,7,6,5],mult:[0.66,0.72,0.68,0.74],bleedChance:[22,24,26,28],bonusVs:'wounded',bonus:[0.08,0.10,0.12,0.14]}) : __magpieSharedCarrionFlurryOriginal(ab)),
+  sneak_swoop: ab=>executeMagpieStrikeAction(ab,{name:'Sneak Swoop',log:'🕶 Sneak Swoop',ignoreDodge:true,miss:[0,0,0,0],mult:[1.08,1.18,1.28,1.38],bonusVs:'acc_down',bonus:[0.10,0.12,0.14,0.16]}),
+  blindside_dive: ab=>executeMagpieStrikeAction(ab,{name:'Blindside Dive',log:'🕶 Blindside Dive',ignoreDodge:true,miss:[6,5,4,3],mult:[1.26,1.36,1.46,1.56],bonusVs:'acc_down',bonus:[0.12,0.14,0.16,0.18]}),
+  cheapshot_flurry: ab=>executeMagpieStrikeAction(ab,{name:'Cheapshot Flurry',log:'🕶 Cheapshot Flurry',hits:[2,2,3,3],miss:[8,7,6,5],mult:[0.62,0.68,0.64,0.70],bonusVs:'taunted',bonus:[0.12,0.14,0.16,0.18]}),
+  gleam_swoop: ab=>executeMagpieStrikeAction(ab,{name:'Gleam Swoop',log:'✨ Gleam Swoop',ignoreDodge:true,miss:[0,0,0,0],mult:[1.10,1.20,1.30,1.40],gainEnergy:[1,1,1,1]}),
+  pilfer_dive: ab=>executeMagpieStrikeAction(ab,{name:'Pilfer Dive',log:'✨ Pilfer Dive',ignoreDodge:true,miss:[6,5,4,3],mult:[1.28,1.38,1.48,1.58],gainEnergy:[1,1,1,2],bonusVs:'buffed',bonus:[0.08,0.10,0.12,0.14],stripBuffs:[1,1,1,1]}),
+  thief_flurry: ab=>executeMagpieStrikeAction(ab,{name:'Thief Flurry',log:'✨ Thief Flurry',hits:[2,2,3,3],miss:[8,7,6,5],mult:[0.64,0.70,0.66,0.72],gainEnergy:[1,1,2,2],bonusVs:'buffed',bonus:[0.10,0.12,0.14,0.16],stripBuffs:[1,1,1,2]}),
+  steal_shine: ab=>executeMagpieStealAction(ab,{log:'✨ Steal Shine',amp:[0.12,0.15,0.18,0.21],stripBuffs:[0,1,1,1],stolenAmp:[0,0.04,0.05,0.06]}),
+  shine_snatch: ab=>executeMagpieStealAction(ab,{log:'✨ Shine Snatch',amp:[0.18,0.22,0.26,0.30],stripBuffs:[1,1,1,1],stolenAmp:[0.05,0.06,0.07,0.08]}),
+  bright_swipe: ab=>executeMagpieStealAction(ab,{log:'✨ Bright Swipe',amp:[0.26,0.30,0.34,0.38],stripBuffs:[1,1,1,2],stolenAmp:[0.06,0.07,0.08,0.10]}),
+  glitter_heist: ab=>executeMagpieStealAction(ab,{log:'✨ Glitter Heist',amp:[0.34,0.38,0.42,0.46],stripBuffs:[1,1,2,2],stolenAmp:[0.08,0.09,0.10,0.12]}),
+  quick_snatch: ab=>executeMagpieStealAction(ab,{log:'⏱ Quick Snatch',energy:[1,1,1,1],amp:[0.08,0.10,0.12,0.14]}),
+  tempo_swipe: ab=>executeMagpieStealAction(ab,{log:'⏱ Tempo Swipe',energy:[1,1,1,2],amp:[0.14,0.16,0.18,0.20]}),
+  momentum_heist: ab=>executeMagpieStealAction(ab,{log:'⏱ Momentum Heist',energy:[2,2,2,2],amp:[0.20,0.22,0.24,0.28]}),
+  weakpoint_snatch: ab=>executeMagpieStealAction(ab,{log:'🎯 Weakpoint Snatch',expose:[0.12,0.14,0.16,0.18],turns:[2,2,2,2]}),
+  crackswipe: ab=>executeMagpieStealAction(ab,{log:'🎯 Crack Swipe',expose:[0.18,0.20,0.22,0.24],turns:[2,2,2,3]}),
+  ruin_heist: ab=>executeMagpieStealAction(ab,{log:'🎯 Ruin Heist',expose:[0.24,0.26,0.28,0.30],turns:[3,3,3,3]}),
+  feather_flick: ab=>executeMagpieFlickAction(ab,{log:'🪶 Feather Flick',accDown:[10,12,14,16],turns:[2,2,2,2]}),
+  dust_flick: ab=>executeMagpieFlickAction(ab,{log:'🪶 Dust Flick',accDown:[16,18,20,22],turns:[2,2,2,3]}),
+  blinding_toss: ab=>executeMagpieFlickAction(ab,{log:'🪶 Blinding Toss',accDown:[24,27,30,33],turns:[2,2,2,3]}),
+  feather_storm: ab=>executeMagpieFlickAction(ab,{log:'🪶 Feather Storm',accDown:[32,35,38,42],turns:[3,3,3,3]}),
+  feather_slip: ab=>executeMagpieFlickAction(ab,{log:'💨 Feather Slip',dodge:[25,30,35,40],turns:[2,2,2,3]}),
+  skitter_toss: ab=>executeMagpieFlickAction(ab,{log:'💨 Skitter Toss',dodge:[35,40,45,50],turns:[2,2,2,3]}),
+  phantom_storm: ab=>executeMagpieFlickAction(ab,{log:'💨 Phantom Storm',dodge:[45,50,55,60],turns:[3,3,3,3]}),
+  mock_flick: ab=>executeMagpieFlickAction(ab,{log:'😤 Mock Flick',accDown:[10,12,14,16],taunt:[1,1,1,1]}),
+  jeer_toss: ab=>executeMagpieFlickAction(ab,{log:'😤 Jeer Toss',accDown:[16,18,20,22],taunt:[1,1,1,1]}),
+  heckle_storm: ab=>executeMagpieFlickAction(ab,{log:'😤 Heckle Storm',accDown:[22,24,26,28],taunt:[1,1,1,1]}),
+  dart: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Dart',log:'💨 Dart',miss:[10,8,6,5],mult:[1.08,1.18,1.28,1.38]}) : __magpieSharedDartOriginal(ab)),
+  broad_dart: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Broad Dart',log:'🩸 Broad Dart',miss:[9,8,7,6],mult:[1.02,1.12,1.22,1.32],bleedChance:[30,35,40,45]}) : __magpieSharedBroadDartOriginal(ab)),
+  broad_arrow: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Broad Arrow',log:'🩸 Broad Arrow',miss:[8,7,6,5],mult:[1.16,1.26,1.36,1.46],bleedChance:[40,45,50,55]}) : __magpieSharedBroadArrowOriginal(ab)),
+  broad_javelin: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Broad Javelin',log:'🩸 Broad Javelin',miss:[7,6,5,4],mult:[1.30,1.40,1.50,1.60],bleedChance:[50,55,60,65]}) : __magpieSharedBroadJavelinOriginal(ab)),
+  bodkin_dart: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Bodkin Dart',log:'🪶 Bodkin Dart',miss:[8,7,6,5],mult:[1.06,1.16,1.26,1.36],pierce:[18,20,22,24]}) : __magpieSharedBodkinDartOriginal(ab)),
+  bodkin_arrow: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Bodkin Arrow',log:'🪶 Bodkin Arrow',miss:[7,6,5,4],mult:[1.20,1.30,1.40,1.50],pierce:[24,26,28,30]}) : __magpieSharedBodkinArrowOriginal(ab)),
+  bodkin_javelin: ab=>(G.player?.birdKey==='magpie' ? executeMagpieStrikeAction(ab,{name:'Bodkin Javelin',log:'🪶 Bodkin Javelin',miss:[6,5,4,3],mult:[1.34,1.44,1.54,1.64],pierce:[30,32,34,36]}) : __magpieSharedBodkinJavelinOriginal(ab)),
+  ricochet_dart: ab=>executeMagpieStrikeAction(ab,{name:'Ricochet Dart',log:'🎯 Ricochet Dart',miss:[8,7,6,5],mult:[1.06,1.16,1.26,1.36],bonusVs:'acc_down',bonus:[0.10,0.12,0.14,0.16]}),
+  trick_arrow: ab=>executeMagpieStrikeAction(ab,{name:'Trick Arrow',log:'🎯 Trick Arrow',miss:[7,6,5,4],mult:[1.20,1.30,1.40,1.50],bonusVs:'acc_down',bonus:[0.12,0.14,0.16,0.18]}),
+  phantom_javelin: ab=>executeMagpieStrikeAction(ab,{name:'Phantom Javelin',log:'🎯 Phantom Javelin',miss:[6,5,4,3],mult:[1.34,1.44,1.54,1.64],bonusVs:'exposed',bonus:[0.12,0.14,0.16,0.18]}),
+};
+Object.entries(MAGPIE_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
 
 const RELIABLE_ONE_EN_ATTACK_BY_CLASS = Object.freeze({
   striker:'rapidPeck',

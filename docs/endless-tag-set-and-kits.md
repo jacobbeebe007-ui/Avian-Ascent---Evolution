@@ -57,7 +57,7 @@ Design implication:
 
 - Sparrow: Peck, Talon Strike, Battle Chirp, Wind Slash
 - Crow: Peck, Murder Murmuration, Dread Call, Battle Focus
-- Magpie: Peck, Steal Shine, Feather Flick, Dart
+- Magpie: Swoop, Steal Shine, Feather Flick, Dart
 - Seagull: Peck, Dive Snatch, Wind Slash, Mob Swarm
 - Flamingo: Peck, Mud Lash, Preen, Grace Step
 - Goose: Peck, Territorial Honk, Guard, Talon Slam
