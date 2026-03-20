@@ -8579,6 +8579,63 @@ Object.assign(ABILITY_TEMPLATES.gale_crush||{}, makeEvolutionAbilityTemplate('ga
 Object.assign(ABILITY_TEMPLATES.rending_talon||{}, makeEvolutionAbilityTemplate('rending_talon','Rending Talon','Heavy-line execute branch. Better against low HP.', {type:'physical', btnType:'physical', energy:2, levels:[{desc:'150% dmg. Bonus vs low HP.'},{desc:'160% dmg. Bonus vs low HP.'},{desc:'170% dmg. Bonus vs low HP.'},{desc:'180% dmg. Bonus vs low HP.'}]}));
 Object.assign(ABILITY_TEMPLATES.finisher_slam||{}, makeEvolutionAbilityTemplate('finisher_slam','Finisher Slam','Heavy-line execute evolution. Higher finishing payoff.', {type:'physical', btnType:'physical', energy:2, levels:[{desc:'165% dmg. Bigger bonus vs low HP.'},{desc:'175% dmg. Bigger bonus vs low HP.'},{desc:'185% dmg. Bigger bonus vs low HP.'},{desc:'195% dmg. Bigger bonus vs low HP.'}]}));
 Object.assign(ABILITY_TEMPLATES.execution_crush||{}, makeEvolutionAbilityTemplate('execution_crush','Execution Crush','Heavy-line execute finisher. Brutal endgame hit.', {type:'physical', btnType:'physical', energy:2, levels:[{desc:'180% dmg. Strong execute threshold.'},{desc:'190% dmg. Strong execute threshold.'},{desc:'200% dmg. Strong execute threshold.'},{desc:'210% dmg. Strong execute threshold.'}]}));
+function executeGooseStrikeAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, ab?.level||1));
+  const miss=Math.max(0, (config.miss?.[lv-1] ?? 0) - getPlayerHitBonus(ab));
+  if(chance(miss)){
+    return doMiss('player').then(()=>logMsg(`${config.name||ab?.name||ab?.id} missed!`,'miss'));
+  }
+  let mult=(config.mult?.[lv-1] ?? 1);
+  if(config.bonusVs==='bleed' && (G.enemyStatus.bleed?.stacks||0)>0) mult += (config.bonus?.[lv-1] ?? 0);
+  if(config.bonusVs==='feared' && (G.enemyStatus.feared||0)>0) mult += (config.bonus?.[lv-1] ?? 0);
+  if(config.bonusVs==='weakened' && (G.enemyStatus.weaken||0)>0) mult += (config.bonus?.[lv-1] ?? 0);
+  if(config.bonusVs==='guard' && ((G.enemyStatus.defending||0)>0 || (G.enemyStatus.exposedGuard?.pct||0)>0)) mult += (config.bonus?.[lv-1] ?? 0);
+  if(config.bonusVs==='low_hp' && G.enemy.stats.hp <= Math.floor((G.enemy.stats.maxHp||1) * (config.lowHpThreshold || 0.5))) mult += (config.bonus?.[lv-1] ?? 0);
+  const prox={...ab, pierceDef:config.pierce?.[lv-1] ?? ab?.pierceDef ?? 0};
+  const isCrit=chance(getPlayerCritChance(ab));
+  const r=dealDamage('enemy',pdmg(mult, prox),isCrit);
+  return doAttack('player','enemy',r).then(async ()=>{
+    setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+    if(config.bleedChance?.[lv-1] && chance(config.bleedChance[lv-1])){ applyAilment('enemy','bleed',1); spawnFloat('enemy','🩸 Bleed!','fn-poison'); }
+    if(config.weakenChance?.[lv-1] && chance(config.weakenChance[lv-1])){ applyAilment('enemy','weaken',1); spawnFloat('enemy','🐔 Weaken!','fn-status'); }
+    if(config.fearChance?.[lv-1] && chance(config.fearChance[lv-1])){ applyAilment('enemy','feared',1); spawnFloat('enemy','😨 Fear!','fn-status'); }
+    if(config.paraChance?.[lv-1] && chance(config.paraChance[lv-1])){ applyAilment('enemy','paralyzed',1); spawnFloat('enemy','⚡ Para!','fn-status'); }
+    logMsg(`${config.log||config.name||ab?.name||ab?.id}! ${r.dmgDealt} dmg.`, 'player-action');
+  });
+}
+const GOOSE_SKILL_ACTION_OVERRIDES = {
+  peck: ab=>executeGooseStrikeAction(ab,{name:'Peck', log:'🪿 Peck', miss:[10,9,8,7], mult:[1.00,1.08,1.16,1.24]}),
+  raking_peck: ab=>executeGooseStrikeAction(ab,{name:'Raking Peck', log:'🩸 Raking Peck', miss:[10,9,8,7], mult:[1.00,1.08,1.16,1.24], bleedChance:[10,12,14,16]}),
+  tearing_bite: ab=>executeGooseStrikeAction(ab,{name:'Tearing Bite', log:'🩸 Tearing Bite', miss:[9,8,7,6], mult:[1.12,1.20,1.28,1.36], bleedChance:[15,17,19,21], bonusVs:'bleed', bonus:[0.10,0.12,0.14,0.16]}),
+  savage_maul: ab=>executeGooseStrikeAction(ab,{name:'Savage Maul', log:'🩸 Savage Maul', miss:[8,7,6,5], mult:[1.24,1.32,1.40,1.48], bleedChance:[20,22,24,26], bonusVs:'bleed', bonus:[0.14,0.16,0.18,0.20]}),
+  numbing_peck: ab=>executeGooseStrikeAction(ab,{name:'Numbing Peck', log:'🐔 Numbing Peck', miss:[10,9,8,7], mult:[0.92,0.98,1.04,1.10], weakenChance:[10,12,14,16]}),
+  crippling_bite: ab=>executeGooseStrikeAction(ab,{name:'Crippling Bite', log:'🐔 Crippling Bite', miss:[9,8,7,6], mult:[1.00,1.06,1.12,1.18], weakenChance:[15,17,19,21]}),
+  submission_maul: ab=>executeGooseStrikeAction(ab,{name:'Submission Maul', log:'🐔 Submission Maul', miss:[8,7,6,5], mult:[1.10,1.18,1.26,1.34], weakenChance:[20,22,24,26], bonusVs:'weakened', bonus:[0.08,0.10,0.12,0.14]}),
+  needle_peck: ab=>executeGooseStrikeAction(ab,{name:'Needle Peck', log:'🪶 Needle Peck', miss:[10,9,8,7], mult:[1.02,1.10,1.18,1.26], pierce:[10,14,18,20]}),
+  bodkin_bite: ab=>executeGooseStrikeAction(ab,{name:'Bodkin Bite', log:'🪶 Bodkin Bite', miss:[9,8,7,6], mult:[1.14,1.22,1.30,1.38], pierce:[20,24,28,30]}),
+  armor_maul: ab=>executeGooseStrikeAction(ab,{name:'Armor Maul', log:'🪶 Armor Maul', miss:[8,7,6,5], mult:[1.26,1.34,1.42,1.50], pierce:[30,32,34,36], bonusVs:'guard', bonus:[0.10,0.12,0.14,0.16]}),
+  territorial_honk: ab=>executeGooseStrikeAction(ab,{name:'Territorial Honk', log:'📣 Territorial Honk', miss:[25,23,21,19], mult:[1.15,1.25,1.35,1.45]}),
+  dread_honk: ab=>executeGooseStrikeAction(ab,{name:'Dread Honk', log:'😨 Dread Honk', miss:[24,22,20,18], mult:[1.05,1.12,1.19,1.26], fearChance:[20,22,25,28]}),
+  terror_blast: ab=>executeGooseStrikeAction(ab,{name:'Terror Blast', log:'😨 Terror Blast', miss:[24,22,20,18], mult:[1.20,1.28,1.36,1.44], fearChance:[25,27,30,32], bonusVs:'feared', bonus:[0.08,0.10,0.12,0.14]}),
+  panic_terror: ab=>executeGooseStrikeAction(ab,{name:'Panic Terror', log:'😨 Panic Terror', miss:[23,21,19,17], mult:[1.24,1.32,1.40,1.48], fearChance:[30,32,34,36], bonusVs:'feared', bonus:[0.12,0.14,0.16,0.18]}),
+  shock_honk: ab=>executeGooseStrikeAction(ab,{name:'Shock Honk', log:'⚡ Shock Honk', miss:[24,22,20,18], mult:[1.15,1.23,1.31,1.39], paraChance:[15,17,20,22]}),
+  stunning_blast: ab=>executeGooseStrikeAction(ab,{name:'Stunning Blast', log:'⚡ Stunning Blast', miss:[23,21,19,17], mult:[1.18,1.26,1.34,1.42], paraChance:[20,22,24,26]}),
+  lockdown_terror: ab=>executeGooseStrikeAction(ab,{name:'Lockdown Terror', log:'⚡ Lockdown Terror', miss:[22,20,18,16], mult:[1.22,1.30,1.38,1.46], paraChance:[25,27,29,31]}),
+  crushing_honk: ab=>executeGooseStrikeAction(ab,{name:'Crushing Honk', log:'🐔 Crushing Honk', miss:[24,22,20,18], mult:[1.15,1.23,1.31,1.39], weakenChance:[15,17,20,22]}),
+  oppression_blast: ab=>executeGooseStrikeAction(ab,{name:'Oppression Blast', log:'🐔 Oppression Blast', miss:[23,21,19,17], mult:[1.18,1.26,1.34,1.42], weakenChance:[20,22,24,26]}),
+  tyrant_terror: ab=>executeGooseStrikeAction(ab,{name:'Tyrant Terror', log:'🐔 Tyrant Terror', miss:[22,20,18,16], mult:[1.22,1.30,1.38,1.46], weakenChance:[25,27,29,31], bonusVs:'weakened', bonus:[0.10,0.12,0.14,0.16]}),
+  talon_slam: ab=>executeGooseStrikeAction(ab,{name:'Talon Slam', log:'💥 Talon Slam', miss:[22,20,18,16], mult:[1.40,1.50,1.60,1.70]}),
+  heavy_talon: ab=>executeGooseStrikeAction(ab,{name:'Heavy Talon', log:'💥 Heavy Talon', miss:[22,20,18,16], mult:[1.50,1.60,1.70,1.80]}),
+  trample_slam: ab=>executeGooseStrikeAction(ab,{name:'Trample Slam', log:'💥 Trample Slam', miss:[20,18,16,14], mult:[1.65,1.75,1.85,1.95]}),
+  crushing_stampede: ab=>executeGooseStrikeAction(ab,{name:'Crushing Stampede', log:'💥 Crushing Stampede', miss:[18,16,14,12], mult:[1.80,1.90,2.00,2.10]}),
+  wing_buffet: ab=>executeGooseStrikeAction(ab,{name:'Wing Buffet', log:'🪽 Wing Buffet', miss:[20,18,16,14], mult:[1.45,1.55,1.65,1.75], weakenChance:[10,12,14,16]}),
+  bone_buffet: ab=>executeGooseStrikeAction(ab,{name:'Bone Buffet', log:'🪽 Bone Buffet', miss:[20,18,16,14], mult:[1.60,1.70,1.80,1.90], weakenChance:[12,14,16,18]}),
+  gale_crush: ab=>executeGooseStrikeAction(ab,{name:'Gale Crush', log:'🪽 Gale Crush', miss:[18,16,14,12], mult:[1.75,1.85,1.95,2.05], weakenChance:[14,16,18,20]}),
+  rending_talon: ab=>executeGooseStrikeAction(ab,{name:'Rending Talon', log:'☠ Rending Talon', miss:[20,18,16,14], mult:[1.50,1.60,1.70,1.80], bonusVs:'low_hp', bonus:[0.15,0.18,0.21,0.24], lowHpThreshold:0.5}),
+  finisher_slam: ab=>executeGooseStrikeAction(ab,{name:'Finisher Slam', log:'☠ Finisher Slam', miss:[18,16,14,12], mult:[1.65,1.75,1.85,1.95], bonusVs:'low_hp', bonus:[0.20,0.23,0.26,0.29], lowHpThreshold:0.5}),
+  execution_crush: ab=>executeGooseStrikeAction(ab,{name:'Execution Crush', log:'☠ Execution Crush', miss:[16,14,12,10], mult:[1.80,1.90,2.00,2.10], bonusVs:'low_hp', bonus:[0.25,0.28,0.31,0.34], lowHpThreshold:0.55}),
+};
+Object.entries(GOOSE_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
 registerAbilityAlias('iceGuard','crowDefend','Ice Guard');
 registerAbilityAlias('bodySlam','beakSlam','Body Slam');
 registerAbilityAlias('rallyCall','victoryChant','Rally Call',{type:'utility',btnType:'utility'});

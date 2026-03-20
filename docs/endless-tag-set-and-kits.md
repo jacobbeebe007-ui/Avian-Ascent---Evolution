@@ -85,7 +85,7 @@ Design implication:
 ## 5) New species-specific abilities to add next
 
 - Fruit Bomb (Toucan) `[SPELL][SIGNATURE]`
-- Honk Terror (Goose) `[CONTROL][SIGNATURE]`
+- Territorial Honk (Goose) `[CONTROL][SIGNATURE]`
 - Dive Snatch (Seagull) `[UTILITY][SIGNATURE]`
 - Savage Kick (Emu) `[HEAVY][SIGNATURE]`
 - Sky Strike (Eagle) `[HEAVY][SIGNATURE]`
