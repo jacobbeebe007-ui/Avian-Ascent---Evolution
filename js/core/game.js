@@ -9102,6 +9102,185 @@ const CROW_SKILL_ACTION_OVERRIDES = {
 };
 Object.entries(CROW_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
 
+const GOOSE_TWO_EN_TREE_IDS = Object.freeze([
+  'gooseHonk','honkAttack','territorial_honk','dread_honk','terror_blast','panic_terror','shock_honk','stunning_blast','lockdown_terror','crushing_honk','oppression_blast','tyrant_terror','honk_terror',
+  'talon_slam','heavy_talon','trample_slam','crushing_stampede','wing_buffet','bone_buffet','gale_crush','rending_talon','finisher_slam','execution_crush','heavyTalon','fearHonk',
+]);
+for(const id of GOOSE_TWO_EN_TREE_IDS){
+  const tmpl=ABILITY_TEMPLATES?.[id];
+  if(!tmpl) continue;
+  tmpl.energyCost=2;
+  tmpl.energyByLevel=[2,2,2,2];
+}
+
+const BLACKBIRD_EVOLUTION_TEMPLATE_DEFS = [
+  ['dark_song','Dark Song','Blackbird base song. A neutral dark refrain before branching.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'100% spell dmg, 14% miss.'},{desc:'110% spell dmg, 12% miss.'},{desc:'120% spell dmg, 10% miss.'},{desc:'130% spell dmg, 8% miss.'}]}],
+  ['dread_song','Dread Song','Song-line fear branch. A chilling refrain that rattles the target.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'108% spell dmg, Fear 20%.'},{desc:'118% spell dmg, Fear 24%.'},{desc:'128% spell dmg, Fear 28%.'},{desc:'138% spell dmg, Fear 32%.'}]}],
+  ['panic_verse','Panic Verse','Song-line fear evolution. Pressure rises against frightened prey.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'122% spell dmg, Fear 24%. Bonus vs feared.'},{desc:'132% spell dmg, Fear 28%. Bonus vs feared.'},{desc:'142% spell dmg, Fear 32%. Bonus vs feared.'},{desc:'152% spell dmg, Fear 36%. Bonus vs feared.'}]}],
+  ['night_anthem','Night Anthem','Song-line fear finisher. A night chorus that overwhelms the enemy.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'3 spell hits, Fear 26%.'},{desc:'3 spell hits, Fear 30%.'},{desc:'4 spell hits, Fear 34%.'},{desc:'4 spell hits, Fear 38%.'}]}],
+  ['venomous_song','Venomous Song','Song-line venom branch. Coat the target in toxic resonance.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'102% spell dmg, Poison 22%.'},{desc:'112% spell dmg, Poison 26%.'},{desc:'122% spell dmg, Poison 30%.'},{desc:'132% spell dmg, Poison 34%.'}]}],
+  ['venomous_verse','Venomous Verse','Song-line venom evolution. Heavier toxin pressure.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'116% spell dmg, Poison 30%.'},{desc:'126% spell dmg, Poison 34%.'},{desc:'136% spell dmg, Poison 38%.'},{desc:'146% spell dmg, Poison 42%.'}]}],
+  ['venomous_anthem','Venomous Anthem','Song-line venom finisher. Saturates the target with dark venom.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'128% spell dmg, Poison 38%, bonus vs poisoned.'},{desc:'138% spell dmg, Poison 42%, bonus vs poisoned.'},{desc:'148% spell dmg, Poison 46%, bonus vs poisoned.'},{desc:'158% spell dmg, Poison 50%, bonus vs poisoned.'}]}],
+  ['hex_song','Hex Song','Song-line hex branch. Dark resonance that clouds aim and weakens resolve.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'100% spell dmg, ACC -10%, Weaken 10%.'},{desc:'110% spell dmg, ACC -12%, Weaken 12%.'},{desc:'120% spell dmg, ACC -14%, Weaken 14%.'},{desc:'130% spell dmg, ACC -16%, Weaken 16%.'}]}],
+  ['hex_verse','Hex Verse','Song-line hex evolution. Stronger curse pressure.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'114% spell dmg, ACC -14%, Weaken 14%.'},{desc:'124% spell dmg, ACC -16%, Weaken 16%.'},{desc:'134% spell dmg, ACC -18%, Weaken 18%.'},{desc:'144% spell dmg, ACC -20%, Weaken 20%.'}]}],
+  ['doom_anthem','Doom Anthem','Song-line hex finisher. A crushing doom-laden refrain.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'126% spell dmg, ACC -18%, Weaken 18%.'},{desc:'136% spell dmg, ACC -20%, Weaken 20%.'},{desc:'146% spell dmg, ACC -22%, Weaken 22%.'},{desc:'156% spell dmg, ACC -24%, Weaken 24%.'}]}],
+  ['shadow_peck','Shadow Peck','Blackbird base peck. A neutral shadow strike before branching.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'98% dmg, 10% miss.'},{desc:'106% dmg, 9% miss.'},{desc:'114% dmg, 8% miss.'},{desc:'122% dmg, 7% miss.'}]}],
+  ['rend_strike','Rend Strike','Shadow-peck bleed evolution. Tear open a darker wound.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'112% dmg, Bleed 18%.'},{desc:'120% dmg, Bleed 20%.'},{desc:'128% dmg, Bleed 22%.'},{desc:'136% dmg, Bleed 24%.'}]}],
+  ['carrion_barrage','Carrion Barrage','Shadow-peck bleed finisher. Burst the target apart with carrion pressure.',{type:'spell',btnType:'spell',energy:1,levels:[{desc:'2 hybrid hits, Bleed 22%.'},{desc:'2 hybrid hits, Bleed 24%.'},{desc:'3 hybrid hits, Bleed 26%.'},{desc:'3 hybrid hits, Bleed 28%.'}]}],
+  ['siphon_peck','Siphon Peck','Shadow-peck siphon branch. Drain life with shadow beaks.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Hybrid strike, heal 6% of dmg.'},{desc:'Hybrid strike, heal 8% of dmg.'},{desc:'Hybrid strike, heal 10% of dmg.'},{desc:'Hybrid strike, heal 12% of dmg.'}]}],
+  ['umbral_strike','Umbral Strike','Shadow-peck siphon evolution. Darker life-drain with more magic weight.',{type:'spell',btnType:'spell',energy:1,levels:[{desc:'Spell dmg, heal 10% of dmg.'},{desc:'Spell dmg, heal 12% of dmg.'},{desc:'Spell dmg, heal 14% of dmg.'},{desc:'Spell dmg, heal 16% of dmg.'}]}],
+  ['soul_barrage','Soul Barrage','Shadow-peck siphon finisher. Tear fragments of soul away.',{type:'spell',btnType:'spell',energy:1,levels:[{desc:'2 spell hits, heal from each hit.'},{desc:'2 spell hits, heal from each hit.'},{desc:'3 spell hits, heal from each hit.'},{desc:'3 spell hits, heal from each hit.'}]}],
+  ['bodkin_strike','Bodkin Strike','Shadow-peck pierce evolution. Sharper armor-punching precision.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'116% dmg, Pierce 20% DEF.'},{desc:'124% dmg, Pierce 24% DEF.'},{desc:'132% dmg, Pierce 28% DEF.'},{desc:'140% dmg, Pierce 32% DEF.'}]}],
+  ['splinter_barrage','Splinter Barrage','Shadow-peck pierce finisher. Burst through armor with shadow shards.',{type:'spell',btnType:'spell',energy:1,levels:[{desc:'2 hybrid hits, Pierce 24% DEF.'},{desc:'2 hybrid hits, Pierce 28% DEF.'},{desc:'3 hybrid hits, Pierce 32% DEF.'},{desc:'3 hybrid hits, Pierce 36% DEF.'}]}],
+  ['gloom_wing','Gloom Wing','Blackbird base utility. A neutral wing shroud before branching.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +20% dodge and enemy ACC -10% for 2 turns.'},{desc:'Gain +24% dodge and enemy ACC -12% for 2 turns.'},{desc:'Gain +28% dodge and enemy ACC -14% for 2 turns.'},{desc:'Gain +32% dodge and enemy ACC -16% for 2 turns.'}]}],
+  ['shade_wing','Shade Wing','Gloom dodge branch. Melt into shade.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +30% dodge for 2 turns.'},{desc:'Gain +35% dodge for 2 turns.'},{desc:'Gain +40% dodge for 2 turns.'},{desc:'Gain +45% dodge for 3 turns.'}]}],
+  ['veil_wing','Veil Wing','Gloom dodge evolution. Thicker cover of shadow.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +40% dodge for 2 turns and cleanse Weaken.'},{desc:'Gain +45% dodge for 2 turns and cleanse Weaken.'},{desc:'Gain +50% dodge for 2 turns and cleanse Weaken.'},{desc:'Gain +55% dodge for 3 turns and cleanse Weaken.'}]}],
+  ['ghost_wing','Ghost Wing','Gloom dodge finisher. Become nearly untouchable.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Gain +50% dodge for 3 turns and cleanse Fear/Weaken.'},{desc:'Gain +55% dodge for 3 turns and cleanse Fear/Weaken.'},{desc:'Gain +60% dodge for 3 turns and cleanse Fear/Weaken.'},{desc:'Gain +65% dodge for 3 turns and cleanse Fear/Weaken.'}]}],
+  ['murk_wing','Murk Wing','Gloom shroud branch. Smother enemy accuracy.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -16% for 2 turns.'},{desc:'Enemy ACC -18% for 2 turns.'},{desc:'Enemy ACC -20% for 2 turns.'},{desc:'Enemy ACC -22% for 3 turns.'}]}],
+  ['blind_veil','Blind Veil','Gloom shroud evolution. Deeper obscuring veil.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -24% for 2 turns.'},{desc:'Enemy ACC -27% for 2 turns.'},{desc:'Enemy ACC -30% for 2 turns.'},{desc:'Enemy ACC -33% for 3 turns.'}]}],
+  ['eclipse_shroud','Eclipse Shroud','Gloom shroud finisher. Eclipse enemy sight entirely.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -32% for 3 turns.'},{desc:'Enemy ACC -35% for 3 turns.'},{desc:'Enemy ACC -38% for 3 turns.'},{desc:'Enemy ACC -42% for 3 turns.'}]}],
+  ['heavy_wing','Heavy Wing','Gloom slow branch. Drag enemy movement down.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Slow enemy for 2 turns.'},{desc:'Slow enemy for 2 turns.'},{desc:'Slow enemy for 3 turns.'},{desc:'Slow enemy for 3 turns.'}]}],
+  ['drag_veil','Drag Veil','Gloom slow evolution. A heavier pall of night.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Stronger Slow for 2 turns.'},{desc:'Stronger Slow for 2 turns.'},{desc:'Stronger Slow for 3 turns.'},{desc:'Stronger Slow for 3 turns.'}]}],
+  ['dusk_field','Dusk Field','Gloom slow finisher. Sink the battlefield into dusk.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Heavy Slow plus ACC down for 3 turns.'},{desc:'Heavy Slow plus ACC down for 3 turns.'},{desc:'Heavy Slow plus ACC down for 3 turns.'},{desc:'Heavy Slow plus ACC down for 4 turns.'}]}],
+  ['grim_sign','Grim Sign','Blackbird base setup. Mark your quarry before choosing a doom path.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% damage.'},{desc:'Next attack +15% damage.'},{desc:'Next attack +18% damage.'},{desc:'Next attack +21% damage.'}]}],
+];
+for(const [id,name,desc,options] of BLACKBIRD_EVOLUTION_TEMPLATE_DEFS){
+  Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
+}
+
+function triggerBlackbirdSpellPassive(){
+  const bd=BIRDS[G.player?.birdKey];
+  if(bd?.passive?.onSpell){
+    bd.passive.onSpell(G.player);
+    setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);
+    spawnFloat('player','+Song','fn-heal');
+  }
+}
+async function executeBlackbirdSpellAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const miss=Math.max(0, (config.miss?.[lv-1] ?? spellMissChance()) - getPlayerHitBonus(ab));
+  const hits=config.hits?.[lv-1] || 1;
+  let total=0;
+  for(let i=0;i<hits;i++){
+    if(chance(miss)){ await doMiss('player'); if(hits===1) logMsg(`${config.name||ab?.name||ab?.id} missed!`,'miss'); continue; }
+    const hybrid=config.damageKind==='hybrid';
+    const amount=hybrid
+      ? Math.max(1, Math.floor((pdmg(config.mult?.[lv-1] ?? 1, ab) + matk(Math.max(0.8,(config.mult?.[lv-1] ?? 1)*0.92))) / 2))
+      : matk(config.mult?.[lv-1] ?? 1);
+    const isCrit=chance(getPlayerCritChance(ab) + (config.bonusVs==='feared' && (G.enemyStatus?.feared||0)>0 ? 8 : 0));
+    const r=dealDamage('enemy', amount, isCrit, true, ab);
+    total+=r.dmgDealt;
+    await doAttack('player','enemy',r);
+    setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+    if(G.battleOver) return;
+  }
+  if(config.fearChance?.[lv-1] && spellAilmentRoll(config.fearChance[lv-1], hits>1)){ applyAilment('enemy','feared',1); spawnFloat('enemy','😨 Fear!','fn-status'); }
+  if(config.poisonChance?.[lv-1] && spellAilmentRoll(config.poisonChance[lv-1], hits>1)){ applyAilment('enemy','poison',1); spawnFloat('enemy','☣ Poison!','fn-poison'); }
+  if(config.bleedChance?.[lv-1] && chance(config.bleedChance[lv-1])){ applyAilment('enemy','bleed',1); spawnFloat('enemy','🩸 Bleed!','fn-poison'); }
+  if(config.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+config.accDown[lv-1];
+  if(config.weakenChance?.[lv-1] && spellAilmentRoll(config.weakenChance[lv-1], false)){ applyAilment('enemy','weaken',1); spawnFloat('enemy','🐔 Weaken!','fn-status'); }
+  renderStatuses('enemy-status',G.enemyStatus);
+  await doSpell('enemy', config.fx||'🌑');
+  logMsg(`${config.log||config.name||ab?.name||ab?.id}! ${total} dmg.`, 'player-action');
+  triggerBlackbirdSpellPassive();
+}
+async function executeBlackbirdPeckAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const miss=Math.max(0, (config.miss?.[lv-1] ?? 0) - getPlayerHitBonus(ab));
+  const hits=config.hits?.[lv-1] || 1;
+  let total=0;
+  for(let i=0;i<hits;i++){
+    if(chance(miss)){ await doMiss('player'); if(hits===1) logMsg(`${config.name||ab?.name||ab?.id} missed!`,'miss'); continue; }
+    let amount;
+    if(config.damageKind==='magic'){
+      amount=matk(config.mult?.[lv-1] ?? 1);
+    }else if(config.damageKind==='hybrid'){
+      amount=Math.max(1, Math.floor((pdmg(config.mult?.[lv-1] ?? 1, ab) + matk(Math.max(0.8,(config.mult?.[lv-1] ?? 1)*0.9))) / 2));
+    }else{
+      const prox={...ab,pierceDef:config.pierce?.[lv-1] ?? 0};
+      amount=pdmg(config.mult?.[lv-1] ?? 1, prox);
+    }
+    const critBonus=(config.bonusVs==='feared' && (G.enemyStatus?.feared||0)>0)?10:0;
+    const r=dealDamage('enemy', amount, chance(getPlayerCritChance(ab)+critBonus), config.damageKind==='magic', ab);
+    total+=r.dmgDealt;
+    await doAttack('player','enemy',r);
+    setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+    if(G.battleOver) return;
+  }
+  if(config.bleedChance?.[lv-1] && chance(config.bleedChance[lv-1])) applyAilment('enemy','bleed',1);
+  if(config.healPct?.[lv-1] && total>0){
+    const heal=Math.max(1,Math.floor(total*config.healPct[lv-1]));
+    G.player.stats.hp=Math.min(G.player.stats.maxHp,G.player.stats.hp+heal);
+    setHpBar('player',G.player.stats.hp,G.player.stats.maxHp);
+    spawnFloat('player',`+${heal}`,'fn-heal');
+  }
+  if(config.poisonChance?.[lv-1] && spellAilmentRoll(config.poisonChance[lv-1], hits>1)) applyAilment('enemy','poison',1);
+  logMsg(`${config.log||config.name||ab?.name||ab?.id}! ${total} dmg.`, 'player-action');
+  if(config.damageKind==='magic' || config.damageKind==='hybrid') triggerBlackbirdSpellPassive();
+}
+async function executeBlackbirdGloomAction(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  if(config.dodge?.[lv-1]) G.playerStatus.humDodge={bonus:config.dodge[lv-1], turns:config.turns?.[lv-1]||2};
+  if(config.cleanse?.length) G.player.statusEffects=(G.player.statusEffects||[]).filter(()=>true);
+  if(config.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+config.accDown[lv-1];
+  if(config.slow?.[lv-1]) applyEnemySlow(config.slow[lv-1], config.slowDodge?.[lv-1]||10, config.turns?.[lv-1]||2);
+  await doSpell('player', config.fx||'🌫');
+  renderStatuses('player-status',G.playerStatus);
+  renderStatuses('enemy-status',G.enemyStatus);
+  logMsg(`${config.log||ab?.name||ab?.id}! Shadows shift the tempo.`, 'player-action');
+}
+const BLACKBIRD_SKILL_ACTION_OVERRIDES = {
+  dark_song: ab=>executeBlackbirdSpellAction(ab,{name:'Dark Song',log:'🎶 Dark Song',fx:'🎶',miss:[14,12,10,8],mult:[1.00,1.10,1.20,1.30]}),
+  dread_song: ab=>executeBlackbirdSpellAction(ab,{name:'Dread Song',log:'😨 Dread Song',fx:'😨',miss:[14,12,10,8],mult:[1.08,1.18,1.28,1.38],fearChance:[20,24,28,32]}),
+  panic_verse: ab=>executeBlackbirdSpellAction(ab,{name:'Panic Verse',log:'😨 Panic Verse',fx:'😨',miss:[13,11,9,7],mult:[1.22,1.32,1.42,1.52],fearChance:[24,28,32,36],bonusVs:'feared'}),
+  night_anthem: ab=>executeBlackbirdSpellAction(ab,{name:'Night Anthem',log:'🌑 Night Anthem',fx:'🌑',hits:[3,3,4,4],miss:[16,14,12,10],mult:[0.44,0.50,0.52,0.58],fearChance:[26,30,34,38]}),
+  venomous_song: ab=>executeBlackbirdSpellAction(ab,{name:'Venomous Song',log:'☣ Venomous Song',fx:'☣',miss:[14,12,10,8],mult:[1.02,1.12,1.22,1.32],poisonChance:[22,26,30,34]}),
+  venomous_verse: ab=>executeBlackbirdSpellAction(ab,{name:'Venomous Verse',log:'☣ Venomous Verse',fx:'☣',miss:[13,11,9,7],mult:[1.16,1.26,1.36,1.46],poisonChance:[30,34,38,42]}),
+  venomous_anthem: ab=>executeBlackbirdSpellAction(ab,{name:'Venomous Anthem',log:'☣ Venomous Anthem',fx:'☣',miss:[12,10,8,6],mult:[1.28,1.38,1.48,1.58],poisonChance:[38,42,46,50]}),
+  hex_song: ab=>executeBlackbirdSpellAction(ab,{name:'Hex Song',log:'🕯 Hex Song',fx:'🕯',miss:[14,12,10,8],mult:[1.00,1.10,1.20,1.30],accDown:[10,12,14,16],weakenChance:[10,12,14,16]}),
+  hex_verse: ab=>executeBlackbirdSpellAction(ab,{name:'Hex Verse',log:'🕯 Hex Verse',fx:'🕯',miss:[13,11,9,7],mult:[1.14,1.24,1.34,1.44],accDown:[14,16,18,20],weakenChance:[14,16,18,20]}),
+  doom_anthem: ab=>executeBlackbirdSpellAction(ab,{name:'Doom Anthem',log:'🕯 Doom Anthem',fx:'🕯',miss:[12,10,8,6],mult:[1.26,1.36,1.46,1.56],accDown:[18,20,22,24],weakenChance:[18,20,22,24]}),
+  shadow_peck: ab=>executeBlackbirdPeckAction(ab,{name:'Shadow Peck',log:'🖤 Shadow Peck',damageKind:'physical',miss:[10,9,8,7],mult:[0.98,1.06,1.14,1.22]}),
+  raking_peck: ab=>(G.player?.birdKey==='blackbird'
+    ? executeBlackbirdPeckAction(ab,{name:'Raking Peck',log:'🩸 Raking Peck',damageKind:'physical',miss:[10,9,8,7],mult:[1.00,1.08,1.16,1.24],bleedChance:[10,12,14,16]})
+    : ACTIONS.raking_peck?.__sharedOriginal ? ACTIONS.raking_peck.__sharedOriginal(ab) : executeGooseStrikeAction(ab,{name:'Raking Peck', log:'🩸 Raking Peck', miss:[10,9,8,7], mult:[1.00,1.08,1.16,1.24], bleedChance:[10,12,14,16]})),
+  rend_strike: ab=>executeBlackbirdPeckAction(ab,{name:'Rend Strike',log:'🩸 Rend Strike',damageKind:'physical',miss:[8,7,6,5],mult:[1.12,1.20,1.28,1.36],bleedChance:[18,20,22,24]}),
+  carrion_barrage: ab=>executeBlackbirdSpellAction(ab,{name:'Carrion Barrage',log:'🩸 Carrion Barrage',fx:'🩸',hits:[2,2,3,3],miss:[14,12,10,8],mult:[0.62,0.68,0.66,0.72],bleedChance:[22,24,26,28],damageKind:'hybrid'}),
+  siphon_peck: ab=>executeBlackbirdPeckAction(ab,{name:'Siphon Peck',log:'🖤 Siphon Peck',damageKind:'hybrid',miss:[10,9,8,7],mult:[1.00,1.08,1.16,1.24],healPct:[0.06,0.08,0.10,0.12]}),
+  umbral_strike: ab=>executeBlackbirdSpellAction(ab,{name:'Umbral Strike',log:'🖤 Umbral Strike',fx:'🖤',miss:[12,10,8,6],mult:[1.14,1.24,1.34,1.44]}),
+  soul_barrage: ab=>executeBlackbirdSpellAction(ab,{name:'Soul Barrage',log:'🖤 Soul Barrage',fx:'🖤',hits:[2,2,3,3],miss:[14,12,10,8],mult:[0.68,0.74,0.72,0.78]}),
+  needle_peck: ab=>(G.player?.birdKey==='blackbird'
+    ? executeBlackbirdPeckAction(ab,{name:'Needle Peck',log:'🪶 Needle Peck',damageKind:'physical',miss:[9,8,7,6],mult:[1.02,1.10,1.18,1.26],pierce:[10,14,18,20]})
+    : ACTIONS.needle_peck?.__sharedOriginal ? ACTIONS.needle_peck.__sharedOriginal(ab) : executeGooseStrikeAction(ab,{name:'Needle Peck', log:'🪶 Needle Peck', miss:[10,9,8,7], mult:[1.02,1.10,1.18,1.26], pierce:[10,14,18,20]})),
+  bodkin_strike: ab=>executeBlackbirdPeckAction(ab,{name:'Bodkin Strike',log:'🪶 Bodkin Strike',damageKind:'physical',miss:[8,7,6,5],mult:[1.16,1.24,1.32,1.40],pierce:[20,24,28,32]}),
+  splinter_barrage: ab=>executeBlackbirdSpellAction(ab,{name:'Splinter Barrage',log:'🪶 Splinter Barrage',fx:'🪶',hits:[2,2,3,3],miss:[12,10,8,6],mult:[0.70,0.76,0.74,0.80],damageKind:'hybrid'}),
+  gloom_wing: ab=>executeBlackbirdGloomAction(ab,{log:'🌫 Gloom Wing',fx:'🌫',dodge:[20,24,28,32],accDown:[10,12,14,16],turns:[2,2,2,2]}),
+  shade_wing: ab=>executeBlackbirdGloomAction(ab,{log:'🌫 Shade Wing',fx:'🌫',dodge:[30,35,40,45],turns:[2,2,2,3]}),
+  veil_wing: ab=>executeBlackbirdGloomAction(ab,{log:'🌫 Veil Wing',fx:'🌫',dodge:[40,45,50,55],turns:[2,2,2,3]}),
+  ghost_wing: ab=>executeBlackbirdGloomAction(ab,{log:'👻 Ghost Wing',fx:'👻',dodge:[50,55,60,65],turns:[3,3,3,3]}),
+  murk_wing: ab=>executeBlackbirdGloomAction(ab,{log:'🌑 Murk Wing',fx:'🌑',accDown:[16,18,20,22],turns:[2,2,2,3]}),
+  blind_veil: ab=>executeBlackbirdGloomAction(ab,{log:'🌑 Blind Veil',fx:'🌑',accDown:[24,27,30,33],turns:[2,2,2,3]}),
+  eclipse_shroud: ab=>executeBlackbirdGloomAction(ab,{log:'🌑 Eclipse Shroud',fx:'🌑',accDown:[32,35,38,42],turns:[3,3,3,3]}),
+  heavy_wing: ab=>executeBlackbirdGloomAction(ab,{log:'🌘 Heavy Wing',fx:'🌘',slow:[2,2,3,3],slowDodge:[10,12,14,16],turns:[2,2,3,3]}),
+  drag_veil: ab=>executeBlackbirdGloomAction(ab,{log:'🌘 Drag Veil',fx:'🌘',slow:[3,3,4,4],slowDodge:[12,14,16,18],turns:[2,2,3,3]}),
+  dusk_field: ab=>executeBlackbirdGloomAction(ab,{log:'🌘 Dusk Field',fx:'🌘',accDown:[10,12,14,16],slow:[4,4,5,5],slowDodge:[14,16,18,20],turns:[3,3,3,4]}),
+  grim_sign: ab=>executeSparrowMarkAmpAction(ab,{log:'☠ Grim Sign!',amp:[0.12,0.15,0.18,0.21]}),
+  grim_mark: ab=>executeSparrowMarkAmpAction(ab,{log:'☠ Grim Mark!',amp:[0.18,0.22,0.26,0.30]}),
+  grave_seal: ab=>executeSparrowMarkAmpAction(ab,{log:'☠ Grave Seal!',amp:[0.26,0.30,0.34,0.38]}),
+  harbinger_doom: ab=>executeSparrowMarkAmpAction(ab,{log:'☠ Harbinger Doom!',amp:[0.34,0.38,0.42,0.46]}),
+  crack_guard: ab=>executeSparrowMarkExposeAction(ab,{log:'☠ Crack Guard!',expose:[0.12,0.14,0.16,0.18],turns:[2,2,2,2]}),
+  break_seal: ab=>executeSparrowMarkExposeAction(ab,{log:'☠ Break Seal!',expose:[0.18,0.20,0.22,0.24],turns:[2,2,2,2]}),
+  ruin_doom: ab=>executeSparrowMarkExposeAction(ab,{log:'☠ Ruin Doom!',expose:[0.24,0.26,0.28,0.30],turns:[3,3,3,3]}),
+  death_sign: ab=>executeSparrowMarkExecuteAction(ab,{log:'☠ Death Sign!',base:[0.16,0.20,0.24,0.28],execute:[0.12,0.14,0.16,0.18]}),
+  death_seal: ab=>executeSparrowMarkExecuteAction(ab,{log:'☠ Death Seal!',base:[0.22,0.26,0.30,0.34],execute:[0.16,0.18,0.20,0.22]}),
+  final_omen: ab=>executeSparrowMarkExecuteAction(ab,{log:'☠ Final Omen!',base:[0.28,0.32,0.36,0.40],execute:[0.24,0.26,0.28,0.30]}),
+};
+const __sharedRakingPeckOriginal=ACTIONS.raking_peck;
+const __sharedNeedlePeckOriginal=ACTIONS.needle_peck;
+if(__sharedRakingPeckOriginal) BLACKBIRD_SKILL_ACTION_OVERRIDES.raking_peck.__sharedOriginal=__sharedRakingPeckOriginal;
+if(__sharedNeedlePeckOriginal) BLACKBIRD_SKILL_ACTION_OVERRIDES.needle_peck.__sharedOriginal=__sharedNeedlePeckOriginal;
+Object.entries(BLACKBIRD_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
+
 const RELIABLE_ONE_EN_ATTACK_BY_CLASS = Object.freeze({
   striker:'rapidPeck',
   bruiser:'bracePeck',
@@ -11089,10 +11268,10 @@ function ensureMainAttackAndLoadoutRules(){
     const isBlackbird = (G.player?.birdKey==='blackbird');
     if(isBlackbird){
       G.player.mainAttackId='shadow_peck';
-      mainAb=G.player.abilities.find(a=>a.id==='shadow_peck' || a.id==='blackPeck') || null;
+      mainAb=G.player.abilities.find(a=>a.id==='shadow_peck') || null;
       G.player.abilities=G.player.abilities.filter(a=>a.id!=='mainAttack');
       if(!mainAb){
-        mainAb={...(ABILITY_TEMPLATES.shadow_peck||ABILITY_TEMPLATES.blackPeck||{}), id:'shadow_peck', level:1};
+        mainAb={...(ABILITY_TEMPLATES.shadow_peck||{}), id:'shadow_peck', level:1};
         G.player.abilities.unshift(mainAb);
       }
     }else{
