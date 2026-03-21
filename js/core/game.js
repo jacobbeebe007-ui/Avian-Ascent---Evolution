@@ -2921,11 +2921,12 @@ const UNLOCK_KEY = 'avianAscent_unlocks_v1';
 // ============================================================
 //  DIFFICULTY SYSTEM
 // ============================================================
+// `mult` scales enemy HP + ATK/MATK only (see buildScaledEnemy). It is the main difficulty knob vs the player.
 const DIFFICULTIES = {
-  fletchling:{ id:'fletchling', label:'Fletchling', emoji:'🥚', mult:0.80, color:'#6ab89a', desc:'Early training difficulty. Enemies are forgiving.' },
-  juvenile:  { id:'juvenile',   label:'Juvenile',   emoji:'🕊️', mult:1.00, color:'#e8c96a', desc:'Intended baseline experience. Balanced combat.' },
-  predator:  { id:'predator',   label:'Predator',   emoji:'🦅', mult:1.20, color:'#e87070', desc:'Enemies hit harder and smarter.' },
-  murder:    { id:'murder',     label:'Murder',     emoji:'‍⬛', mult:1.40, color:'#c040e0', desc:'Extreme scaling with enraged boss pressure.', unlockRequires:'predatorWin' },
+  fletchling:{ id:'fletchling', label:'Fletchling', emoji:'🥚', mult:0.80, color:'#6ab89a', desc:'Enemy HP & attack ×0.8. Forgiving pacing.' },
+  juvenile:  { id:'juvenile',   label:'Juvenile',   emoji:'🕊️', mult:1.00, color:'#e8c96a', desc:'Enemy HP & attack ×1.0 — baseline tuning.' },
+  predator:  { id:'predator',   label:'Predator',   emoji:'🦅', mult:1.20, color:'#e87070', desc:'Enemy HP & attack ×1.2 — sharper fights.' },
+  murder:    { id:'murder',     label:'Murder',     emoji:'‍⬛', mult:1.40, color:'#c040e0', desc:'Enemy HP & attack ×1.4 — brutal pressure.', unlockRequires:'predatorWin' },
 };
 function getUnlocks() {
   try { return JSON.parse(localStorage.getItem(UNLOCK_KEY)||'{}'); } catch(e){ return {}; }
@@ -5158,15 +5159,18 @@ function loadStage() {
       if(stage<=5){
         ed = pickEarlyStageEnemyTemplate(stage);
       }
-      // 30% chance to use a bird-character enemy (if stage >= 5)
-      if(!ed && stage>=6 && Math.random()<0.30){
+      // Bird-character enemies: mirror roster birds; tier/elite is decided in buildScaledEnemy (elite = endless only, stage>20).
+      if(!ed && stage>=6){
+        const birdRollCap = stage<=9 ? 0.18 : 0.28;
+        if(Math.random()<birdRollCap){
         const pool=BIRD_ENEMIES.filter(e=>e.tier.includes(tier));
         if(pool.length>0){
           const src=pool[Math.floor(Math.random()*pool.length)];
           ed={name:src.name,emoji:src.emoji,birdKey:src.birdKey,portraitKey:src.birdKey,hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
-            acc:src.acc,dodge:src.dodge,size:src.size,enemyClass:(src.enemyClass||inferEnemyClassFromStyle(src.aiStyle)),aiStyle:src.aiStyle,aiPersonality:(src.aiPersonality||inferAIPersonalityFromStyle(src.aiStyle,src.name)),isBoss:false,bossTitle:'',enemyTier:'elite',
+            acc:src.acc,dodge:src.dodge,size:src.size,enemyClass:(src.enemyClass||inferEnemyClassFromStyle(src.aiStyle)),aiStyle:src.aiStyle,aiPersonality:(src.aiPersonality||inferAIPersonalityFromStyle(src.aiStyle,src.name)),isBoss:false,bossTitle:'',enemyTier:'normal',
             abilities:src.abilities,stats:{hp:src.hp,maxHp:src.hp,atk:src.atk,def:src.def,spd:src.spd,
             acc:src.acc,dodge:src.dodge,mdef:8,matk:6,cc:0.05,cd:1.5,critChance:5,critMult:1.5,en:(src.size==='xl'?5:src.size==='large'?4:src.size==='medium'?4:3)}};
+        }
         }
       }
       // Fallback / normal enemy
@@ -5185,15 +5189,21 @@ function loadStage() {
     }
 
   }
+  const scaleOpts={
+    isEndless:(G.endlessMode && G.stage>20),
+    diffMult,
+    playerBirdLevel:Math.max(1, Math.floor(G.player?.birdLevel||1)),
+  };
   const scaled=ed.isBoss
-    ? buildScaledBoss(ed, G.stage, {isEndless:(G.endlessMode && G.stage>20), diffMult})
-    : buildScaledEnemy(ed, G.stage, {isEndless:(G.endlessMode && G.stage>20), diffMult});
+    ? buildScaledBoss(ed, G.stage, scaleOpts)
+    : buildScaledEnemy(ed, G.stage, scaleOpts);
   ed.hp=scaled.hp; ed.maxHp=scaled.maxHp;
   ed.atk=scaled.atk; ed.def=scaled.def; ed.spd=scaled.spd;
   ed.acc=scaled.acc; ed.dodge=scaled.dodge; ed.mdodge=scaled.mdodge;
   ed.cc=scaled.cc; ed.cd=scaled.cd;
   ed.mdef=scaled.mdef; ed.matk=scaled.matk;
   ed.enemyClass=scaled.enemyClass||ed.enemyClass||inferEnemyClassFromStyle(ed.aiStyle);
+  if(Number.isFinite(scaled.effectiveLevel)) ed.effectiveLevel=scaled.effectiveLevel;
   if(G.player?.mutBloodMoon){ ed.atk=Math.floor(ed.atk*1.10); ed.matk=Math.floor((ed.matk||ed.atk)*1.10); }
   ed.stats = {hp:ed.hp, maxHp:ed.hp, atk:ed.atk, def:ed.def, spd:ed.spd, acc:ed.acc, dodge:ed.dodge, mdodge:ed.mdodge, mdef:ed.mdef, matk:ed.matk, cc:ed.cc, cd:ed.cd, critChance:Math.round((ed.cc||0.05)*100), critMult:ed.cd||1.5, en:(scaled.en||0)};
   const baseEnemyEnergy = Math.max(1, scaled.en||ed.stats.en||3);
@@ -6725,11 +6735,51 @@ function resolveEnemyTier(enemyBase, forceTier=''){
   return 'normal';
 }
 
+// --- Enemy combat scaling (authoring rules for new enemies) ---
+// - Template stats (makeEnemy / BIRD_ENEMIES) are the baseline identity.
+// - Size + enemyClass modifiers shape role (tank vs striker, etc.) — not stage power.
+// - Power growth is level-based: effectiveLevel = stage depth + player bird level contribution + endless bonus.
+// - Difficulty preset mult (DIFFICULTIES.*.mult) scales enemy HP + ATK/MATK only.
+// - Elite tier: endless mode AND stage > 20 only (never in story). Boss / lieutenant tiers unchanged.
+const ENEMY_PLAYER_LEVEL_TO_EFFECTIVE = 0.42;
+const ENEMY_ENDLESS_EXTRA_LEVEL_EVERY = 5;
+const ENEMY_ENDLESS_EXTRA_LEVEL_STEP = 2;
+const ENEMY_ELITE_SPAWN_CHANCE_DEEP = 0.17;
+const ENEMY_HP_PER_LEVEL_BY_SIZE = Object.freeze({tiny:2.4,small:3.1,medium:3.7,large:4.4,xl:5.2});
+const ENEMY_ATK_PER_LEVEL_BY_SIZE = Object.freeze({tiny:0.42,small:0.52,medium:0.60,large:0.68,xl:0.76});
+const ENEMY_MATK_PER_LEVEL_BY_SIZE = Object.freeze({tiny:0.48,small:0.58,medium:0.66,large:0.72,xl:0.78});
+
+function computeEnemyEffectiveLevel(stage, playerBirdLevel, isEndless){
+  const s=Math.max(1,Math.floor(stage||1));
+  const pl=Math.max(1,Math.floor(playerBirdLevel||1));
+  let L=1+(s-1)+Math.floor((pl-1)*ENEMY_PLAYER_LEVEL_TO_EFFECTIVE);
+  if(isEndless && s>20){
+    L+=Math.floor((s-20)/ENEMY_ENDLESS_EXTRA_LEVEL_EVERY)*ENEMY_ENDLESS_EXTRA_LEVEL_STEP;
+  }
+  return Math.max(1,L);
+}
+
+function combatResolveEnemyTier(enemyBase, stage, opts, templateTier){
+  if(templateTier==='boss') return 'boss';
+  if(templateTier==='lieutenant') return 'lieutenant';
+  if(enemyBase?.isBoss) return 'boss';
+  const s=Math.max(1,Math.floor(stage||1));
+  const deepEndless=!!opts.isEndless && s>20;
+  if(templateTier==='elite'){
+    return deepEndless ? 'elite' : 'normal';
+  }
+  if(deepEndless && templateTier==='normal' && opts.allowDeepEliteRoll!==false){
+    if(Math.random()<ENEMY_ELITE_SPAWN_CHANCE_DEEP) return 'elite';
+  }
+  return 'normal';
+}
+
 function buildScaledEnemy(enemyBase, stage, opts={}){
   const s=Math.max(1, Math.floor(stage||1));
   const isEndless=!!opts.isEndless;
   const diffMult=Number.isFinite(opts.diffMult)?opts.diffMult:1;
-  const tier=resolveEnemyTier(enemyBase, opts.tier);
+  const templateTier=resolveEnemyTier(enemyBase, opts.tier);
+  const tier=combatResolveEnemyTier(enemyBase, stage, opts, templateTier);
   const mult=ENEMY_TIER_MULTIPLIERS[tier]||ENEMY_TIER_MULTIPLIERS.normal;
   const base=getEnemyBaseStats(enemyBase);
   const sizeKey=String(enemyBase?.size||'medium').toLowerCase();
@@ -6737,7 +6787,7 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   const classKey=String(enemyBase?.enemyClass||inferEnemyClassFromStyle(enemyBase?.aiStyle)||'singer').toLowerCase();
   const classMod=ENEMY_CLASS_MODIFIERS[classKey]||ENEMY_CLASS_MODIFIERS.singer;
 
-  // Base -> Size -> Class -> Stage -> Tier -> Endless
+  // Identity: base template -> size role -> class role (no stage multipliers here)
   let hpBase=base.hp*sizeMod.hp;
   let atkBase=base.atk*sizeMod.atk;
   let defBase=base.def*sizeMod.def;
@@ -6757,12 +6807,18 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   cc=Math.min(0.95,Math.max(0,cc+(classMod.ccAdd||0)));
   if(Number.isFinite(classMod.cdSet)) cd=classMod.cdSet;
 
-  let hp=hpBase*(1+s*0.05);
-  let atk=atkBase*(1+s*0.035);
-  let matk=matkBase*(1+s*0.035);
-  let def=defBase+Math.floor(s/5);
-  let mdef=mdefBase+Math.floor(s/6);
-  let spd=spdBase+Math.floor(s/10);
+  const L=computeEnemyEffectiveLevel(s, opts.playerBirdLevel, isEndless);
+  const gain=Math.max(0,L-1);
+  const hpPL=ENEMY_HP_PER_LEVEL_BY_SIZE[sizeKey]??ENEMY_HP_PER_LEVEL_BY_SIZE.medium;
+  const atkPL=ENEMY_ATK_PER_LEVEL_BY_SIZE[sizeKey]??ENEMY_ATK_PER_LEVEL_BY_SIZE.medium;
+  const matkPL=ENEMY_MATK_PER_LEVEL_BY_SIZE[sizeKey]??ENEMY_MATK_PER_LEVEL_BY_SIZE.medium;
+
+  let hp=hpBase+gain*hpPL;
+  let atk=atkBase+gain*atkPL;
+  let matk=matkBase+gain*matkPL;
+  let def=defBase+Math.floor(gain/4);
+  let mdef=mdefBase+Math.floor(gain/5);
+  let spd=spdBase+Math.floor(gain/8);
 
   hp*=mult.hp;
   atk*=mult.atk;
@@ -6770,25 +6826,13 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   def*=mult.def;
   mdef*=mult.def;
 
-  if(isEndless && s>20){
-    const milestone=Math.max(0,Math.floor((s-20)/10));
-    hp*=1+milestone*0.22;
-    atk*=1+milestone*0.12;
-    matk*=1+milestone*0.12;
-    def+=milestone;
-    mdef+=milestone;
-    spd+=Math.floor(milestone/2);
-  }
-
   hp*=diffMult;
   atk*=diffMult;
   matk*=diffMult;
-  def*=diffMult;
-  mdef*=diffMult;
 
-  const acc=Math.max(60,Math.min(96,Math.floor(accBase+Math.floor((s-1)/5)+(tier==='boss'?2:0))));
-  const dodge=Math.max(0,Math.min(42,Math.floor(base.dodge+Math.floor((s-1)/8)+(tier==='boss'?2:0))));
-  const mdodge=Math.max(0,Math.min(32,Math.floor(base.mdodge+Math.floor((s-1)/10)+(tier==='boss'?1:0))));
+  const acc=Math.max(60,Math.min(96,Math.floor(accBase+Math.floor(gain/4)+(tier==='boss'?2:0))));
+  const dodge=Math.max(0,Math.min(42,Math.floor(base.dodge+Math.floor(gain/6)+(tier==='boss'?2:0))));
+  const mdodge=Math.max(0,Math.min(32,Math.floor(base.mdodge+Math.floor(gain/7)+(tier==='boss'?1:0))));
 
   hp=Math.max(1,Math.round(hp));
   atk=Math.max(1,Math.round(atk));
@@ -6797,7 +6841,7 @@ function buildScaledEnemy(enemyBase, stage, opts={}){
   mdef=Math.max(0,Math.round(mdef));
   spd=Math.max(1,Math.round(spd));
 
-  return {hp,maxHp:hp,atk,def,matk,mdef,spd,acc,dodge,mdodge,cc,cd,critChance:Math.round(cc*100),critMult:cd,en:base.en,tier,enemyClass:classKey};
+  return {hp,maxHp:hp,atk,def,matk,mdef,spd,acc,dodge,mdodge,cc,cd,critChance:Math.round(cc*100),critMult:cd,en:base.en,tier,enemyClass:classKey,effectiveLevel:L};
 }
 
 function buildScaledBoss(enemyBase, stage, opts={}){
@@ -6807,7 +6851,11 @@ function buildScaledBoss(enemyBase, stage, opts={}){
 
 function enemyScaleFactor(base, stage, diffMult){
   const isEndless=(G.endlessMode && stage>20);
-  const opts={isEndless,diffMult};
+  const opts={
+    isEndless,
+    diffMult,
+    playerBirdLevel:Math.max(1, Math.floor(G.player?.birdLevel||1)),
+  };
   return (base?.isBoss)
     ? buildScaledBoss(base,stage,opts)
     : buildScaledEnemy(base,stage,opts);
@@ -6956,10 +7004,10 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     G._currentPiercePct=0;
   } else { G._currentPiercePct=0; }
   if (target==='player') {
-    if(!isMagic) dmg=Math.max(1,Math.floor(dmg*calcDefenseMultiplier(G.player.stats.def||0)));
+    if(isMagic) dmg=Math.max(1,Math.floor(dmg*calcDefenseMultiplier(G.player.stats.mdef||0)));
+    else dmg=Math.max(1,Math.floor(dmg*calcDefenseMultiplier(G.player.stats.def||0)));
     if((G.enemyStatus?.feared||0)>0 && G.player?.relTerrorLedger) dmg=Math.max(1,Math.floor(dmg*0.90));
     if(G.playerStatus?.ironResolve && G.playerStatus.ironResolve.turns>0) dmg=Math.max(1,Math.floor(dmg*0.80));
-    else dmg=Math.max(1,Math.floor(dmg*calcDefenseMultiplier(G.player.stats.mdef||0)));
     const _bd=BIRDS[G.player.birdKey];
     const _p=_bd&&_bd.passive;
     if(isMagic){
