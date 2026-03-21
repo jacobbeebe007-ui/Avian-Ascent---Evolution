@@ -401,24 +401,6 @@
       return out;
     };
   }
-
-  // Small helper log for major hybrid stat upgrades
-  const _oldGetUpgradePoolScaleFix = globalThis.getUpgradePool;
-  if(typeof _oldGetUpgradePoolScaleFix === 'function'){
-    globalThis.getUpgradePool = function(){
-      const pool = _oldGetUpgradePoolScaleFix.apply(this, arguments);
-      for(const item of pool){
-        if(!item || item.__scaleFixWrapped) continue;
-        const oldApply = item.apply;
-        item.apply = function(p){
-          oldApply && oldApply(p);
-          if(typeof enforceAbilityCosts === 'function') enforceAbilityCosts(p);
-        };
-        item.__scaleFixWrapped = true;
-      }
-      return pool;
-    };
-  }
 })();
 
 
@@ -531,52 +513,10 @@
 (function(){
 const ENERGY_CAP = 7;
 
-function enforceEnergyCap(p){
- if(!p) return;
- const base = Math.max(0, p.baseEnergy || (p.energyMax - (p.energyBonus||0)) || 0);
- const bonus = Math.max(0, p.energyBonus || 0);
- const total = Math.min(ENERGY_CAP, base + bonus);
- p.energyMax = total;
- if(typeof p.energy !== 'number') p.energy = total;
- p.energy = Math.min(p.energy,total);
-}
-
 const oldCompute = globalThis.computePlayerMaxEnergy;
 if(typeof oldCompute === 'function'){
  globalThis.computePlayerMaxEnergy = function(){
   return Math.min(ENERGY_CAP, oldCompute.apply(this,arguments));
- }
-}
-
-const oldPool = globalThis.getUpgradePool;
-if(typeof oldPool === 'function'){
- globalThis.getUpgradePool = function(){
-  let pool = oldPool.apply(this,arguments)||[];
-
-  pool = pool.filter(item=>{
-   if(!item) return false;
-   const txt=(item.name||'')+(item.desc||'');
-   if(/energy/i.test(txt) && (item.tier==='green'||item.tier==='blue')) return false;
-   return true;
-  });
-
-  if(!G._runShopFlags) G._runShopFlags={};
-
-  pool = pool.filter(item=>{
-   const txt=(item.name||'')+(item.desc||'');
-   if(!/energy/i.test(txt)) return true;
-   if(G._runShopFlags[item.id]) return false;
-   const oldApply=item.apply;
-   item.apply=function(p){
-    if(G._runShopFlags[item.id]) return;
-    G._runShopFlags[item.id]=true;
-    oldApply&&oldApply(p);
-    enforceEnergyCap(p);
-   }
-   return true;
-  });
-
-  return pool;
  }
 }
 
