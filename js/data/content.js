@@ -538,7 +538,7 @@
 
 // ===== 14_script_14.js =====
 
-/* ===== Shop upgrade reliability + new balanced upgrades ===== */
+/* ===== Shop: sync energy UI after purchase (upgrade list lives in game.js UPGRADE_CARDS_REWORK) ===== */
 (function(){
   function syncPlayerEnergyState(p){
     if(!p) return;
@@ -553,105 +553,6 @@
       if(typeof renderEnergyOrbs === 'function') renderEnergyOrbs();
       if(typeof renderAllCombatUI === 'function' && G?.player===p) renderAllCombatUI();
     }catch(err){ console.error(err); }
-  }
-
-  const _origGetUpgradePool = globalThis.getUpgradePool;
-  if(typeof _origGetUpgradePool === 'function'){
-    globalThis.getUpgradePool = function(){
-      const pool = _origGetUpgradePool.call(this).slice();
-
-      function wrapApply(item){
-        const oldApply = item.apply;
-        item.apply = function(p){
-          oldApply(p);
-          syncPlayerEnergyState(p);
-          if(typeof enforceAbilityCosts === 'function') enforceAbilityCosts(p);
-        };
-        return item;
-      }
-
-      // Patch existing energy upgrades so they always recalculate cap immediately.
-      for(const item of pool){
-        if(['r_energyMax1','e_energyMax2','l_energyMax3'].includes(item.id)){
-          item.apply = (function(oldId){
-            return function(p){
-              if(oldId==='r_energyMax1') p.energyBonus = (p.energyBonus||0) + 1;
-              if(oldId==='e_energyMax2') p.energyBonus = (p.energyBonus||0) + 2;
-              if(oldId==='l_energyMax3') p.energyBonus = (p.energyBonus||0) + 3;
-              syncPlayerEnergyState(p);
-            };
-          })(item.id);
-        }
-      }
-
-      const extra = [
-        wrapApply({
-          id:'g_guardedCore', tier:'grey', icon:'🪵', name:'Guarded Core',
-          desc:'DEF +1 and MDEF +1',
-          tags:['defense','hybrid'],
-          apply:p=>{ p.stats.def += 1; p.stats.mdef = (p.stats.mdef||0) + 1; }
-        }),
-        wrapApply({
-          desc:'Restore 1 Energy now',
-          tags:['utility','energy'],
-          apply:p=>{ p.energy = Math.min((p.energyMax||0), (p.energy||0) + 1); }
-        }),
-        wrapApply({
-          id:'u_battleReadiness', tier:'green', icon:'🧭', name:'Battle Readiness',
-          desc:'+1 Energy on your first turn each battle and ACC +2',
-          tags:['utility','energy','accuracy'],
-          apply:p=>{ p.firstTurnEnergy=(p.firstTurnEnergy||0)+1; p.stats.acc=(p.stats.acc||80)+2; }
-        }),
-        wrapApply({
-          id:'u_steadyPulse', tier:'green', icon:'💠', name:'Steady Pulse',
-          desc:'MATK +1 and MDEF +1',
-          tags:['offense','defense','magic'],
-          apply:p=>{ p.stats.matk=(p.stats.matk||0)+1; p.stats.mdef=(p.stats.mdef||0)+1; }
-        }),
-        wrapApply({
-          id:'r_secondWind', tier:'blue', icon:'🌀', name:'Second Wind',
-          desc:'Heal 20% HP and gain +1 Max Energy',
-          tags:['sustain','energy'],
-          apply:p=>{ p.stats.hp=Math.min(p.stats.maxHp, p.stats.hp + Math.max(1, Math.floor(p.stats.maxHp*0.20))); p.energyBonus=(p.energyBonus||0)+1; }
-        }),
-        wrapApply({
-          id:'r_spellguard', tier:'blue', icon:'🔹', name:'Spellguard Plumage',
-          desc:'MDEF +2 and MDodge +6%',
-          tags:['defense','magic'],
-          apply:p=>{ p.stats.mdef=(p.stats.mdef||0)+2; p.stats.mdodge=Math.min((p.stats.mdodge||0)+6,100); }
-        }),
-        wrapApply({
-          id:'e_apexFocus', tier:'purple', icon:'🜂', name:'Apex Focus',
-          desc:'ATK +3, MATK +3, ACC +4',
-          tags:['offense','hybrid'],
-          apply:p=>{ p.stats.atk+=3; p.stats.matk=(p.stats.matk||0)+3; p.stats.acc=(p.stats.acc||80)+4; }
-        }),
-        wrapApply({
-          id:'e_veteranPlumage', tier:'purple', icon:'🪶', name:'Veteran Plumage',
-          desc:'DEF +2, MDEF +2, Dodge +6%',
-          tags:['defense','hybrid'],
-          apply:p=>{ p.stats.def+=2; p.stats.mdef=(p.stats.mdef||0)+2; p.stats.dodge=Math.min((p.stats.dodge||0)+6,100); }
-        }),
-        wrapApply({
-          id:'l_skyBattery', tier:'gold', icon:'🌟', name:'Sky Battery',
-          desc:'Max Energy +2 and gain 1 Energy at the start of every battle',
-          tags:['utility','energy'],
-          apply:p=>{ p.energyBonus=(p.energyBonus||0)+2; p.firstTurnEnergy=(p.firstTurnEnergy||0)+1; }
-        }),
-        wrapApply({
-          id:'l_dualNature', tier:'gold', icon:'☯️', name:'Dual Nature',
-          desc:'ATK +4, MATK +4, DEF +2, MDEF +2',
-          tags:['offense','defense','hybrid'],
-          apply:p=>{ p.stats.atk+=4; p.stats.matk=(p.stats.matk||0)+4; p.stats.def+=2; p.stats.mdef=(p.stats.mdef||0)+2; }
-        })
-      ];
-
-      const seen = new Set(pool.map(x=>x.id));
-      for(const item of extra){
-        if(!seen.has(item.id)) pool.push(item);
-      }
-      return pool;
-    };
   }
 
   // Re-render purchase descriptions more clearly after buy.
@@ -669,32 +570,6 @@
         }
       }catch(err){ console.error(err); }
       return out;
-    };
-  }
-})();
-
-
-// ===== 15_script_15.js =====
-
-/* ===== Adjust Energy +1 upgrade tier ===== */
-(function(){
-  const bump = { grey:'green', green:'blue', blue:'purple', purple:'gold' };
-  const oldGetUpgradePool = globalThis.getUpgradePool;
-  if(typeof oldGetUpgradePool === 'function'){
-    globalThis.getUpgradePool = function(){
-      const pool = oldGetUpgradePool.apply(this, arguments);
-      for(const item of pool){
-        if(!item) continue;
-        const name = (item.name||'').toLowerCase();
-        const desc = (item.desc||'').toLowerCase();
-        if(name.includes('energy') && desc.includes('+1') && desc.includes('energy')){
-          if(item.tier && bump[item.tier]) item.tier = bump[item.tier];
-        }
-        if(item.id === 'r_energyMax1'){
-          item.tier = 'green';
-        }
-      }
-      return pool;
     };
   }
 })();

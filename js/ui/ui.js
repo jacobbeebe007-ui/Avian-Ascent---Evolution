@@ -133,12 +133,13 @@
           item.tier = 'gold';
           item.desc = '+2 Max Energy. Unique this run.';
           markUniqueRun(item);
-        } else if(/second lung/.test(t) || /third lung/.test(t) || /r_energymax1/.test(t) || /e_energymax2/.test(t) || /\+1 max energy/.test(t)){
+        } else if(/second lung|third lung|r_energymax1|e_energymax2/.test(t)){
           item.tier = 'purple';
           item.desc = '+1 Max Energy. Unique this run.';
           markUniqueRun(item);
-        } else if(/green|blue/.test(item.tier||'')){
-          markRemoved(item);
+        } else if(/\+1 max energy/.test(t)){
+          item.tier = 'purple';
+          markUniqueRun(item);
         }
       }
     }

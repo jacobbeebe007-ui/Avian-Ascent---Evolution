@@ -873,11 +873,6 @@ body.ui-mobile-mode #screen-battle .level-badge{font-size:.7rem;}
 
 
 
-.sprite-kookaburra{background-image:url("../assets/sprites/kookaburra.png");}
-.sprite-kookaburra{background-image:url("../assets/sprites/kookaburra.png");}
-
-
-
 /* ===== Sprite scaling (prevents squish; supports sizes) ===== */
 .sprite-bird{display:flex;align-items:center;justify-content:center;}
 .sprite-bird img{width:auto;image-rendering:pixelated;image-rendering:crisp-edges;}
@@ -902,26 +897,6 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
 .sprite4.large{width:96px;height:96px;border-radius:16px;}
 .sprite4.xl{width:110px;height:110px;border-radius:18px;}
 
-/* Flamingo + Seagull sprite sheets */
-.sprite-flamingo{ background-image:url("../assets/sprites/Flamingo.png"); }
-.sprite-seagull{ background-image:url("../assets/sprites/Seagull.png"); }
-
-
-/* ===== New bird sprite sheets ===== */
-.sprite-kiwi{background-image:url("../assets/sprites/kiwi.png");}
-.sprite-kiwi{background-image:url("../assets/sprites/kiwi.png");}
-
-
-
-.sprite-robin{background-image:url("../assets/sprites/Robin.png");}
-.sprite-robin{background-image:url("../assets/sprites/Robin.png");}
-
-.sprite-flamingo{background-image:url("../assets/sprites/Flamingo.png");}
-.sprite-flamingo{background-image:url("../assets/sprites/Flamingo.png");}
-
-.sprite-seagull{background-image:url("../assets/sprites/Seagull.png");}
-.sprite-seagull{background-image:url("../assets/sprites/Seagull.png");}
-
 /* ===== Portrait sizing / pixel art standardization ===== */
 .sprite4.medium{width:92px;height:92px;border-radius:16px;}
 .sprite4.large{width:104px;height:104px;border-radius:18px;}
@@ -929,13 +904,8 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
 .sprite4.tiny{width:64px;height:64px;border-radius:12px;}
 .bird-portrait .sprite4.medium{width:86px;height:105px;}
 .ascent-face .sprite4.medium, .ascent-panel-portrait .sprite4.medium{width:96px;height:96px;}
-.sprite-emu{background-image:url("../assets/sprites/emu.png");}
-.sprite-emu{background-image:url("../assets/sprites/emu.png");}
-
-
 
 /* MAGPIE SPRITE CLEAN */
-.sprite-magpie{background-image:url("../assets/sprites/magpie.png");background-size:200% 200%;}
 .sprite-magpie{background-image:url("../assets/sprites/magpie.png");background-size:200% 200%;}
 
 /* Magpie uses a 2x2 sheet */
@@ -1398,9 +1368,10 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
 
 /* Species tuning requested */
 
-.sprite4.sprite-robin.tiny{width:56px !important;height:56px !important;}
-.sprite4.sprite-robin.small{width:66px !important;height:66px !important;}
-.sprite4.sprite-robin.medium{width:78px !important;height:78px !important;}
+/* Robin sheet reads large vs frame; keep small-bird sizes tighter than default .small */
+.sprite4.sprite-robin.tiny{width:46px !important;height:46px !important;}
+.sprite4.sprite-robin.small{width:54px !important;height:54px !important;}
+.sprite4.sprite-robin.medium{width:68px !important;height:68px !important;}
 .sprite4.sprite-seagull.medium{
   width:84px !important;
   height:84px !important;
