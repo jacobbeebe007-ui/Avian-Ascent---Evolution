@@ -789,15 +789,16 @@ const BIRDS = {
       get _pierceBase(){return 30;}},
   },
   blackCockatoo:{
-    name:'Black Cockatoo', portraitKey:'blackCockatoo', tagline:'Ebon omen. Pure psychic wails.',
-    size:'small', class:'singer',
+    name:'Black Cockatoo', portraitKey:'blackCockatoo', tagline:'Booming crest. Shock, resonance, and heavy wingbeats.',
+    size:'medium', class:'bruiser',
     unlockRequires:'juvenileWin',
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
-    stats:{hp:30,maxHp:30,atk:5,def:2,spd:6,dodge:18,acc:78,mdef:12,matk:16},
+    stats:{hp:44,maxHp:44,atk:9,def:5,spd:5,dodge:14,acc:80,critChance:8,mdef:9,matk:12},
     color:'#2a1a3a',
-    startAbilities:['piercingScreech','stormChorus','battleChorus','thunderScreech'],
-    passive:{id:'crestScream',name:'Crest Scream',desc:'Spells ignore 20% enemy M.DEF. Critical spells apply Brain Fog (−15% SPD/ACC for 3t).',
-      get _mdefPierce(){return 20;}},
+    mainAttackId:'beak_crack',
+    startAbilities:['beak_crack','boom_call','wing_beat','resonance_mark'],
+    passive:{id:'resonantMenace',name:'Resonant Menace',desc:'Boom-line sonic spells ignore 10% M.DEF. Your attacks deal +8% damage vs Feared or Paralyzed foes.',
+      get _boomMdefPierce(){return 0.10;}},
   },
 
   // ── MEDIUM ──────────────────────────────────────────────────
@@ -1613,7 +1614,8 @@ const FINAL_BIRD_CLASS_BY_KEY = Object.freeze({
   goose:'tank', swan:'tank', penguin:'tank', emperorpenguin:'tank', shoebill:'tank', shoebillstork:'tank',
   magpie:'trickster', lyrebird:'trickster', seagull:'trickster', kookaburra:'trickster', bowerbird:'trickster', crow:'trickster',
   snowyowl:'predator', harpy:'predator', harpyeagle:'predator', baldeagle:'predator', dukeblakiston:'predator', duke_blakiston:'predator', kiwi:'predator',
-  blackbird:'singer', phainopepla:'singer', macaw:'singer', flamingo:'singer', toucan:'singer', raven:'singer', blackcockatoo:'singer', albatross:'singer', dove:'singer',
+  blackbird:'singer', phainopepla:'singer', macaw:'singer', flamingo:'singer', toucan:'singer', raven:'singer', albatross:'singer', dove:'singer',
+  blackcockatoo:'bruiser',
 });
 
 function normalizeBirdClassKey(birdKey=''){
@@ -4160,6 +4162,71 @@ const MACAW_SKILL_FAMILIES = Object.freeze({
   },
 });
 
+const BLACK_COCKATOO_SKILL_SLOT_LAYOUT = Object.freeze([
+  {slotIndex:0, familyId:'beak', abilityId:'beak_crack'},
+  {slotIndex:1, familyId:'boom', abilityId:'boom_call'},
+  {slotIndex:2, familyId:'wing', abilityId:'wing_beat'},
+  {slotIndex:3, familyId:'resonance', abilityId:'resonance_mark'},
+]);
+const BLACK_COCKATOO_SKILL_FAMILIES = Object.freeze({
+  beak:{
+    familyId:'beak', displayName:'Beak Line', baseAbilityId:'beak_crack', slotRole:'filler_attack', maxTier:3,
+    tierNames:{1:'Crack',2:'Bite',3:'Crush'},
+    masteries:[
+      {id:'power', name:'Iron Bill', desc:'+8% Beak-line damage.'},
+      {id:'precision', name:'Split Grain', desc:'Beak-line Pierce and guard-break riders +4%.'},
+      {id:'control', name:'Crack Tempo', desc:'Beak-line Weaken odds +8%.'},
+    ],
+    paths:{
+      pierce:{pathId:'pierce', displayName:'Pierce', abilities:{1:'beak_crack',2:'bc_bodkin_bite',3:'splinter_crush'}},
+      weaken:{pathId:'weaken', displayName:'Weaken', abilities:{1:'dulling_crack',2:'numbing_bite',3:'crushing_weakness'}},
+      break:{pathId:'break', displayName:'Break', abilities:{1:'split_crack',2:'break_bite',3:'ruin_crush'}},
+    },
+  },
+  boom:{
+    familyId:'boom', displayName:'Boom Line', baseAbilityId:'boom_call', slotRole:'signature_resonant_attack', maxTier:3,
+    tierNames:{1:'Call',2:'Boom',3:'Shockwave'},
+    masteries:[
+      {id:'power', name:'Thunderhead', desc:'+7% Boom-line damage; delayed sonic +6.'},
+      {id:'precision', name:'Echo Find', desc:'Boom-line Fear/Paralysis odds +8%.'},
+      {id:'control', name:'Aftershock', desc:'Boom-line delayed resonance +10.'},
+    ],
+    paths:{
+      fear:{pathId:'fear', displayName:'Fear', abilities:{1:'cockatoo_dread_call',2:'terror_boom',3:'black_shockwave'}},
+      paralysis:{pathId:'paralysis', displayName:'Paralysis', abilities:{1:'shock_call',2:'static_boom',3:'lockwave'}},
+      delayed:{pathId:'delayed', displayName:'Delayed', abilities:{1:'echo_call',2:'resonant_boom',3:'returning_shockwave'}},
+    },
+  },
+  wing:{
+    familyId:'wing', displayName:'Wing Beat Line', baseAbilityId:'wing_beat', slotRole:'control_utility', maxTier:3,
+    tierNames:{1:'Beat',2:'Gust',3:'Gale'},
+    masteries:[
+      {id:'power', name:'Dust Storm', desc:'Wing-line ACC crash +5%.'},
+      {id:'precision', name:'Shear Wind', desc:'Wing-line Slow +1 turn when possible.'},
+      {id:'control', name:'Iron Pinion', desc:'Guard-path brace +4% damage reduction.'},
+    ],
+    paths:{
+      acc_break:{pathId:'acc_break', displayName:'Accuracy Break', abilities:{1:'dust_beat',2:'shudder_gust',3:'black_gale'}},
+      slow:{pathId:'slow', displayName:'Slow', abilities:{1:'heavy_beat',2:'drag_gust',3:'falling_gale'}},
+      guard:{pathId:'guard', displayName:'Guard', abilities:{1:'brace_beat',2:'guard_gust',3:'iron_gale'}},
+    },
+  },
+  resonance:{
+    familyId:'resonance', displayName:'Resonance Line', baseAbilityId:'resonance_mark', slotRole:'setup', maxTier:3,
+    tierNames:{1:'Mark',2:'Pulse',3:'Collapse'},
+    masteries:[
+      {id:'power', name:'Crest Harmonics', desc:'Amp-path next-hit +5%; delayed +8.'},
+      {id:'precision', name:'Fault Finder', desc:'Read-path bonus vs debuffed +4%.'},
+      {id:'control', name:'Collapse Art', desc:'Delayed-path resonance +12.'},
+    ],
+    paths:{
+      amp:{pathId:'amp', displayName:'Amp', abilities:{1:'resonance_mark',2:'harmonic_pulse',3:'resonant_collapse'}},
+      delayed:{pathId:'delayed', displayName:'Delayed', abilities:{1:'cockatoo_echo_mark',2:'return_pulse',3:'delayed_collapse'}},
+      read:{pathId:'read', displayName:'Read', abilities:{1:'fault_mark',2:'weak_pulse',3:'collapse_read'}},
+    },
+  },
+});
+
 function buildFamilySkillAbilityLookup(slotLayout, families){
   const out = Object.create(null);
   for(const slot of slotLayout){
@@ -4308,6 +4375,18 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
       mimic:{legacy:['mimicSong', 'birdBrain'], current:'mimic_song'},
       taunt:{legacy:['confuseChorus', 'dirge', 'distractingChorus', 'jungleChorus', 'dizzyChorus'], current:'feather_taunt'},
       chorus:{legacy:['battleChorus', 'victoryChant', 'inspireSong', 'freedomCry'], current:'chorus_mark'},
+    }),
+  },
+  blackCockatoo:{
+    birdKey:'blackCockatoo',
+    slotLayout:BLACK_COCKATOO_SKILL_SLOT_LAYOUT,
+    families:BLACK_COCKATOO_SKILL_FAMILIES,
+    abilityLookup:buildFamilySkillAbilityLookup(BLACK_COCKATOO_SKILL_SLOT_LAYOUT, BLACK_COCKATOO_SKILL_FAMILIES),
+    legacyBaseAbilityIds:Object.freeze({
+      beak:{legacy:['peck','piercingScreech'], current:'beak_crack'},
+      boom:{legacy:['stormChorus','thunderScreech','sonicDirge'], current:'boom_call'},
+      wing:{legacy:['battleChorus'], current:'wing_beat'},
+      resonance:{legacy:['battleChorus','thunderScreech'], current:'resonance_mark'},
     }),
   },
 });
@@ -4535,6 +4614,7 @@ function syncPlayerAbilitiesFromSkillSlots(player){
     if(player.birdKey==='peregrine' && slot.abilityId==='talon_jab') ab.fixedMainAttackCost = true;
     if(player.birdKey==='snowyOwl' && slot.abilityId==='talon_snap') ab.fixedMainAttackCost = true;
     if(player.birdKey==='kiwi' && slot.abilityId==='beak_jab') ab.fixedMainAttackCost = true;
+    if(player.birdKey==='blackCockatoo' && slot.abilityId==='beak_crack') ab.fixedMainAttackCost = true;
     return ab;
   });
 }
@@ -7454,6 +7534,7 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     if(classPerkCtx.openingRush && isAttack && !G._firstAttackUsed) dmg=Math.floor(dmg*1.15);
     if(classPerkCtx.markedForDeath && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.15);
     if(G.player?.birdKey==='raven' && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.12);
+    if(G.player?.birdKey==='blackCockatoo' && ((G.enemyStatus?.feared||0)>0 || (G.enemyStatus?.paralyzed||0)>0)) dmg=Math.floor(dmg*1.08);
     if(G.player?.birdKey==='harpy' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.18);
     if(G.player?.birdKey==='seagull' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.6)) dmg=Math.floor(dmg*1.20);
     if(classPerkCtx.executionLine && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.20);
@@ -7470,6 +7551,10 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
       if((G.player._augAtkCounter%3)===0) dmg=Math.floor(dmg*(1+G.player.augThirdAttackPct));
     }
     if(G.playerStatus?.huntersMarkBonusPct){ dmg=Math.floor(dmg*(1+G.playerStatus.huntersMarkBonusPct)); delete G.playerStatus.huntersMarkBonusPct; }
+    if(G.playerStatus?.cockatooReadExtra){
+      if(macawEnemyHasDebuff()) dmg=Math.floor(dmg*(1+G.playerStatus.cockatooReadExtra));
+      delete G.playerStatus.cockatooReadExtra;
+    }
     if(target==='enemy' && G.enemyStatus?.exposedGuard?.pct){ dmg=Math.floor(dmg*(1+G.enemyStatus.exposedGuard.pct)); }
     if(G.playerStatus?.postDefAtkPct){ dmg=Math.floor(dmg*(1+G.playerStatus.postDefAtkPct)); delete G.playerStatus.postDefAtkPct; }
     if(G.playerStatus?.tensionCoil?.turns>0){ dmg=Math.floor(dmg*(1+G.playerStatus.tensionCoil.pct)); }
@@ -10160,6 +10245,50 @@ for(const [id,name,desc,options] of MACAW_EVOLUTION_TEMPLATE_DEFS){
   ABILITY_TEMPLATES[id] = Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
 }
 
+const BLACK_COCKATOO_EVOLUTION_TEMPLATE_DEFS = [
+  ['beak_crack','Beak Crack','Beak-line neutral. A heavy crack before you specialize.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'~100% dmg, Pierce 10%.'},{desc:'Stronger crack.'},{desc:'Stronger crack.'},{desc:'Peak crack.'}]}],
+  ['bc_bodkin_bite','Bodkin Bite','Beak-line pierce evolution. Armor-breaking bite.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Pierce 20%.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Maximum pierce bite.'}]}],
+  ['splinter_crush','Splinter Crush','Beak-line pierce finisher. Splinters guard.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Pierce 30% + bonus vs heavy armor.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Capstone crush.'}]}],
+  ['dulling_crack','Dulling Crack','Beak-line weaken branch. Blunt their offense.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Weaken 10% chance.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak dulling crack.'}]}],
+  ['numbing_bite','Numbing Bite','Beak-line weaken evolution. Deeper bite pressure.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Weaken 15% chance.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Cruel numb.'}]}],
+  ['crushing_weakness','Crushing Weakness','Beak-line weaken finisher. Total collapse of guard.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Weaken 20% + bonus vs weakened.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Total weakness.'}]}],
+  ['split_crack','Split Crack','Beak-line break branch. Hairline cracks in defense.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Small DEF break.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Heavy split.'}]}],
+  ['break_bite','Break Bite','Beak-line break evolution. Widen the crack.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Stronger DEF break.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Violent break.'}]}],
+  ['ruin_crush','Ruin Crush','Beak-line break finisher. Ruin their footing.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Largest anti-defense bite.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Ruin capstone.'}]}],
+  ['boom_call','Boom Call','Boom-line neutral. A resonant crest call that defines the battlefield.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~88% MATK sonic burst.'},{desc:'~96% MATK.'},{desc:'~104% MATK.'},{desc:'~112% MATK.'}]}],
+  ['cockatoo_dread_call','Dread Call','Boom-line fear branch. Booming predator warning.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~92% MATK, Fear chance.'},{desc:'~100% MATK.'},{desc:'~108% MATK.'},{desc:'~116% MATK.'}]}],
+  ['terror_boom','Terror Boom','Boom-line fear evolution. Chorus of dread.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~104% MATK, stronger Fear.'},{desc:'~112% MATK.'},{desc:'~120% MATK.'},{desc:'~128% MATK.'}]}],
+  ['black_shockwave','Black Shockwave','Boom-line fear finisher. A black shock of sound.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'2 hits; Fear; bonus vs feared.'},{desc:'2 hits.'},{desc:'3 hits.'},{desc:'3 hits, peak Fear.'}]}],
+  ['shock_call','Shock Call','Boom-line paralysis branch. Static on the crest.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~90% MATK, Paralysis chance.'},{desc:'~98% MATK.'},{desc:'~106% MATK.'},{desc:'~114% MATK.'}]}],
+  ['static_boom','Static Boom','Boom-line paralysis evolution. Chattering interference.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~102% MATK, stronger Paralysis.'},{desc:'~110% MATK.'},{desc:'~118% MATK.'},{desc:'~126% MATK.'}]}],
+  ['lockwave','Lockwave','Boom-line paralysis finisher. Locks the air.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~114% MATK, heavy Paralysis.'},{desc:'~122% MATK.'},{desc:'~130% MATK.'},{desc:'~138% MATK.'}]}],
+  ['echo_call','Echo Call','Boom-line delayed branch. Sound now, impact later.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~86% MATK + delayed resonance.'},{desc:'~94% MATK + bigger delay.'},{desc:'~102% MATK.'},{desc:'~110% MATK.'}]}],
+  ['resonant_boom','Resonant Boom','Boom-line delayed evolution. Harmonic pile-up.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~96% MATK + strong delayed.'},{desc:'~104% MATK.'},{desc:'~112% MATK.'},{desc:'~120% MATK.'}]}],
+  ['returning_shockwave','Returning Shockwave','Boom-line delayed finisher. The wave returns harder.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~106% MATK + massive delayed; vs debuffed.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak shockwave.'}]}],
+  ['wing_beat','Wing Beat','Wing-line neutral. Heavy beat before you specialize.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Light ACC pressure + tempo.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Strongest baseline beat.'}]}],
+  ['dust_beat','Dust Beat','Wing-line accuracy-break branch. Dust and grit in the eyes.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -14% for 2t.'},{desc:'-16% ACC.'},{desc:'-18% ACC.'},{desc:'-20% ACC for 3t.'}]}],
+  ['shudder_gust','Shudder Gust','Wing-line accuracy-break evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -22% for 2t.'},{desc:'-24% ACC.'},{desc:'-26% ACC.'},{desc:'-28% ACC for 3t.'}]}],
+  ['black_gale','Black Gale','Wing-line accuracy-break finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -30% for 3t.'},{desc:'-32% ACC.'},{desc:'-34% ACC.'},{desc:'-36% ACC for 3t.'}]}],
+  ['heavy_beat','Heavy Beat','Wing-line slow branch. Ground the target.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Slow + small ACC down.'},{desc:'Stronger slow.'},{desc:'Stronger.'},{desc:'Heaviest beat.'}]}],
+  ['drag_gust','Drag Gust','Wing-line slow evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Bigger slow + ACC pressure.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Violent drag.'}]}],
+  ['falling_gale','Falling Gale','Wing-line slow finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Massive slow + Weaken odds.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Total grounding.'}]}],
+  ['brace_beat','Brace Beat','Wing-line guard branch. Brace into the wind.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Small Guard + light resist.'},{desc:'Stronger brace.'},{desc:'Stronger.'},{desc:'Strongest brace.'}]}],
+  ['guard_gust','Guard Gust','Wing-line guard evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Bigger Guard window.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Iron posture.'}]}],
+  ['iron_gale','Iron Gale','Wing-line guard finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Huge Guard + stability.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Capstone gale.'}]}],
+  ['resonance_mark','Resonance Mark','Resonance-line neutral setup. Mark the measure before the boom.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% damage.'},{desc:'+15%.'},{desc:'+18%.'},{desc:'+21%.'}]}],
+  ['harmonic_pulse','Harmonic Pulse','Resonance-line amp evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +20% damage.'},{desc:'+24%.'},{desc:'+28%.'},{desc:'+32%.'}]}],
+  ['resonant_collapse','Resonant Collapse','Resonance-line amp finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +30% damage.'},{desc:'+34%.'},{desc:'+38%.'},{desc:'+42%.'}]}],
+  ['cockatoo_echo_mark','Echo Mark','Resonance-line delayed branch. Mark now; collapse later.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +8% + delayed resonance.'},{desc:'+10% + bigger delay.'},{desc:'+12%.'},{desc:'+14%.'}]}],
+  ['return_pulse','Return Pulse','Resonance-line delayed evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% + strong delayed.'},{desc:'+14%.'},{desc:'+16%.'},{desc:'+18%.'}]}],
+  ['delayed_collapse','Delayed Collapse','Resonance-line delayed finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +16% + massive delayed.'},{desc:'+18%.'},{desc:'+20%.'},{desc:'+22%.'}]}],
+  ['fault_mark','Fault Mark','Resonance-line read branch. Exploit a fault line.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Bonus damage vs debuffed targets.'},{desc:'Stronger read.'},{desc:'Stronger.'},{desc:'Peak fault.'}]}],
+  ['weak_pulse','Weak Pulse','Resonance-line read evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Larger read bonus.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Hard read.'}]}],
+  ['collapse_read','Collapse Read','Resonance-line read finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Maximum compromised-target payoff.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Total collapse.'}]}],
+];
+for(const [id,name,desc,options] of BLACK_COCKATOO_EVOLUTION_TEMPLATE_DEFS){
+  ABILITY_TEMPLATES[id] = Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
+}
+
 const _hbDashCond=[{type:'while_self_buff_active',buff:'dodge_up',damageBonus:0.10},{type:'per_target_debuff',damageBonusPerStack:0.05,maxStacks:3}];
 const HUMMINGBIRD_EVOLUTION_TEMPLATE_DEFS = [
   ['needle_jab','Needle Jab','Needle-line neutral. Pinpoint jabs before you specialize.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,role:['multiHit'],levels:[{desc:'3 hits, pierce pressure.'},{desc:'3 hits.'},{desc:'4 hits.'},{desc:'4 hits.'}]}],
@@ -10610,6 +10739,178 @@ const MACAW_SKILL_ACTION_OVERRIDES = {
   fading_finale: ab=>executeMacawChorusWeaken(ab,[18,20,22,24],[3,4,4,4],'🎵 Fading Finale!'),
 };
 Object.entries(MACAW_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
+
+function getBlackCockatooMasteryBonuses(ab){
+  const slot=getAbilitySkillSlot(G.player, ab);
+  const m=getSlotMasteryProfile(slot);
+  const fam=slot?.familyId||'';
+  const base={power:m.power,precision:m.precision,control:m.control};
+  if(fam==='beak'){
+    return {...base, dmg:0.08*m.power, pierceRider:4*m.precision, weakenRider:8*m.control};
+  }
+  if(fam==='boom'){
+    return {...base, spellMult:0.07*m.power+0.04*m.control, controlRider:8*m.precision, delayedFlat:6*m.power+10*m.control};
+  }
+  if(fam==='wing'){
+    return {...base, accRider:5*m.power+3*m.precision, slowTurn:m.control>0?1:0, guardRider:4*m.control};
+  }
+  if(fam==='resonance'){
+    return {...base, markAmp:0.05*m.power+0.04*m.precision, delayedFlat:8*m.power+12*m.control, readRider:0.04*m.precision};
+  }
+  return base;
+}
+function bcMatkBoom(mult){
+  const p=BIRDS[G.player.birdKey]?.passive;
+  const pierce=(p&&p.id==='resonantMenace')?(p._boomMdefPierce||0.10):0;
+  const base=G.player.stats.matk||8;
+  const effMdef=(G.enemy.stats.mdef||8)*(1-pierce);
+  const matkVsEnemy=base-effMdef;
+  const adjust=matkVsEnemy*0.015;
+  return Math.max(1,Math.floor(pdmg(1)*(mult+adjust)*base/7.2));
+}
+function applyBcDelayed(flat, mb, debuffSynergy=null){
+  let amt=Math.max(1, Math.floor(flat + (mb?.delayedFlat||0)));
+  if(debuffSynergy && (debuffSynergy.perCategory||0)>0){
+    const n=countEnemyCombatDebuffCategories();
+    const capAdd=Number.isFinite(debuffSynergy.cap)?debuffSynergy.cap:18;
+    amt+=Math.min(capAdd, Math.floor(n*debuffSynergy.perCategory));
+  }
+  const cap=Math.max(40, Math.floor(bcMatkBoom(2.5)));
+  const merged=Math.min(cap, (G.enemyStatus.delayed?.dmg||0)+amt);
+  G.enemyStatus.delayed={dmg:merged};
+  logMsg(`🔊 Resonance builds (${merged} on their turn).`,'system');
+}
+async function executeBlackCockatooSpell(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const mb=getBlackCockatooMasteryBonuses(ab);
+  const miss=Math.max(0,(config.miss?.[lv-1]??spellMissChance())-getPlayerHitBonus(ab)-(mb.precision||0)*2);
+  let mult=(config.mult?.[lv-1]??1)+(mb.spellMult||0);
+  if(config.bonusVsDebuffed?.[lv-1] && macawEnemyHasDebuff()) mult+=config.bonusVsDebuffed[lv-1];
+  if(config.bonusVsFeared?.[lv-1] && (G.enemyStatus?.feared||0)>0) mult+=config.bonusVsFeared[lv-1];
+  const hits=config.hits?.[lv-1]||1;
+  let total=0;
+  for(let i=0;i<hits;i++){
+    if(chance(miss)){ await doMiss('player'); if(hits===1) logMsg(`${config.name||ab?.id} missed!`,'miss'); continue; }
+    const amount=bcMatkBoom(mult);
+    const isCrit=chance(getPlayerCritChance(ab));
+    const r=dealDamage('enemy', amount, isCrit, true, ab);
+    total+=r.dmgDealt;
+    await doAttack('player','enemy', r);
+    setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+    if(G.battleOver) return;
+  }
+  const rc=mb.controlRider||0;
+  if(config.fearChance?.[lv-1] && spellAilmentRoll(config.fearChance[lv-1]+rc, hits>1)){
+    applyAilment('enemy','feared', config.fearStacks?.[lv-1]||1);
+    spawnFloat('enemy','😨 Fear!','fn-status');
+  }
+  if(config.paraChance?.[lv-1] && spellAilmentRoll(config.paraChance[lv-1]+rc, hits>1)){
+    G.enemyStatus.paralyzed=(G.enemyStatus.paralyzed||0)+(config.paraTurns?.[lv-1]||2);
+    spawnFloat('enemy','⚡ Para!','fn-status');
+  }
+  if(config.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+config.accDown[lv-1]+Math.floor(rc/2);
+  if(config.delayedFlat?.[lv-1]) applyBcDelayed(config.delayedFlat[lv-1], mb, { perCategory:2, cap:12 });
+  renderStatuses('enemy-status',G.enemyStatus);
+  await doSpell('enemy', config.fx||'🔊');
+  logMsg(`${config.log||config.name||'🔊 Boom'}! ${total} sonic dmg.`, 'player-action');
+}
+async function executeBlackCockatooBeakStrike(ab, cfg){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getBlackCockatooMasteryBonuses(ab);
+  const miss=Math.max(0,(cfg.miss?.[lv-1]??9)-getPlayerHitBonus(ab)-(mb.precision||0)*2);
+  if(chance(miss)){await doMiss('player');logMsg(`${cfg.log||ab.name} missed!`,'miss');return;}
+  let mult=(cfg.mult?.[lv-1]??1)+(mb.dmg||0);
+  const pierce=(cfg.pierce?.[lv-1]??0)+(mb.pierceRider||0);
+  if(cfg.bonusVsArmor?.[lv-1] && (G.enemy.stats.def||0)>=5) mult+=cfg.bonusVsArmor[lv-1];
+  if(cfg.bonusVsWeakened?.[lv-1] && (G.enemyStatus.weaken||0)>0) mult+=cfg.bonusVsWeakened[lv-1];
+  const prox={...ab,pierceDef:pierce};
+  const r=dealDamage('enemy',pdmg(mult,prox),chance(getPlayerCritChance(ab)),false,prox);
+  await doAttack('player','enemy',r);
+  setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+  if(cfg.weakenChance?.[lv-1] && spellAilmentRoll(cfg.weakenChance[lv-1]+(mb.weakenRider||0), false)){
+    applyAilment('enemy','weaken',1); spawnFloat('enemy','🐔 Weaken!','fn-status');
+  }
+  if(cfg.defBreak?.[lv-1]) peregrineApplyDefBreak(cfg.defBreak[lv-1]+Math.floor(mb.precision/2), cfg.defBreakTurns?.[lv-1]||2);
+  renderStatuses('enemy-status',G.enemyStatus);
+  logMsg(`${cfg.log||ab.name}! ${r.dmgDealt} dmg.`,'player-action');
+}
+async function executeBlackCockatooWing(ab, cfg={}){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getBlackCockatooMasteryBonuses(ab);
+  const extraT=mb.slowTurn||0;
+  if(cfg.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+cfg.accDown[lv-1]+(mb.accRider||0);
+  if(cfg.slow?.[lv-1]) applyEnemySlow(cfg.slow[lv-1], cfg.slowDodge?.[lv-1]||8, (cfg.slowTurns?.[lv-1]||2)+extraT);
+  if(cfg.defending?.[lv-1]) G.playerStatus.defending=(G.playerStatus.defending||0)+cfg.defending[lv-1]+(mb.guardRider||0);
+  if(cfg.weakenChance?.[lv-1] && chance(cfg.weakenChance[lv-1]+mb.control*3)) applyAilment('enemy','weaken',1);
+  await doSpell('player', cfg.fx||'🪶');
+  renderStatuses('player-status',G.playerStatus);
+  renderStatuses('enemy-status',G.enemyStatus);
+  logMsg(`${cfg.log||'🪶 Wing beat'}!`,'player-action');
+}
+async function executeBlackCockatooResonanceAmp(ab, ampArr, logPrefix, fx){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getBlackCockatooMasteryBonuses(ab);
+  G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+(mb.markAmp||0);
+  await doSpell('enemy', fx||'🎯');
+  logMsg(`${logPrefix} Next attack +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% damage.`,'player-action');
+}
+async function executeBlackCockatooResonanceDelayed(ab, ampArr, delayedArr, syn, logPrefix){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getBlackCockatooMasteryBonuses(ab);
+  G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+(mb.markAmp||0);
+  applyBcDelayed(delayedArr[lv-1]||10, mb, syn);
+  await doSpell('enemy','🔊');
+  logMsg(`${logPrefix} Next hit +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% and Resonance builds.`,'player-action');
+}
+async function executeBlackCockatooResonanceRead(ab, ampArr, readArr, logPrefix, fx){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getBlackCockatooMasteryBonuses(ab);
+  G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+(mb.markAmp||0);
+  G.playerStatus.cockatooReadExtra=(readArr[lv-1]||0)+(mb.readRider||0);
+  await doSpell('enemy', fx||'🎯');
+  logMsg(`${logPrefix} Next attack +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% plus +${Math.round((G.playerStatus.cockatooReadExtra||0)*100)}% vs compromised.`,'player-action');
+}
+const BLACK_COCKATOO_SKILL_ACTION_OVERRIDES = {
+  beak_crack: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Beak Crack',miss:[9,8,7,6],mult:[0.96,1.00,1.04,1.08],pierce:[10,12,14,16]}),
+  bc_bodkin_bite: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Bodkin Bite',miss:[8,7,6,5],mult:[1.04,1.08,1.12,1.16],pierce:[20,22,26,30]}),
+  splinter_crush: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Splinter Crush',miss:[7,6,5,4],mult:[1.12,1.16,1.20,1.26],pierce:[28,32,36,42],bonusVsArmor:[0.06,0.08,0.10,0.12]}),
+  dulling_crack: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Dulling Crack',miss:[9,8,7,6],mult:[0.94,0.98,1.02,1.06],pierce:[6,8,10,12],weakenChance:[10,12,14,16]}),
+  numbing_bite: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Numbing Bite',miss:[8,7,6,5],mult:[1.02,1.06,1.10,1.14],pierce:[8,10,12,14],weakenChance:[15,17,19,22]}),
+  crushing_weakness: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Crushing Weakness',miss:[7,6,5,4],mult:[1.08,1.12,1.16,1.20],pierce:[10,12,14,16],weakenChance:[20,22,25,28],bonusVsWeakened:[0.06,0.08,0.10,0.12]}),
+  split_crack: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Split Crack',miss:[9,8,7,6],mult:[0.98,1.02,1.06,1.10],pierce:[8,10,12,14],defBreak:[1,1,2,2],defBreakTurns:[2,2,2,3]}),
+  break_bite: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Break Bite',miss:[8,7,6,5],mult:[1.06,1.10,1.14,1.18],pierce:[10,12,14,16],defBreak:[2,3,3,4],defBreakTurns:[2,2,3,3]}),
+  ruin_crush: ab=>executeBlackCockatooBeakStrike(ab,{log:'🪶 Ruin Crush',miss:[7,6,5,4],mult:[1.14,1.18,1.22,1.28],pierce:[12,14,16,18],defBreak:[3,4,5,6],defBreakTurns:[3,3,4,4]}),
+  boom_call: ab=>executeBlackCockatooSpell(ab,{name:'Boom Call',log:'🔊 Boom Call',fx:'🔊',miss:[14,12,10,8],mult:[0.88,0.96,1.04,1.12]}),
+  cockatoo_dread_call: ab=>executeBlackCockatooSpell(ab,{name:'Dread Call',log:'😨 Dread Call',fx:'😨',miss:[13,11,9,7],mult:[0.92,1.00,1.08,1.16],fearChance:[20,22,24,28]}),
+  terror_boom: ab=>executeBlackCockatooSpell(ab,{name:'Terror Boom',log:'😨 Terror Boom',fx:'😨',miss:[12,10,8,6],mult:[1.04,1.12,1.20,1.28],fearChance:[26,28,30,32]}),
+  black_shockwave: ab=>executeBlackCockatooSpell(ab,{name:'Black Shockwave',log:'🖤 Black Shockwave',fx:'🖤',hits:[2,2,3,3],miss:[11,10,9,8],mult:[0.52,0.56,0.50,0.54],fearChance:[28,30,32,34],bonusVsFeared:[0.10,0.11,0.12,0.13]}),
+  shock_call: ab=>executeBlackCockatooSpell(ab,{name:'Shock Call',log:'⚡ Shock Call',fx:'⚡',miss:[13,11,9,7],mult:[0.90,0.98,1.06,1.14],paraChance:[16,18,20,22],paraTurns:[2,2,2,3]}),
+  static_boom: ab=>executeBlackCockatooSpell(ab,{name:'Static Boom',log:'⚡ Static Boom',fx:'⚡',miss:[12,10,8,6],mult:[1.02,1.10,1.18,1.26],paraChance:[22,24,26,28],paraTurns:[2,3,3,3]}),
+  lockwave: ab=>executeBlackCockatooSpell(ab,{name:'Lockwave',log:'⚡ Lockwave',fx:'⚡',miss:[11,9,7,5],mult:[1.14,1.22,1.30,1.38],paraChance:[28,30,32,34],paraTurns:[3,3,3,4]}),
+  echo_call: ab=>executeBlackCockatooSpell(ab,{name:'Echo Call',log:'🔊 Echo Call',fx:'🔊',miss:[13,11,9,7],mult:[0.86,0.94,1.02,1.10],delayedFlat:[12,16,20,24]}),
+  resonant_boom: ab=>executeBlackCockatooSpell(ab,{name:'Resonant Boom',log:'🔊 Resonant Boom',fx:'🔊',miss:[12,10,8,6],mult:[0.96,1.04,1.12,1.20],delayedFlat:[18,22,26,30]}),
+  returning_shockwave: ab=>executeBlackCockatooSpell(ab,{name:'Returning Shockwave',log:'🔊 Returning Shockwave',fx:'🔊',miss:[11,9,7,5],mult:[1.06,1.14,1.22,1.30],delayedFlat:[22,26,30,36],bonusVsDebuffed:[0.08,0.09,0.10,0.11]}),
+  wing_beat: ab=>executeBlackCockatooWing(ab,{log:'🪶 Wing Beat',fx:'🪶',accDown:[5,6,7,8]}),
+  dust_beat: ab=>executeBlackCockatooWing(ab,{log:'🌫 Dust Beat',fx:'🌫',accDown:[14,16,18,20]}),
+  shudder_gust: ab=>executeBlackCockatooWing(ab,{log:'🌫 Shudder Gust',fx:'🌫',accDown:[22,24,26,28]}),
+  black_gale: ab=>executeBlackCockatooWing(ab,{log:'🌑 Black Gale',fx:'🌑',accDown:[30,32,34,36]}),
+  heavy_beat: ab=>executeBlackCockatooWing(ab,{log:'🪶 Heavy Beat',fx:'🪶',accDown:[4,5,6,7],slow:[1,1,2,2],slowDodge:[6,8,10,12],slowTurns:[2,2,2,3]}),
+  drag_gust: ab=>executeBlackCockatooWing(ab,{log:'🪶 Drag Gust',fx:'🪶',accDown:[6,8,10,12],slow:[2,2,2,3],slowDodge:[8,10,12,14],slowTurns:[2,2,3,3]}),
+  falling_gale: ab=>executeBlackCockatooWing(ab,{log:'🪶 Falling Gale',fx:'🪶',accDown:[8,10,12,14],slow:[3,3,3,4],slowDodge:[10,12,14,16],slowTurns:[3,3,3,3],weakenChance:[15,18,22,26]}),
+  brace_beat: ab=>executeBlackCockatooWing(ab,{log:'🛡 Brace Beat',fx:'🛡',defending:[10,12,14,16]}),
+  guard_gust: ab=>executeBlackCockatooWing(ab,{log:'🛡 Guard Gust',fx:'🛡',defending:[16,20,24,28]}),
+  iron_gale: ab=>executeBlackCockatooWing(ab,{log:'🛡 Iron Gale',fx:'🛡',defending:[24,30,34,38]}),
+  resonance_mark: ab=>executeBlackCockatooResonanceAmp(ab,[0.12,0.15,0.18,0.21],'🔊 Resonance Mark!','🎯'),
+  harmonic_pulse: ab=>executeBlackCockatooResonanceAmp(ab,[0.20,0.24,0.28,0.32],'🔊 Harmonic Pulse!','🎯'),
+  resonant_collapse: ab=>executeBlackCockatooResonanceAmp(ab,[0.30,0.34,0.38,0.42],'🔊 Resonant Collapse!','🎯'),
+  cockatoo_echo_mark: ab=>executeBlackCockatooResonanceDelayed(ab,[0.08,0.10,0.12,0.14],[10,14,18,22],{ perCategory:3, cap:14 },'🔊 Echo Mark!'),
+  return_pulse: ab=>executeBlackCockatooResonanceDelayed(ab,[0.12,0.14,0.16,0.18],[16,20,24,28],{ perCategory:4, cap:18 },'🔊 Return Pulse!'),
+  delayed_collapse: ab=>executeBlackCockatooResonanceDelayed(ab,[0.16,0.18,0.20,0.22],[22,26,30,36],{ perCategory:5, cap:24 },'🔊 Delayed Collapse!'),
+  fault_mark: ab=>executeBlackCockatooResonanceRead(ab,[0.02,0.03,0.04,0.05],[0.10,0.12,0.14,0.16],'🔍 Fault Mark!','🎯'),
+  weak_pulse: ab=>executeBlackCockatooResonanceRead(ab,[0.04,0.05,0.06,0.07],[0.14,0.16,0.18,0.20],'🔍 Weak Pulse!','🎯'),
+  collapse_read: ab=>executeBlackCockatooResonanceRead(ab,[0.06,0.07,0.08,0.09],[0.18,0.20,0.24,0.28],'🔍 Collapse Read!','🎯'),
+};
+Object.entries(BLACK_COCKATOO_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
 
 const HUMMINGBIRD_DASH_ABILITY_IDS = new Set([
   'dash','sonic_dash','sonicDash','critical_rush','blurring_strike','static_dash','shock_rush','storm_blur','passing_dash','afterimage_rush','return_blur',

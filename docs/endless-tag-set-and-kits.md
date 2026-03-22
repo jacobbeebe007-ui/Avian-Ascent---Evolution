@@ -58,6 +58,7 @@ Design implication:
 - Sparrow: Peck, Talon Strike, Battle Chirp, Wind Slash
 - Crow: Peck, Murder Murmuration, Dread Call, Battle Focus
 - Macaw: Echo Note, Mimic Song, Feather Taunt, Chorus Mark
+- Black Cockatoo: Beak Crack, Boom Call, Wing Beat, Resonance Mark (family evolution; bruiser)
 - Hummingbird: Needle Jab, Dash, Blink Flutter, Combo Strike
 - Peregrine Falcon: Talon Jab, Dive, Keen Eye, Aerial Pace
 - Snowy Owl: Talon Snap, Silent Dive, Owl Eye, Frost Glide
