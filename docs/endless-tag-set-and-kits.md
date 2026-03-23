@@ -58,6 +58,7 @@ Design implication:
 - Sparrow: Peck, Talon Strike, Battle Chirp, Wind Slash
 - Crow: Peck, Murder Murmuration, Dread Call, Battle Focus
 - Macaw: Echo Note, Mimic Song, Feather Taunt, Chorus Mark
+- Lyrebird: Echo Note, Mimic Chorus, Display Step, Refrain Mark (family evolution; singer)
 - Black Cockatoo: Beak Crack, Boom Call, Wing Beat, Resonance Mark (family evolution; bruiser)
 - Kookaburra: Beak Chop, Laugh Call, Perch Watch, Drop Strike (family evolution; bruiser)
 - Hummingbird: Needle Jab, Dash, Blink Flutter, Combo Strike
