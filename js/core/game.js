@@ -4462,6 +4462,7 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
     slotLayout:KOOKABURRA_SKILL_SLOT_LAYOUT,
     families:KOOKABURRA_SKILL_FAMILIES,
     abilityLookup:buildFamilySkillAbilityLookup(KOOKABURRA_SKILL_SLOT_LAYOUT, KOOKABURRA_SKILL_FAMILIES),
+    // Save migration only: pre–family-evolution Kookaburra flat ids → current tier-0 bases (not used for new runs).
     legacyBaseAbilityIds:Object.freeze({
       beak:{legacy:['mockingPeck','peck','mainAttack'], current:'beak_chop'},
       laugh:{legacy:['laughingCall','echoLaugh','dizzyChorus'], current:'laugh_call'},
@@ -5742,7 +5743,7 @@ function loadStage() {
   document.getElementById('player-panel')?.classList.remove('player-danger');
   document.getElementById('enemy-panel')?.classList.remove('boss-phase-two');
   const pb=document.getElementById('boss-phase-banner');if(pb){pb.textContent='';pb.classList.remove('visible');}
-  // Kookaburra ambush
+  // Bird passive hooks (onBattleStart)
   const bd2=BIRDS[G.player.birdKey||'sparrow'];
   if(bd2&&bd2.passive&&bd2.passive.onBattleStart) bd2.passive.onBattleStart(G.player);
   if((G.player?.openingEnemyFear||0)>0){
@@ -8959,8 +8960,6 @@ const ACTIONS = {
   // ---- NEW BIRDS ----
   async bashUp(ab) {
     const lv=ab.level;
-    // Kookaburra ambush passive
-    const _ambush=G.player._ambushReady; G.player._ambushReady=false;
     const wasActive=G.sitAndWaitActive;
     G.sitAndWaitActive=false; // consume the buff after use
     const missBase=[20,16,12,8][lv-1];
@@ -8969,15 +8968,12 @@ const ACTIONS = {
     for(let i=0;i<hits;i++){
       const mc=wasActive?Math.max(2,15-4*(lv-1)):Math.max(2,missBase);
       if(chance(mc)){await doMiss('player');logMsg(`Bash-Up ${i+1} missed!`,'miss');continue;}
-      // Ambush: force crit with 1.5× bonus crit multiplier on first hit
-      const isAmbushHit=_ambush&&i===0;
-      const isCrit=isAmbushHit||chance(getPlayerCritChance(ab));
+      const isCrit=chance(getPlayerCritChance(ab));
       const r=dealDamage('enemy',pdmg(1+.15*(lv-1)),isCrit);
       await doAttack('player','enemy',r);
       setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
       total+=r.dmgDealt;
       if(tryApplyAilment('enemy','weaken',ab)){spawnFloat('enemy','🐔 Weaken!','fn-status');}
-      if(isAmbushHit){spawnFloat('player','🪶 AMBUSH!','fn-crit');SFX.ambush();logMsg(`🪶 AMBUSH CRIT!`,'crit');}
       if(G.battleOver)break;
     }
     logMsg(`💢 Bash-Up${wasActive?' (double!)':''}: ${total} dmg!`,'player-action');
@@ -9967,6 +9963,7 @@ registerAbilityAlias('decorate','aerialPoop','Decorate',{isBasic:true,type:'util
 registerAbilityAlias('inspireSong','victoryChant','Inspire Song',{type:'spell',btnType:'spell'});
 registerAbilityAlias('charmDisplay','taunt','Charm Display',{type:'utility',btnType:'utility'});
 registerAbilityAlias('focusCall','battleFocus','Focus Call',{type:'utility',btnType:'utility'});
+// Legacy display ids → canonical ACTIONS (other birds/codex/old saves). Kookaburra’s live kit uses laugh_call / family evolution instead.
 registerAbilityAlias('laughingCall','theJoker','Laughing Call',{type:'spell',btnType:'spell'});
 registerAbilityAlias('dizzyChorus','dirge','Dizzy Chorus',{type:'utility',btnType:'utility'});
 registerAbilityAlias('echoLaugh','shriekwave','Echo Laugh',{type:'spell',btnType:'spell'});
@@ -13554,11 +13551,8 @@ function checkDeath() {
     if(G.enemy.isBoss){
       G.bossKills++;
       logMsg(`💀 Boss kill #${G.bossKills}! Future enemies grow stronger.`,'boss');
-      const _harpyBd=BIRDS[G.player.birdKey];
-      if(_harpyBd&&_harpyBd.passive&&_harpyBd.passive.onBossKill) _harpyBd.passive.onBossKill(G.player);
-      // Kookaburra Ambush Master: reset on boss kill
-      const _kookBd=BIRDS[G.player.birdKey];
-      if(_kookBd&&_kookBd.passive&&_kookBd.passive.id==='laughingPerch') _kookBd.passive.onBossKill(G.player);
+      const _bossBd=BIRDS[G.player.birdKey];
+      if(_bossBd&&_bossBd.passive&&_bossBd.passive.onBossKill) _bossBd.passive.onBossKill(G.player);
     }
     logMsg(`✨ ${G.enemy.name} defeated!`,'crit');
     setTimeout(postCombat,700);return true;
