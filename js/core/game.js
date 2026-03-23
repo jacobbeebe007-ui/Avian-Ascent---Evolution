@@ -813,17 +813,19 @@ const BIRDS = {
       onBattleStart(p){p._crowOpportunistReady=true;}},
   },
   kookaburra:{
-    name:'Kookaburra', portraitKey:'kookaburra', tagline:'Patient hunter. Strikes when they least expect.',
-    size:'medium', class:'trickster',
+    name:'Kookaburra', portraitKey:'kookaburra', tagline:'Bush king. Laughing pressure, perch reads, and sudden drops.',
+    size:'medium', class:'bruiser',
     unlockRequires:'unlock_kookaburra',
     unlockHint:'Defeat Stage 10 with Macaw.',
     stats:{hp:46,maxHp:46,atk:9,def:5,spd:7,dodge:22,acc:82,mdef:10,matk:8},
     statBars:{HP:46/50,ATK:9/15,SPD:7/10,Dodge:.44,ACC:.82}, color:'#c8a060',
-    startAbilities:['mockingPeck','laughingCall','dizzyChorus','echoLaugh'],
-    passive:{id:'ambushMaster',name:'Ambush Master',desc:'First attack each battle always crits. Immune to Fear and Confused. Boss kill resets Ambush for next fight.',
+    mainAttackId:'beak_chop',
+    startAbilities:['beak_chop','laugh_call','perch_watch','drop_strike'],
+    passive:{id:'laughingPerch',name:'Laughing Perch',desc:'Laugh-line sonic spells ignore 8% M.DEF. +5% damage vs Feared or Paralyzed foes. First physical attack each battle always crits. Immune to Fear and Confused. Boss kill resets your opening strike tempo.',
       immuneFear:true, immuneConfused:true,
-      onBattleStart(p){p._ambushReady=true;},
-      onBossKill(p){p._ambushReady=true;spawnFloat('player','🪶 Ambush Ready!','fn-status');}},
+      get _laughMdefPierce(){return 0.08;},
+      onBattleStart(p){p.firstAttackAlwaysCrit=true;},
+      onBossKill(p){p.firstAttackAlwaysCrit=true;spawnFloat('player','🪶 Perch Ready!','fn-status');}},
   },
   lyrebird:{
     name:'Lyrebird', portraitKey:'lyrebird', tagline:'The great deceiver. Master of all songs.',
@@ -1610,9 +1612,9 @@ const CLASS_ROLE_BY_CLASS = {
 
 const FINAL_BIRD_CLASS_BY_KEY = Object.freeze({
   sparrow:'striker', hummingbird:'striker', robin:'striker', peregrine:'striker',
-  cassowary:'bruiser', emu:'bruiser', ostrich:'bruiser', secretary:'bruiser', secretarybird:'bruiser',
+  cassowary:'bruiser', emu:'bruiser', ostrich:'bruiser', secretary:'bruiser', secretarybird:'bruiser', kookaburra:'bruiser',
   goose:'tank', swan:'tank', penguin:'tank', emperorpenguin:'tank', shoebill:'tank', shoebillstork:'tank',
-  magpie:'trickster', lyrebird:'trickster', seagull:'trickster', kookaburra:'trickster', bowerbird:'trickster', crow:'trickster',
+  magpie:'trickster', lyrebird:'trickster', seagull:'trickster', bowerbird:'trickster', crow:'trickster',
   snowyowl:'predator', harpy:'predator', harpyeagle:'predator', baldeagle:'predator', dukeblakiston:'predator', duke_blakiston:'predator', kiwi:'predator',
   blackbird:'singer', phainopepla:'singer', macaw:'singer', flamingo:'singer', toucan:'singer', raven:'singer', albatross:'singer', dove:'singer',
   blackcockatoo:'bruiser',
@@ -4693,6 +4695,7 @@ function syncPlayerAbilitiesFromSkillSlots(player){
     if(player.birdKey==='snowyOwl' && slot.abilityId==='talon_snap') ab.fixedMainAttackCost = true;
     if(player.birdKey==='kiwi' && slot.abilityId==='beak_jab') ab.fixedMainAttackCost = true;
     if(player.birdKey==='blackCockatoo' && slot.abilityId==='beak_crack') ab.fixedMainAttackCost = true;
+    if(player.birdKey==='kookaburra' && slot.abilityId==='beak_chop') ab.fixedMainAttackCost = true;
     return ab;
   });
 }
@@ -6147,6 +6150,7 @@ function renderStatuses(id, statuses) {
     else if (k==='wingClip') { b.className='status-badge feared'; b.textContent=`✂ Clipped(${v.turns}t,-${v.spdRedux}SPD)`; }
     else if (k==='sonicSkip') { b.className='status-badge paralyzed'; b.textContent=`🔊 Dirge(${v.turns}t,${v.chance}%skip)`; tooltipSummary='Debuff: chance to skip actions from sonic disorientation.'; }
     else if (k==='peregrineCritLens') { b.className='status-badge crit'; b.textContent=`🦅 Aim+${v.bonus||0}%Crit(${v.turns}t)`; }
+    else if (k==='kookaCritLens') { b.className='status-badge crit'; b.textContent=`🪶 Lock+${v.bonus||0}%Crit(${v.turns}t)`; }
     else if (k==='peregrineDiveAmp') { b.className='status-badge buffed'; b.textContent=`🦅 Stoop+${Math.round((v.mult||0)*100)}%(${v.turns}t)`; }
     else if (k==='peregrineDefBreak') { b.className='status-badge weaken'; b.textContent=`🛡 Broken(${v.turns}t,−${v.defLost||0}DEF)`; }
     else if (k==='owlCritFocus') { b.className='status-badge crit'; b.textContent=`🦉 Moon+${v.bonus||0}%Crit(${v.turns}t)`; }
@@ -7613,6 +7617,7 @@ function dealDamage(target,amount,isCrit=false,isMagic=false,srcAbility=null) {
     if(classPerkCtx.markedForDeath && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.15);
     if(G.player?.birdKey==='raven' && (G.enemyStatus?.feared||0)>0) dmg=Math.floor(dmg*1.12);
     if(G.player?.birdKey==='blackCockatoo' && ((G.enemyStatus?.feared||0)>0 || (G.enemyStatus?.paralyzed||0)>0)) dmg=Math.floor(dmg*1.08);
+    if(G.player?.birdKey==='kookaburra' && ((G.enemyStatus?.feared||0)>0 || (G.enemyStatus?.paralyzed||0)>0)) dmg=Math.floor(dmg*1.05);
     if(G.player?.birdKey==='harpy' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.18);
     if(G.player?.birdKey==='seagull' && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.6)) dmg=Math.floor(dmg*1.20);
     if(classPerkCtx.executionLine && (G.enemy.stats.hp||1)<=Math.floor((G.enemy.stats.maxHp||1)*0.4)) dmg=Math.floor(dmg*1.20);
@@ -8137,6 +8142,8 @@ function getPlayerCritChance(ab) {
   if(isAttack) base += (G.player?.augAttackCrit||0);
   const pfLens=G.playerStatus?.peregrineCritLens;
   if(isAttack && pfLens && (pfLens.turns||0)>0) base += (pfLens.bonus||0);
+  const kookLens=G.playerStatus?.kookaCritLens;
+  if(isAttack && kookLens && (kookLens.turns||0)>0) base += (kookLens.bonus||0);
   const owlLens=G.playerStatus?.owlCritFocus;
   if(isAttack && owlLens && (owlLens.turns||0)>0) base += (owlLens.bonus||0);
   return Math.min(100,base);
@@ -10367,6 +10374,49 @@ for(const [id,name,desc,options] of BLACK_COCKATOO_EVOLUTION_TEMPLATE_DEFS){
   ABILITY_TEMPLATES[id] = Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
 }
 
+const KOOKABURRA_EVOLUTION_TEMPLATE_DEFS = [
+  ['beak_chop','Beak Chop','Beak-line neutral. A heavy chop before you specialize.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'~100% dmg, Pierce 10%.'},{desc:'Stronger chop.'},{desc:'Stronger chop.'},{desc:'Peak chop.'}]}],
+  ['bodkin_crack','Bodkin Crack','Beak-line pierce evolution. Armor-breaking bite.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Pierce 20%.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Maximum pierce bite.'}]}],
+  ['splinter_break','Splinter Break','Beak-line pierce finisher. Splinters guard.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Pierce 30% + bonus vs heavy armor.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Capstone break.'}]}],
+  ['razor_chop','Razor Chop','Beak-line bleed branch.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Bleed 10% chance.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak razor chop.'}]}],
+  ['razor_crack','Razor Crack','Beak-line bleed evolution.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Bleed 15% chance.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Cruel razor crack.'}]}],
+  ['razor_break','Razor Break','Beak-line bleed finisher.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Bleed 20% + bonus vs wounded prey.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Total razor break.'}]}],
+  ['dulling_chop','Dulling Chop','Beak-line weaken branch.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Weaken 10% chance.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak dulling chop.'}]}],
+  ['numbing_crack','Numbing Crack','Beak-line weaken evolution.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Weaken 15% chance.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Cruel numb.'}]}],
+  ['weakening_break','Weakening Break','Beak-line weaken finisher.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Weaken 20% + bonus vs weakened.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Total weakness.'}]}],
+  ['laugh_call','Laugh Call','Laugh-line neutral. Iconic laughing pressure before you specialize.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~86% MATK sonic burst.'},{desc:'~92% MATK.'},{desc:'~98% MATK.'},{desc:'~104% MATK.'}]}],
+  ['kooka_dread_call','Dread Call','Laugh-line fear branch. Booming mockery.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~90% MATK, Fear chance.'},{desc:'~98% MATK.'},{desc:'~106% MATK.'},{desc:'~114% MATK.'}]}],
+  ['mocking_laugh','Mocking Laugh','Laugh-line fear evolution. Cruel laughter.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~102% MATK, stronger Fear.'},{desc:'~110% MATK.'},{desc:'~118% MATK.'},{desc:'~126% MATK.'}]}],
+  ['terror_cackle','Terror Cackle','Laugh-line fear finisher. The bush shakes.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'2 hits; Fear; bonus vs feared.'},{desc:'2 hits.'},{desc:'3 hits.'},{desc:'3 hits, peak Fear.'}]}],
+  ['kooka_shock_call','Shock Call','Laugh-line paralysis branch. Static on the wire.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~88% MATK, Paralysis chance.'},{desc:'~96% MATK.'},{desc:'~104% MATK.'},{desc:'~112% MATK.'}]}],
+  ['static_laugh','Static Laugh','Laugh-line paralysis evolution.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~100% MATK, stronger Paralysis.'},{desc:'~108% MATK.'},{desc:'~116% MATK.'},{desc:'~124% MATK.'}]}],
+  ['lock_cackle','Lock Cackle','Laugh-line paralysis finisher. Locks the prey.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~112% MATK, heavy Paralysis.'},{desc:'~120% MATK.'},{desc:'~128% MATK.'},{desc:'~136% MATK.'}]}],
+  ['kooka_echo_call','Echo Call','Laugh-line delayed branch. Sound now, bite later.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~84% MATK + delayed echo.'},{desc:'~92% MATK + bigger echo.'},{desc:'~100% MATK.'},{desc:'~108% MATK.'}]}],
+  ['echo_laugh','Echo Laugh','Laugh-line delayed evolution.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~94% MATK + strong delayed echo.'},{desc:'~102% MATK.'},{desc:'~110% MATK.'},{desc:'~118% MATK.'}]}],
+  ['returning_cackle','Returning Cackle','Laugh-line delayed finisher. The laugh returns harder.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~104% MATK + massive echo; vs debuffed.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak returning cackle.'}]}],
+  ['perch_watch','Perch Watch','Watch-line neutral. Read the angle from the branch.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% damage.'},{desc:'+15%.'},{desc:'+18%.'},{desc:'+21%.'}]}],
+  ['kooka_hunters_sight','Hunter\'s Sight','Watch-line amp evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +18% damage.'},{desc:'+22%.'},{desc:'+26%.'},{desc:'+30%.'}]}],
+  ['perch_lock','Perch Lock','Watch-line amp finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +26% damage.'},{desc:'+30%.'},{desc:'+34%.'},{desc:'+38%.'}]}],
+  ['expose_perch','Expose Perch','Watch-line break branch.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Small DEF break.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Heavy expose.'}]}],
+  ['kooka_weakpoint_sight','Weakpoint Sight','Watch-line break evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Stronger DEF break.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Violent read.'}]}],
+  ['kooka_ruin_lock','Ruin Lock','Watch-line break finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Largest anti-defense read.'},{desc:'Heavier.'},{desc:'Heavier.'},{desc:'Ruin capstone.'}]}],
+  ['killer_watch','Killer Watch','Watch-line crit branch.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Crit lens + aim.'},{desc:'Stronger lens.'},{desc:'Stronger.'},{desc:'Peak killer watch.'}]}],
+  ['killing_sight','Killing Sight','Watch-line crit evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Bigger crit lens.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Hard sight.'}]}],
+  ['kooka_death_lock','Death Lock','Watch-line crit finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Maximum crit lens.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Total death lock.'}]}],
+  ['drop_strike','Drop Strike','Drop-line neutral. A sudden stoop before you specialize.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'~100% dmg; ignores dodge this hit.'},{desc:'Stronger drop.'},{desc:'Stronger drop.'},{desc:'Peak drop.'}]}],
+  ['hunter_drop','Hunter Drop','Drop-line execute evolution.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Bonus vs compromised / low HP prey.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Hard hunter drop.'}]}],
+  ['kill_smash','Kill Smash','Drop-line execute finisher.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Large execute payoff.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Capstone kill smash.'}]}],
+  ['kooka_trigger_strike','Trigger Strike','Drop-line trigger branch.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Hit + delayed echo chip.'},{desc:'Bigger echo.'},{desc:'Bigger.'},{desc:'Echo trigger.'}]}],
+  ['echo_drop','Echo Drop','Drop-line trigger evolution.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Stronger hit + echo.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Heavy echo drop.'}]}],
+  ['repeat_smash','Repeat Smash','Drop-line trigger finisher.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Big hit + massive echo.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Repeat killing smash.'}]}],
+  ['clutch_strike','Clutch Strike','Drop-line slow branch.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Slow + small ACC down.'},{desc:'Stronger slow.'},{desc:'Stronger.'},{desc:'Heaviest clutch.'}]}],
+  ['drag_drop','Drag Drop','Drop-line slow evolution.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Bigger slow + ACC pressure.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Violent drag.'}]}],
+  ['ground_smash','Ground Smash','Drop-line slow finisher.',{type:'physical',btnType:'physical',energy:1,levels:[{desc:'Massive slow + Weaken odds.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Total grounding.'}]}],
+];
+for(const [id,name,desc,options] of KOOKABURRA_EVOLUTION_TEMPLATE_DEFS){
+  ABILITY_TEMPLATES[id] = Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
+}
+
 const _hbDashCond=[{type:'while_self_buff_active',buff:'dodge_up',damageBonus:0.10},{type:'per_target_debuff',damageBonusPerStack:0.05,maxStacks:3}];
 const HUMMINGBIRD_EVOLUTION_TEMPLATE_DEFS = [
   ['needle_jab','Needle Jab','Needle-line neutral. Pinpoint jabs before you specialize.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,role:['multiHit'],levels:[{desc:'3 hits, pierce pressure.'},{desc:'3 hits.'},{desc:'4 hits.'},{desc:'4 hits.'}]}],
@@ -10989,6 +11039,213 @@ const BLACK_COCKATOO_SKILL_ACTION_OVERRIDES = {
   collapse_read: ab=>executeBlackCockatooResonanceRead(ab,[0.06,0.07,0.08,0.09],[0.18,0.20,0.24,0.28],'🔍 Collapse Read!','🎯'),
 };
 Object.entries(BLACK_COCKATOO_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
+
+function getKookaburraMasteryBonuses(ab){
+  const slot=getAbilitySkillSlot(G.player, ab);
+  const m=getSlotMasteryProfile(slot);
+  const fam=slot?.familyId||'';
+  const base={power:m.power,precision:m.precision,control:m.control};
+  if(fam==='beak'){
+    return {...base, dmg:0.075*m.power, pierceRider:3*m.precision, weakenRider:8*m.control, bleedRider:4*m.precision};
+  }
+  if(fam==='laugh'){
+    return {...base, spellMult:0.065*m.power+0.035*m.control, controlRider:8*m.precision, delayedFlat:6*m.power+10*m.control, markAmp:0.04*m.power+0.03*m.control};
+  }
+  if(fam==='watch'){
+    return {...base, markAmp:0.05*m.power+0.04*m.precision, defBreakRider:Math.floor(m.precision/2), critRider:3*m.control};
+  }
+  if(fam==='drop'){
+    return {...base, dmg:0.07*m.power, delayedFlat:5*m.power+6*m.control, crit:2*m.power+m.control, pierceRider:2*m.precision};
+  }
+  return base;
+}
+function kookaMatkLaugh(mult){
+  const p=BIRDS[G.player.birdKey]?.passive;
+  const pierce=(p&&p.id==='laughingPerch')?(p._laughMdefPierce||0.08):0;
+  const base=G.player.stats.matk||8;
+  const effMdef=(G.enemy.stats.mdef||8)*(1-pierce);
+  const matkVsEnemy=base-effMdef;
+  const adjust=matkVsEnemy*0.015;
+  return Math.max(1,Math.floor(pdmg(1)*(mult+adjust)*base/7.2));
+}
+function applyKookaDelayed(flat, mb, debuffSynergy=null){
+  let amt=Math.max(1, Math.floor(flat + (mb?.delayedFlat||0)));
+  if(debuffSynergy && (debuffSynergy.perCategory||0)>0){
+    const n=countEnemyCombatDebuffCategories();
+    const capAdd=Number.isFinite(debuffSynergy.cap)?debuffSynergy.cap:18;
+    amt+=Math.min(capAdd, Math.floor(n*debuffSynergy.perCategory));
+  }
+  const cap=Math.max(40, Math.floor(kookaMatkLaugh(2.5)));
+  const merged=Math.min(cap, (G.enemyStatus.delayed?.dmg||0)+amt);
+  G.enemyStatus.delayed={dmg:merged};
+  logMsg(`😂 Laugh echoes (${merged} on their turn).`,'system');
+}
+async function executeKookaburraSpell(ab, config={}){
+  const lv=Math.max(1, Math.min(4, Number(ab?.level)||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  const miss=Math.max(0,(config.miss?.[lv-1]??spellMissChance())-getPlayerHitBonus(ab)-(mb.precision||0)*2);
+  let mult=(config.mult?.[lv-1]??1)+(mb.spellMult||0);
+  if(config.bonusVsDebuffed?.[lv-1] && macawEnemyHasDebuff()) mult+=config.bonusVsDebuffed[lv-1];
+  if(config.bonusVsFeared?.[lv-1] && (G.enemyStatus?.feared||0)>0) mult+=config.bonusVsFeared[lv-1];
+  const hits=config.hits?.[lv-1]||1;
+  let total=0;
+  for(let i=0;i<hits;i++){
+    if(chance(miss)){ await doMiss('player'); if(hits===1) logMsg(`${config.name||ab?.id} missed!`,'miss'); continue; }
+    const amount=kookaMatkLaugh(mult);
+    const isCrit=chance(getPlayerCritChance(ab));
+    const r=dealDamage('enemy', amount, isCrit, true, ab);
+    total+=r.dmgDealt;
+    await doAttack('player','enemy', r);
+    setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+    if(G.battleOver) return;
+  }
+  const rc=mb.controlRider||0;
+  if(config.fearChance?.[lv-1] && spellAilmentRoll(config.fearChance[lv-1]+rc, hits>1)){
+    applyAilment('enemy','feared', config.fearStacks?.[lv-1]||1);
+    spawnFloat('enemy','😨 Fear!','fn-status');
+  }
+  if(config.paraChance?.[lv-1] && spellAilmentRoll(config.paraChance[lv-1]+rc, hits>1)){
+    G.enemyStatus.paralyzed=(G.enemyStatus.paralyzed||0)+(config.paraTurns?.[lv-1]||2);
+    spawnFloat('enemy','⚡ Para!','fn-status');
+  }
+  if(config.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+config.accDown[lv-1]+Math.floor(rc/2);
+  if(config.delayedFlat?.[lv-1]) applyKookaDelayed(config.delayedFlat[lv-1], mb, { perCategory:2, cap:12 });
+  renderStatuses('enemy-status',G.enemyStatus);
+  await doSpell('enemy', config.fx||'😂');
+  logMsg(`${config.log||config.name||'😂 Laugh'}! ${total} sonic dmg.`, 'player-action');
+}
+async function executeKookaburraBeakStrike(ab, cfg){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  const miss=Math.max(0,(cfg.miss?.[lv-1]??9)-getPlayerHitBonus(ab)-(mb.precision||0)*2);
+  if(chance(miss)){await doMiss('player');logMsg(`${cfg.log||ab.name} missed!`,'miss');return;}
+  let mult=(cfg.mult?.[lv-1]??1)+(mb.dmg||0);
+  const pierce=(cfg.pierce?.[lv-1]??0)+(mb.pierceRider||0);
+  if(cfg.bonusVsArmor?.[lv-1] && (G.enemy.stats.def||0)>=5) mult+=cfg.bonusVsArmor[lv-1];
+  if(cfg.bonusVsWeakened?.[lv-1] && (G.enemyStatus.weaken||0)>0) mult+=cfg.bonusVsWeakened[lv-1];
+  if(cfg.bonusVsWounded?.[lv-1] && peregrinePreyVulnerable()) mult+=cfg.bonusVsWounded[lv-1];
+  const prox={...ab,pierceDef:pierce};
+  const r=dealDamage('enemy',pdmg(mult,prox),chance(getPlayerCritChance(ab)),false,prox);
+  await doAttack('player','enemy',r);
+  setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+  if(cfg.weakenChance?.[lv-1] && spellAilmentRoll(cfg.weakenChance[lv-1]+(mb.weakenRider||0), false)){
+    applyAilment('enemy','weaken',1); spawnFloat('enemy','🐔 Weaken!','fn-status');
+  }
+  if(cfg.bleedChance?.[lv-1] && chance(cfg.bleedChance[lv-1]+(mb.bleedRider||0))){
+    applyAilment('enemy','bleed',1); spawnFloat('enemy','🩸 Bleed!','fn-poison');
+  }
+  if(cfg.defBreak?.[lv-1]) peregrineApplyDefBreak(cfg.defBreak[lv-1]+Math.floor(mb.precision/2), cfg.defBreakTurns?.[lv-1]||2);
+  renderStatuses('enemy-status',G.enemyStatus);
+  logMsg(`${cfg.log||ab.name}! ${r.dmgDealt} dmg.`,'player-action');
+}
+async function executeKookaburraWatchAmp(ab, ampArr, logPrefix, fx){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+(mb.markAmp||0);
+  await doSpell('enemy', fx||'🎯');
+  logMsg(`${logPrefix} Next attack +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% damage.`,'player-action');
+}
+async function executeKookaburraWatchBreak(ab, defArr, turnArr){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  await doSpell('enemy','🛡');
+  peregrineApplyDefBreak(defArr[lv-1]+(mb.defBreakRider||0), turnArr[lv-1]||2);
+  renderStatuses('enemy-status',G.enemyStatus);
+}
+async function executeKookaburraWatchCrit(ab, bonusArr, turnArr){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  G.playerStatus.kookaCritLens={bonus:bonusArr[lv-1]+(mb.critRider||0), turns:turnArr[lv-1]||2};
+  await doSpell('enemy','🎯');
+  logMsg(`🎯 Lock! +${G.playerStatus.kookaCritLens.bonus}% crit on attacks (${G.playerStatus.kookaCritLens.turns}t).`,'player-action');
+}
+async function executeKookaburraWatch(ab){
+  const id=ab.id;
+  if(id==='perch_watch') return executeKookaburraWatchAmp(ab,[0.12,0.15,0.18,0.21],'🪶 Perch Watch!','🪶');
+  if(id==='kooka_hunters_sight') return executeKookaburraWatchAmp(ab,[0.18,0.22,0.26,0.30],'🪶 Hunter\'s Sight!','🪶');
+  if(id==='perch_lock') return executeKookaburraWatchAmp(ab,[0.26,0.30,0.34,0.38],'🪶 Perch Lock!','🪶');
+  if(id==='expose_perch') return executeKookaburraWatchBreak(ab,[1,1,2,2],[2,2,2,3]);
+  if(id==='kooka_weakpoint_sight') return executeKookaburraWatchBreak(ab,[2,3,3,4],[2,2,3,3]);
+  if(id==='kooka_ruin_lock') return executeKookaburraWatchBreak(ab,[3,4,5,6],[3,3,4,4]);
+  if(id==='killer_watch') return executeKookaburraWatchCrit(ab,[10,14,18,22],[2,2,3,3]);
+  if(id==='killing_sight') return executeKookaburraWatchCrit(ab,[14,18,22,26],[2,3,3,3]);
+  if(id==='kooka_death_lock') return executeKookaburraWatchCrit(ab,[18,22,26,30],[3,3,3,4]);
+}
+async function executeKookaburraLaughDelayedSetup(ab, ampArr, delayedArr, syn, logPrefix){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+(mb.markAmp||0);
+  applyKookaDelayed(delayedArr[lv-1]||10, mb, syn);
+  await doSpell('enemy','😂');
+  logMsg(`${logPrefix} Next hit +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% and laugh echoes.`,'player-action');
+}
+async function executeKookaburraDrop(ab, cfg){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getKookaburraMasteryBonuses(ab);
+  const oldDodge=G.enemy.stats.dodge;
+  G.enemy.stats.dodge=0;
+  const miss=Math.max(0,(cfg.miss?.[lv-1]??8)-getPlayerHitBonus(ab)-(mb.precision||0)*2);
+  if(chance(miss)){
+    G.enemy.stats.dodge=oldDodge;
+    await doMiss('player');
+    logMsg(`${cfg.log||ab.name} missed!`,'miss');
+    return;
+  }
+  let mult=(cfg.mult?.[lv-1]??1)+(mb.dmg||0);
+  const pierce=(cfg.pierce?.[lv-1]??0)+(mb.pierceRider||0);
+  if(cfg.executeBonus?.[lv-1] && peregrinePreyVulnerable()) mult+=cfg.executeBonus[lv-1];
+  const prox={...ab,pierceDef:pierce};
+  const r=dealDamage('enemy',pdmg(mult,prox),chance(getPlayerCritChance(ab)+mb.crit),false,prox);
+  await doAttack('player','enemy',r);
+  setHpBar('enemy',G.enemy.stats.hp,G.enemy.stats.maxHp);
+  if(cfg.weakenChance?.[lv-1] && chance(cfg.weakenChance[lv-1]+mb.control*3)) applyAilment('enemy','weaken',1);
+  if(cfg.delayed?.[lv-1]) applyKookaDelayed(cfg.delayed[lv-1], mb, cfg.delayedSynergy||{});
+  if(cfg.slow?.[lv-1]) applyEnemySlow(cfg.slow[lv-1], cfg.slowDodge?.[lv-1]||10, (cfg.slowTurns?.[lv-1]||2)+(mb.control>0?1:0));
+  if(cfg.accDown?.[lv-1]) G.enemyStatus.accDebuff=(G.enemyStatus.accDebuff||0)+cfg.accDown[lv-1];
+  G.enemy.stats.dodge=oldDodge;
+  renderStatuses('enemy-status',G.enemyStatus);
+  logMsg(`${cfg.log||ab.name}! ${r.dmgDealt} dmg.`,'player-action');
+}
+const KOOKABURRA_SKILL_ACTION_OVERRIDES = {
+  beak_chop: ab=>executeKookaburraBeakStrike(ab,{log:'🪶 Beak Chop',miss:[9,8,7,6],mult:[0.96,1.00,1.04,1.08],pierce:[10,12,14,16]}),
+  bodkin_crack: ab=>executeKookaburraBeakStrike(ab,{log:'🪶 Bodkin Crack',miss:[8,7,6,5],mult:[1.04,1.08,1.12,1.16],pierce:[20,22,26,30]}),
+  splinter_break: ab=>executeKookaburraBeakStrike(ab,{log:'🪶 Splinter Break',miss:[7,6,5,4],mult:[1.12,1.16,1.20,1.26],pierce:[28,32,36,42],bonusVsArmor:[0.06,0.08,0.10,0.12]}),
+  razor_chop: ab=>executeKookaburraBeakStrike(ab,{log:'🩸 Razor Chop',miss:[9,8,7,6],mult:[0.96,1.00,1.04,1.08],pierce:[8,10,12,14],bleedChance:[10,12,14,16]}),
+  razor_crack: ab=>executeKookaburraBeakStrike(ab,{log:'🩸 Razor Crack',miss:[8,7,6,5],mult:[1.04,1.08,1.12,1.16],pierce:[10,12,14,16],bleedChance:[15,17,19,22]}),
+  razor_break: ab=>executeKookaburraBeakStrike(ab,{log:'🩸 Razor Break',miss:[7,6,5,4],mult:[1.10,1.14,1.18,1.22],pierce:[12,14,16,18],bleedChance:[20,22,24,26],bonusVsWounded:[0.06,0.08,0.10,0.12]}),
+  dulling_chop: ab=>executeKookaburraBeakStrike(ab,{log:'🪶 Dulling Chop',miss:[9,8,7,6],mult:[0.94,0.98,1.02,1.06],pierce:[6,8,10,12],weakenChance:[10,12,14,16]}),
+  numbing_crack: ab=>executeKookaburraBeakStrike(ab,{log:'🪶 Numbing Crack',miss:[8,7,6,5],mult:[1.02,1.06,1.10,1.14],pierce:[8,10,12,14],weakenChance:[15,17,19,22]}),
+  weakening_break: ab=>executeKookaburraBeakStrike(ab,{log:'🪶 Weakening Break',miss:[7,6,5,4],mult:[1.08,1.12,1.16,1.20],pierce:[10,12,14,16],weakenChance:[20,22,25,28],bonusVsWeakened:[0.06,0.08,0.10,0.12]}),
+  laugh_call: ab=>executeKookaburraSpell(ab,{name:'Laugh Call',log:'😂 Laugh Call',fx:'😂',miss:[14,12,10,8],mult:[0.84,0.90,0.96,1.02]}),
+  kooka_dread_call: ab=>executeKookaburraSpell(ab,{name:'Dread Call',log:'😨 Dread Call',fx:'😨',miss:[13,11,9,7],mult:[0.90,0.98,1.06,1.14],fearChance:[20,22,24,28]}),
+  mocking_laugh: ab=>executeKookaburraSpell(ab,{name:'Mocking Laugh',log:'😨 Mocking Laugh',fx:'😨',miss:[12,10,8,6],mult:[1.02,1.10,1.18,1.26],fearChance:[26,28,30,32]}),
+  terror_cackle: ab=>executeKookaburraSpell(ab,{name:'Terror Cackle',log:'😨 Terror Cackle',fx:'😨',hits:[2,2,3,3],miss:[11,10,9,8],mult:[0.52,0.56,0.50,0.54],fearChance:[28,30,32,34],bonusVsFeared:[0.10,0.11,0.12,0.13]}),
+  kooka_shock_call: ab=>executeKookaburraSpell(ab,{name:'Shock Call',log:'⚡ Shock Call',fx:'⚡',miss:[13,11,9,7],mult:[0.88,0.96,1.04,1.12],paraChance:[16,18,20,22],paraTurns:[2,2,2,3]}),
+  static_laugh: ab=>executeKookaburraSpell(ab,{name:'Static Laugh',log:'⚡ Static Laugh',fx:'⚡',miss:[12,10,8,6],mult:[1.00,1.08,1.16,1.24],paraChance:[22,24,26,28],paraTurns:[2,3,3,3]}),
+  lock_cackle: ab=>executeKookaburraSpell(ab,{name:'Lock Cackle',log:'⚡ Lock Cackle',fx:'⚡',miss:[11,9,7,5],mult:[1.12,1.20,1.28,1.36],paraChance:[28,30,32,34],paraTurns:[3,3,3,4]}),
+  kooka_echo_call: ab=>executeKookaburraSpell(ab,{name:'Echo Call',log:'😂 Echo Call',fx:'😂',miss:[13,11,9,7],mult:[0.84,0.92,1.00,1.08],delayedFlat:[12,16,20,24]}),
+  echo_laugh: ab=>executeKookaburraLaughDelayedSetup(ab,[0.08,0.10,0.12,0.14],[14,18,22,26],{ perCategory:3, cap:14 },'😂 Echo Laugh!'),
+  returning_cackle: ab=>executeKookaburraSpell(ab,{name:'Returning Cackle',log:'😂 Returning Cackle',fx:'😂',miss:[11,9,7,5],mult:[1.04,1.12,1.20,1.28],delayedFlat:[22,26,30,36],bonusVsDebuffed:[0.08,0.09,0.10,0.11]}),
+  perch_watch: ab=>executeKookaburraWatch(ab),
+  kooka_hunters_sight: ab=>executeKookaburraWatch(ab),
+  perch_lock: ab=>executeKookaburraWatch(ab),
+  expose_perch: ab=>executeKookaburraWatch(ab),
+  kooka_weakpoint_sight: ab=>executeKookaburraWatch(ab),
+  kooka_ruin_lock: ab=>executeKookaburraWatch(ab),
+  killer_watch: ab=>executeKookaburraWatch(ab),
+  killing_sight: ab=>executeKookaburraWatch(ab),
+  kooka_death_lock: ab=>executeKookaburraWatch(ab),
+  drop_strike: ab=>executeKookaburraDrop(ab,{log:'🪶 Drop Strike',miss:[9,8,7,6],mult:[0.98,1.02,1.06,1.10],pierce:[8,10,12,14]}),
+  hunter_drop: ab=>executeKookaburraDrop(ab,{log:'☠ Hunter Drop',miss:[8,7,6,5],mult:[1.06,1.10,1.14,1.18],pierce:[10,12,14,16],executeBonus:[0.08,0.10,0.12,0.14]}),
+  kill_smash: ab=>executeKookaburraDrop(ab,{log:'☠ Kill Smash',miss:[7,6,5,4],mult:[1.14,1.18,1.22,1.28],pierce:[12,14,16,18],executeBonus:[0.14,0.16,0.18,0.22]}),
+  kooka_trigger_strike: ab=>executeKookaburraDrop(ab,{log:'😂 Trigger Strike',miss:[8,7,6,5],mult:[0.98,1.02,1.06,1.10],pierce:[8,10,12,14],delayed:[10,14,18,22],delayedSynergy:{ perCategory:2, cap:12 }}),
+  echo_drop: ab=>executeKookaburraDrop(ab,{log:'😂 Echo Drop',miss:[7,6,5,4],mult:[1.06,1.10,1.14,1.18],pierce:[10,12,14,16],delayed:[16,20,24,30],delayedSynergy:{ perCategory:3, cap:16 }}),
+  repeat_smash: ab=>executeKookaburraDrop(ab,{log:'😂 Repeat Smash',miss:[6,5,4,3],mult:[1.12,1.16,1.20,1.26],pierce:[12,14,16,18],delayed:[22,28,34,42],delayedSynergy:{ perCategory:4, cap:22 }}),
+  clutch_strike: ab=>executeKookaburraDrop(ab,{log:'🪶 Clutch Strike',miss:[9,8,7,6],mult:[0.94,0.98,1.02,1.06],pierce:[6,8,10,12],accDown:[4,5,6,7],slow:[1,1,2,2],slowDodge:[6,8,10,12],slowTurns:[2,2,2,3]}),
+  drag_drop: ab=>executeKookaburraDrop(ab,{log:'🪶 Drag Drop',miss:[8,7,6,5],mult:[1.02,1.06,1.10,1.14],pierce:[8,10,12,14],accDown:[6,8,10,12],slow:[2,2,2,3],slowDodge:[8,10,12,14],slowTurns:[2,2,3,3]}),
+  ground_smash: ab=>executeKookaburraDrop(ab,{log:'🪶 Ground Smash',miss:[7,6,5,4],mult:[1.08,1.12,1.16,1.20],pierce:[10,12,14,16],accDown:[8,10,12,14],slow:[3,3,3,4],slowDodge:[10,12,14,16],slowTurns:[3,3,3,3],weakenChance:[12,15,18,22]}),
+};
+Object.entries(KOOKABURRA_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
 
 const HUMMINGBIRD_DASH_ABILITY_IDS = new Set([
   'dash','sonic_dash','sonicDash','critical_rush','blurring_strike','static_dash','shock_rush','storm_blur','passing_dash','afterimage_rush','return_blur',
@@ -12551,6 +12808,10 @@ function endPlayerTurn(force=false) {
     G.playerStatus.peregrineCritLens.turns--;
     if(G.playerStatus.peregrineCritLens.turns<=0) delete G.playerStatus.peregrineCritLens;
   }
+  if(G.playerStatus.kookaCritLens){
+    G.playerStatus.kookaCritLens.turns--;
+    if(G.playerStatus.kookaCritLens.turns<=0) delete G.playerStatus.kookaCritLens;
+  }
   if(G.playerStatus.owlCritFocus){
     G.playerStatus.owlCritFocus.turns--;
     if(G.playerStatus.owlCritFocus.turns<=0) delete G.playerStatus.owlCritFocus;
@@ -13297,7 +13558,7 @@ function checkDeath() {
       if(_harpyBd&&_harpyBd.passive&&_harpyBd.passive.onBossKill) _harpyBd.passive.onBossKill(G.player);
       // Kookaburra Ambush Master: reset on boss kill
       const _kookBd=BIRDS[G.player.birdKey];
-      if(_kookBd&&_kookBd.passive&&_kookBd.passive.id==='ambushMaster') _kookBd.passive.onBossKill(G.player);
+      if(_kookBd&&_kookBd.passive&&_kookBd.passive.id==='laughingPerch') _kookBd.passive.onBossKill(G.player);
     }
     logMsg(`✨ ${G.enemy.name} defeated!`,'crit');
     setTimeout(postCombat,700);return true;
@@ -15963,7 +16224,7 @@ SPRITE_KEYS_ALL.add('magpie');
    ============================================================ */
 (function(){
   const FLYERS = new Set(['sparrow','goose','blackbird','crow','macaw','robin','hummingbird','magpie','kookaburra','flamingo','seagull','raven','hawk','owl']);
-  const TRICKSTERS = new Set(['crow','raven','magpie','kookaburra','seagull']);
+  const TRICKSTERS = new Set(['crow','raven','magpie','seagull']);
   const DEFENSIVE = new Set(['goose','swan','pelican','duck']);
   const PREDATORS = new Set(['hawk','falcon','eagle','owl','redtailedhawk','barnowl']);
   const AGGRESSORS = new Set(['emu','cassowary','shoebill','secretarybird','condor']);
