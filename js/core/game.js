@@ -4913,8 +4913,48 @@ function continueRun() {
 }
 function goMainMenu() {
   if(G.player) saveRun();
+  // Clear overworld state so we return to select screen cleanly
+  try { localStorage.removeItem('avianAscent_overworld'); localStorage.removeItem('avianAscent_nav'); } catch(_) {}
   showScreen('screen-select');initSelectionSafe();
 }
+
+// ============================================================
+//  OVERWORLD NAVIGATION RETURN HANDLER
+// ============================================================
+const OW_NAV_KEY = 'avianAscent_nav';
+const OW_STATE_KEY = 'avianAscent_overworld';
+
+/** True when the player launched this run via the overworld map. */
+function _isOverworldRun() {
+  try { return !!localStorage.getItem(OW_STATE_KEY); } catch(_) { return false; }
+}
+
+function handleOverworldReturn() {
+  let intent = null;
+  try { intent = JSON.parse(localStorage.getItem(OW_NAV_KEY) || 'null'); } catch(_) {}
+  if (!intent?.action) return false;
+
+  try { localStorage.removeItem(OW_NAV_KEY); } catch(_) {}
+
+  const save = loadSaveData();
+  if (!save?.player) return false;
+
+  if (intent.action === 'battle') {
+    // Restore run, ensure correct stage, then fight
+    continueRun();
+    return true;
+  }
+
+  if (intent.action === 'shop') {
+    // Restore run then open shop instead of loading a battle
+    G._pendingOverworldShop = true;
+    continueRun();
+    return true;
+  }
+
+  return false;
+}
+globalThis.handleOverworldReturn = handleOverworldReturn;
 
 // ============================================================
 //  NEXT STAGE PREVIEW
@@ -5110,6 +5150,8 @@ function renderStarterFallbackGrid(reason=''){
 }
 
 function initSelectionSafe(){
+  // Check if we're returning from the overworld (after a battle or shop visit)
+  try { if(handleOverworldReturn()) return; } catch(_) {}
   try{
     initSelection();
     wireRefGuideClicks();
@@ -5624,7 +5666,14 @@ function startGame() {
   const runStartEvt = {birdKey:G.player.birdKey, difficulty:G.difficulty, endless:!!G.endlessMode};
   AvianEvents.emit('run:start', runStartEvt);
   runModuleHook('onRunStart', runStartEvt);
-  loadStage();
+  // Navigate to the overworld instead of loading a stage directly
+  try {
+    localStorage.setItem('avianAscent_overworld', JSON.stringify({nodeId:0, birdKey:G.selected}));
+    localStorage.removeItem('avianAscent_nav');
+    window.location.href = 'blackstone_overworld_new.html';
+  } catch(_) {
+    loadStage(); // fallback if navigation fails
+  }
 }
 
 // Build endless-mode enemy from base pool (scaling happens in loadStage via stage-depth curve)
@@ -5698,6 +5747,12 @@ function pickEarlyStageEnemyTemplate(stage){
 }
 
 function loadStage() {
+  // Overworld shop intent: open shop instead of fighting
+  if (G._pendingOverworldShop) {
+    G._pendingOverworldShop = false;
+    showStorkShop('grey');
+    return;
+  }
   G.autoQueuedAbilityId=null;
   G._breakClampStreak=0;
   G.abilityCooldowns=G.abilityCooldowns||{};
@@ -7060,6 +7115,14 @@ function continueStageTransitionAfterRewards(){
   }
 
   G.phase='PLAYER';
+
+  // Overworld mode: return to the map instead of auto-loading the next stage
+  if (_isOverworldRun()) {
+    saveRun();
+    try { window.location.href = 'blackstone_overworld_new.html'; } catch(_) { loadStage(); }
+    return;
+  }
+
   loadStage();
 }
 
@@ -15756,6 +15819,12 @@ function shopRefresh() {
   return true;
 }
 function exitStorkShop() {
+  // Overworld mode: return to the map after shopping rather than advancing stage
+  if (_isOverworldRun()) {
+    saveRun();
+    try { window.location.href = 'blackstone_overworld_new.html'; } catch(_) { advanceStage(); }
+    return;
+  }
   advanceStage();
 }
 
