@@ -829,36 +829,23 @@ const BIRDS = {
   },
   lyrebird:{
     name:'Lyrebird', portraitKey:'lyrebird', tagline:'The great deceiver. Master of all songs.',
-    size:'medium', class:'trickster',
+    size:'medium', class:'singer',
     unlockRequires:'unlock_lyrebird',
     unlockHint:'Defeat Stage 20 with Kookaburra.',
     stats:{hp:38,maxHp:38,atk:6,def:4,spd:6,dodge:20,acc:82,critChance:6,mdef:10,matk:14},
     statBars:{HP:38/50,ATK:6/15,SPD:6/10,Dodge:.4,ACC:.82}, color:'#c8902a',
-    startAbilities:['mockingPeck','echoSong','mimicSong','confuseChorus'],
-    passive:{id:'lyreLyre',name:'Perfect Mimicry',desc:'First Song each battle repeats at 40% power.',
+    mainAttackId:'echo_note',
+    startAbilities:['echo_note','mimic_chorus','display_step','refrain_mark'],
+    passive:{id:'lyreStage',name:'Perfect Mimicry',desc:'First Song each battle repeats at 40% power. After an enemy uses an ability, gain +5% Dodge for 1 turn (max 20%). Your next Mimic-line spell reads that rhythm for extra payoff.',
       onBattleStart(p){
         p._lyrebirdSongEchoUsed=false;
-        const enemy=G?.enemy?.stats;
-        if(!enemy) return;
-        const picks=[
-          {key:'atk',label:'ATK',min:1,delta:2},
-          {key:'def',label:'DEF',min:0,delta:2},
-          {key:'spd',label:'SPD',min:1,delta:2},
-          {key:'acc',label:'ACC',min:40,delta:6},
-          {key:'dodge',label:'Dodge',min:0,delta:6},
-          {key:'matk',label:'MATK',min:0,delta:2},
-          {key:'mdef',label:'MDEF',min:0,delta:2},
-        ].filter(x=>Number.isFinite(enemy[x.key]));
-        if(!picks.length) return;
-        const pick=picks[Math.floor(Math.random()*picks.length)];
-        const cur=Number(enemy[pick.key]||0);
-        const reduction=Math.max(0,Math.min(pick.delta, cur-pick.min));
-        if(reduction<=0) return;
-        enemy[pick.key]=cur-reduction;
-        p.stats[pick.key]=Number(p.stats[pick.key]||0)+reduction;
-        spawnFloat('enemy',`🎼 ${pick.label}-${reduction}`,'fn-status');
-        spawnFloat('player',`🎵 ${pick.label}+${reduction}`,'fn-status');
-        logMsg(`🎵 Lyre Lyre steals ${pick.label} ${reduction} at battle start!`,'system');
+        p._macawEchoDodge=0;
+        p._macawCopycatPulse=false;
+      },
+      onEnemyAbility(p,abilityId){
+        p._macawEchoDodge=Math.min(20,(p._macawEchoDodge||0)+5);
+        G.playerStatus.humDodge={bonus:p._macawEchoDodge,turns:1};
+        p._macawCopycatPulse=true;
       }},
   },
   raven:{
@@ -1614,9 +1601,9 @@ const FINAL_BIRD_CLASS_BY_KEY = Object.freeze({
   sparrow:'striker', hummingbird:'striker', robin:'striker', peregrine:'striker',
   cassowary:'bruiser', emu:'bruiser', ostrich:'bruiser', secretary:'bruiser', secretarybird:'bruiser', kookaburra:'bruiser',
   goose:'tank', swan:'tank', penguin:'tank', emperorpenguin:'tank', shoebill:'tank', shoebillstork:'tank',
-  magpie:'trickster', lyrebird:'trickster', seagull:'trickster', bowerbird:'trickster', crow:'trickster',
+  magpie:'trickster', seagull:'trickster', bowerbird:'trickster', crow:'trickster',
   snowyowl:'predator', harpy:'predator', harpyeagle:'predator', baldeagle:'predator', dukeblakiston:'predator', duke_blakiston:'predator', kiwi:'predator',
-  blackbird:'singer', phainopepla:'singer', macaw:'singer', flamingo:'singer', toucan:'singer', raven:'singer', albatross:'singer', dove:'singer',
+  blackbird:'singer', phainopepla:'singer', macaw:'singer', lyrebird:'singer', flamingo:'singer', toucan:'singer', raven:'singer', albatross:'singer', dove:'singer',
   blackcockatoo:'bruiser',
 });
 
@@ -4164,6 +4151,71 @@ const MACAW_SKILL_FAMILIES = Object.freeze({
   },
 });
 
+const LYREBIRD_SKILL_SLOT_LAYOUT = Object.freeze([
+  {slotIndex:0, familyId:'echo', abilityId:'echo_note'},
+  {slotIndex:1, familyId:'mimic', abilityId:'mimic_chorus'},
+  {slotIndex:2, familyId:'display', abilityId:'display_step'},
+  {slotIndex:3, familyId:'refrain', abilityId:'refrain_mark'},
+]);
+const LYREBIRD_SKILL_FAMILIES = Object.freeze({
+  echo:{
+    familyId:'echo', displayName:'Echo Line', baseAbilityId:'echo_note', slotRole:'filler_spell', maxTier:3,
+    tierNames:{1:'Note',2:'Echo',3:'Refrain'},
+    masteries:[
+      {id:'power', name:'Silver Throat', desc:'+8% Echo-line spell damage.'},
+      {id:'precision', name:'Stage Pitch', desc:'Echo-line −3% spell miss.'},
+      {id:'control', name:'Layered Song', desc:'Echo-line Burn/Confuse +8%.'},
+    ],
+    paths:{
+      burn:{pathId:'burn', displayName:'Burn', abilities:{1:'ember_note',2:'ember_echo',3:'ember_refrain'}},
+      confuse:{pathId:'confuse', displayName:'Confuse', abilities:{1:'warble_note',2:'dizzy_echo',3:'maddening_refrain'}},
+      delayed:{pathId:'delayed', displayName:'Delayed', abilities:{1:'echo_note',2:'delayed_echo',3:'returning_refrain'}},
+    },
+  },
+  mimic:{
+    familyId:'mimic', displayName:'Mimic Line', baseAbilityId:'mimic_chorus', slotRole:'signature_imitation_spell', maxTier:3,
+    tierNames:{1:'Chorus',2:'Verse',3:'Anthem'},
+    masteries:[
+      {id:'power', name:'Great Pretender', desc:'+9% Mimic-line damage.'},
+      {id:'precision', name:'Borrowed Voice', desc:'Mimic-line Fear/Paralysis +8%.'},
+      {id:'control', name:'Encore Theft', desc:'Copycat pulse payoff +12%.'},
+    ],
+    paths:{
+      fear:{pathId:'fear', displayName:'Fear', abilities:{1:'lyre_dread_chorus',2:'lyre_panic_verse',3:'lyre_terror_anthem'}},
+      paralysis:{pathId:'paralysis', displayName:'Paralysis', abilities:{1:'lyre_shock_chorus',2:'lyre_static_verse',3:'lyre_lock_anthem'}},
+      copycat:{pathId:'copycat', displayName:'Copycat', abilities:{1:'lyre_mirror_chorus',2:'lyre_echo_verse',3:'lyre_stolen_anthem'}},
+    },
+  },
+  display:{
+    familyId:'display', displayName:'Display Line', baseAbilityId:'display_step', slotRole:'performance_utility', maxTier:3,
+    tierNames:{1:'Step',2:'Flourish',3:'Display'},
+    masteries:[
+      {id:'power', name:'Tail Train', desc:'Display-line ACC pressure +5%.'},
+      {id:'precision', name:'Fan Flourish', desc:'Dodge-path +4% dodge window.'},
+      {id:'control', name:'Courtship', desc:'Pressure-path Weaken +1 turn when possible.'},
+    ],
+    paths:{
+      dodge:{pathId:'dodge', displayName:'Dodge', abilities:{1:'lyre_grace_step',2:'lyre_feather_flourish',3:'lyre_grand_display'}},
+      acc_break:{pathId:'acc_break', displayName:'Accuracy Break', abilities:{1:'lyre_distracting_step',2:'lyre_mock_flourish',3:'lyre_blinding_display'}},
+      pressure:{pathId:'pressure', displayName:'Pressure', abilities:{1:'lyre_proud_step',2:'lyre_dominant_flourish',3:'lyre_stage_display'}},
+    },
+  },
+  refrain:{
+    familyId:'refrain', displayName:'Refrain Line', baseAbilityId:'refrain_mark', slotRole:'setup', maxTier:3,
+    tierNames:{1:'Mark',2:'Measure',3:'Finale'},
+    masteries:[
+      {id:'power', name:'Crescendo', desc:'Amp-path next-hit +4%; delayed +8.'},
+      {id:'precision', name:'Downbeat', desc:'Read-path +4% vs compromised.'},
+      {id:'control', name:'Grand Pause', desc:'Delayed-path resonance +12.'},
+    ],
+    paths:{
+      amp:{pathId:'amp', displayName:'Damage Amp', abilities:{1:'refrain_mark',2:'lyre_harmonic_measure',3:'lyre_finale_mark'}},
+      delayed:{pathId:'delayed', displayName:'Delayed', abilities:{1:'lyre_echo_mark',2:'lyre_resonant_measure',3:'lyre_delayed_finale'}},
+      read:{pathId:'read', displayName:'Read', abilities:{1:'lyre_fault_mark',2:'lyre_weak_measure',3:'lyre_collapse_finale'}},
+    },
+  },
+});
+
 const BLACK_COCKATOO_SKILL_SLOT_LAYOUT = Object.freeze([
   {slotIndex:0, familyId:'beak', abilityId:'beak_crack'},
   {slotIndex:1, familyId:'boom', abilityId:'boom_call'},
@@ -4444,6 +4496,18 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
       chorus:{legacy:['battleChorus', 'victoryChant', 'inspireSong', 'freedomCry'], current:'chorus_mark'},
     }),
   },
+  lyrebird:{
+    birdKey:'lyrebird',
+    slotLayout:LYREBIRD_SKILL_SLOT_LAYOUT,
+    families:LYREBIRD_SKILL_FAMILIES,
+    abilityLookup:buildFamilySkillAbilityLookup(LYREBIRD_SKILL_SLOT_LAYOUT, LYREBIRD_SKILL_FAMILIES),
+    legacyBaseAbilityIds:Object.freeze({
+      echo:{legacy:['echoSong','shriekwave'], current:'echo_note'},
+      mimic:{legacy:['mimicSong','birdBrain'], current:'mimic_chorus'},
+      display:{legacy:['confuseChorus','dirge','dizzyChorus','feather_taunt','mockingPeck'], current:'display_step'},
+      refrain:{legacy:['battleChorus','victoryChant','inspireSong','chorus_mark','echo_mark'], current:'refrain_mark'},
+    }),
+  },
   blackCockatoo:{
     birdKey:'blackCockatoo',
     slotLayout:BLACK_COCKATOO_SKILL_SLOT_LAYOUT,
@@ -4690,7 +4754,7 @@ function syncPlayerAbilitiesFromSkillSlots(player){
     const prior = bySlot.get(slot.slotIndex) || byId.get(slot.abilityId) || null;
     const ab = ensureAbilityObjectFromTemplate(slot.abilityId, prior, slot.slotIndex);
     if(slot.familyId==='rapid') ab.fixedMainAttackCost = true;
-    if(player.birdKey==='macaw' && slot.abilityId==='echo_note') ab.fixedMainAttackCost = true;
+    if((player.birdKey==='macaw' || player.birdKey==='lyrebird') && slot.abilityId==='echo_note') ab.fixedMainAttackCost = true;
     if(player.birdKey==='hummingbird' && slot.abilityId==='needle_jab') ab.fixedMainAttackCost = true;
     if(player.birdKey==='peregrine' && slot.abilityId==='talon_jab') ab.fixedMainAttackCost = true;
     if(player.birdKey==='snowyOwl' && slot.abilityId==='talon_snap') ab.fixedMainAttackCost = true;
@@ -10327,6 +10391,41 @@ for(const [id,name,desc,options] of MACAW_EVOLUTION_TEMPLATE_DEFS){
   ABILITY_TEMPLATES[id] = Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
 }
 
+const LYREBIRD_EVOLUTION_TEMPLATE_DEFS = [
+  ['mimic_chorus','Mimic Chorus','Mimic-line neutral. Signature imitation that steals tempo without committing to a branch.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~92% MATK, light control pressure.'},{desc:'~100% MATK.'},{desc:'~108% MATK.'},{desc:'~116% MATK.'}]}],
+  ['display_step','Display Step','Display-line neutral. A poised flourish that baits attention before branching.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + modest ACC crash.'},{desc:'Stronger crash.'},{desc:'Stronger crash.'},{desc:'Strongest baseline display.'}]}],
+  ['refrain_mark','Refrain Mark','Refrain-line neutral setup. Mark the measure before the finale.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% damage.'},{desc:'+15%.'},{desc:'+18%.'},{desc:'+21%.'}]}],
+  ['lyre_dread_chorus','Dread Chorus','Mimic-line fear branch. Borrowed predator warning.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~96% MATK, Fear chance.'},{desc:'~104% MATK.'},{desc:'~112% MATK.'},{desc:'~120% MATK.'}]}],
+  ['lyre_panic_verse','Panic Verse','Mimic-line fear evolution. False threats stack.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~108% MATK, Fear + ACC down.'},{desc:'~116% MATK.'},{desc:'~124% MATK.'},{desc:'~132% MATK.'}]}],
+  ['lyre_terror_anthem','Terror Anthem','Mimic-line fear finisher. A solo that breaks nerve.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'2 hits, Fear, stronger vs feared.'},{desc:'2 hits.'},{desc:'3 hits.'},{desc:'3 hits, peak Fear pressure.'}]}],
+  ['lyre_shock_chorus','Shock Chorus','Mimic-line paralysis branch. Static-perfect mimic timing.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~94% MATK, Paralysis chance.'},{desc:'~102% MATK.'},{desc:'~110% MATK.'},{desc:'~118% MATK.'}]}],
+  ['lyre_static_verse','Static Verse','Mimic-line paralysis evolution. Chattering interference.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~106% MATK, stronger Paralysis.'},{desc:'~114% MATK.'},{desc:'~122% MATK.'},{desc:'~130% MATK.'}]}],
+  ['lyre_lock_anthem','Lock Anthem','Mimic-line paralysis finisher. Locks the enemy mid-beat.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~118% MATK, heavy Paralysis.'},{desc:'~126% MATK.'},{desc:'~134% MATK.'},{desc:'~142% MATK.'}]}],
+  ['lyre_mirror_chorus','Mirror Chorus','Mimic-line copycat branch. Extra payoff after enemy tricks.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'~98% MATK; reactive bonus if enemy just acted.'},{desc:'~106% MATK.'},{desc:'~114% MATK.'},{desc:'~122% MATK.'}]}],
+  ['lyre_echo_verse','Echo Verse','Mimic-line copycat evolution. Double-timed mimic payoff.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'2 hits; reactive bonus.'},{desc:'2 hits.'},{desc:'3 hits.'},{desc:'3 hits.'}]}],
+  ['lyre_stolen_anthem','Stolen Anthem','Mimic-line copycat finisher. Steals rhythm from a messy field.',{type:'spell',btnType:'spell',energy:2,levels:[{desc:'Big spell hit; bonus vs debuffed or reactive.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak adaptive burst.'}]}],
+  ['lyre_grace_step','Grace Step','Display-line dodge branch. Slip the reprisal with poise.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + +28% dodge 2t.'},{desc:'+32% dodge.'},{desc:'+36% dodge.'},{desc:'+40% dodge 3t.'}]}],
+  ['lyre_feather_flourish','Feather Flourish','Display-line dodge evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + +38% dodge 2t.'},{desc:'+42% dodge.'},{desc:'+46% dodge.'},{desc:'+50% dodge 3t.'}]}],
+  ['lyre_grand_display','Grand Display','Display-line dodge finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + +48% dodge 3t.'},{desc:'+52% dodge.'},{desc:'+56% dodge.'},{desc:'+60% dodge 3t.'}]}],
+  ['lyre_distracting_step','Distracting Step','Display-line accuracy-break branch.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -18% for 2t.'},{desc:'-20% ACC.'},{desc:'-22% ACC.'},{desc:'-24% ACC for 3t.'}]}],
+  ['lyre_mock_flourish','Mock Flourish','Display-line accuracy-break evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -26% for 2t.'},{desc:'-28% ACC.'},{desc:'-30% ACC.'},{desc:'-32% ACC for 3t.'}]}],
+  ['lyre_blinding_display','Blinding Display','Display-line accuracy-break finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Enemy ACC -34% for 3t.'},{desc:'-36% ACC.'},{desc:'-38% ACC.'},{desc:'-40% ACC for 3t.'}]}],
+  ['lyre_proud_step','Proud Step','Display-line pressure branch. Mock openings into punishment.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + Weaken + ACC down.'},{desc:'Stronger Weaken.'},{desc:'Stronger Weaken.'},{desc:'Peak bait pressure.'}]}],
+  ['lyre_dominant_flourish','Dominant Flourish','Display-line pressure evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + heavier Weaken.'},{desc:'Heavier Weaken.'},{desc:'Heavier Weaken.'},{desc:'Heaviest Weaken.'}]}],
+  ['lyre_stage_display','Stage Display','Display-line pressure finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Taunt + big Weaken + ACC crash.'},{desc:'Bigger crash.'},{desc:'Bigger crash.'},{desc:'Maximum spectacle.'}]}],
+  ['lyre_harmonic_measure','Harmonic Measure','Refrain-line damage-amp evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +20% damage.'},{desc:'+24%.'},{desc:'+28%.'},{desc:'+32%.'}]}],
+  ['lyre_finale_mark','Finale Mark','Refrain-line damage-amp finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +30% damage.'},{desc:'+34%.'},{desc:'+38%.'},{desc:'+42%.'}]}],
+  ['lyre_echo_mark','Echo Mark','Refrain-line delayed branch. Mark now; resonance pays next beat.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +8% + Resonance next turn (extra vs debuffed).'},{desc:'+10% + bigger Resonance.'},{desc:'+12% + bigger Resonance.'},{desc:'+14% + biggest Resonance.'}]}],
+  ['lyre_resonant_measure','Resonant Measure','Refrain-line delayed evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +12% + strong Resonance (more vs debuffed).'},{desc:'+14% + stronger.'},{desc:'+16% + stronger.'},{desc:'+18% + peak stack.'}]}],
+  ['lyre_delayed_finale','Delayed Finale','Refrain-line delayed finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Next attack +16% + massive Resonance (max vs debuffed).'},{desc:'+18%.'},{desc:'+20%.'},{desc:'+22% + capstone Resonance.'}]}],
+  ['lyre_fault_mark','Fault Mark','Refrain-line read branch. Exploit a cracked rhythm.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Small next-hit amp + bonus vs compromised.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Strongest read.'}]}],
+  ['lyre_weak_measure','Weak Measure','Refrain-line read evolution.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Bigger amp + bigger compromised bonus.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Peak measure.'}]}],
+  ['lyre_collapse_finale','Collapse Finale','Refrain-line read finisher.',{type:'utility',btnType:'utility',energy:1,levels:[{desc:'Huge setup + maximum read payoff.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Terminal finale.'}]}],
+];
+for(const [id,name,desc,options] of LYREBIRD_EVOLUTION_TEMPLATE_DEFS){
+  ABILITY_TEMPLATES[id] = Object.assign(ABILITY_TEMPLATES[id]||{}, makeEvolutionAbilityTemplate(id,name,desc,options));
+}
+
 const BLACK_COCKATOO_EVOLUTION_TEMPLATE_DEFS = [
   ['beak_crack','Beak Crack','Beak-line neutral. A heavy crack before you specialize.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'~100% dmg, Pierce 10%.'},{desc:'Stronger crack.'},{desc:'Stronger crack.'},{desc:'Peak crack.'}]}],
   ['bc_bodkin_bite','Bodkin Bite','Beak-line pierce evolution. Armor-breaking bite.',{type:'physical',btnType:'physical',energy:1,fixedMainAttackCost:true,levels:[{desc:'Pierce 20%.'},{desc:'Stronger.'},{desc:'Stronger.'},{desc:'Maximum pierce bite.'}]}],
@@ -10682,7 +10781,8 @@ Object.entries(BLACKBIRD_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[i
 function getMacawMasteryBonuses(ab){
   const slot=getAbilitySkillSlot(G.player, ab);
   const m=getSlotMasteryProfile(slot);
-  return {
+  const fam=slot?.familyId||'';
+  const base={
     power:m.power, precision:m.precision, control:m.control,
     spellMult:0.04*m.power,
     rider:5*m.control,
@@ -10690,7 +10790,15 @@ function getMacawMasteryBonuses(ab){
     dodgeB:5*m.power,
     markAmp:0.03*m.power,
     tauntAcc:3*m.power,
+    readRider:0,
   };
+  if(G.player?.birdKey==='lyrebird'){
+    if(fam==='echo') return {...base, spellMult:0.07*m.power+0.01*m.precision, rider:5*m.control+3*m.precision};
+    if(fam==='mimic') return {...base, spellMult:0.045*m.power+0.025*m.control, rider:4*m.control+4*m.precision};
+    if(fam==='display') return {...base, tauntAcc:4*m.power+2*m.precision, dodgeB:4*m.power+3*m.control};
+    if(fam==='refrain') return {...base, markAmp:0.04*m.power+0.03*m.precision, delayedFlat:8*m.power+12*m.control, readRider:0.04*m.precision+0.02*m.control};
+  }
+  return base;
 }
 function macawEnemyHasDebuff(){
   const s=G.enemyStatus||{};
@@ -10776,7 +10884,7 @@ async function executeMacawChorusMark(ab){
   const mb=getMacawMasteryBonuses(ab);
   const base=[0.12,0.15,0.18,0.21];
   let amp=base[lv-1]+mb.markAmp;
-  if(slot?.pathId==='damage_amp' && (slot.tier||0)>=1) amp+=0.04;
+  if((slot?.pathId==='damage_amp' || slot?.pathId==='amp') && (slot.tier||0)>=1) amp+=0.04;
   G.playerStatus.huntersMarkBonusPct=amp;
   await doSpell('enemy','🎯');
   logMsg(`🎯 Chorus Mark! Next attack +${Math.round(amp*100)}% damage.`,'player-action');
@@ -10792,7 +10900,8 @@ async function executeMacawChorusDelayedSetup(ab, ampArr, delayedArr, logPrefix)
   const lv=Math.max(1,Math.min(4,ab.level||1));
   const mb=getMacawMasteryBonuses(ab);
   G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+mb.markAmp;
-  const syn=ab.id==='delayed_finale'?{ perCategory:5, cap:24 }:ab.id==='resonant_measure'?{ perCategory:4, cap:18 }:{ perCategory:3, cap:14 };
+  const id=String(ab?.id||'');
+  const syn=id==='delayed_finale'||id==='lyre_delayed_finale'?{ perCategory:5, cap:24 }:id==='resonant_measure'||id==='lyre_resonant_measure'?{ perCategory:4, cap:18 }:{ perCategory:3, cap:14 };
   applyMacawDelayed(delayedArr[lv-1]||10, mb, syn);
   await doSpell('enemy','🎵');
   logMsg(`${logPrefix} Next hit +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% and Resonance builds.`,'player-action');
@@ -10806,6 +10915,15 @@ async function executeMacawChorusWeaken(ab, accArr, weakArr, logPrefix){
   await doSpell('enemy','🎵');
   renderStatuses('enemy-status',G.enemyStatus);
   logMsg(`${logPrefix} Enemy offense cracked.`,'player-action');
+}
+async function executeMacawChorusRead(ab, ampArr, readArr, logPrefix){
+  const lv=Math.max(1,Math.min(4,ab.level||1));
+  const mb=getMacawMasteryBonuses(ab);
+  const readExtra=(readArr[lv-1]||0)+(mb.readRider||0);
+  G.playerStatus.huntersMarkBonusPct=(ampArr[lv-1]||0)+mb.markAmp;
+  G.playerStatus.cockatooReadExtra=readExtra;
+  await doSpell('enemy','🎯');
+  logMsg(`${logPrefix} Next attack +${Math.round((G.playerStatus.huntersMarkBonusPct||0)*100)}% plus +${Math.round(readExtra*100)}% vs compromised.`,'player-action');
 }
 async function executeMacawTaunt(ab, config={}){
   const lv=Math.max(1,Math.min(4,Number(ab?.level)||1));
@@ -10863,7 +10981,39 @@ const MACAW_SKILL_ACTION_OVERRIDES = {
   softening_measure: ab=>executeMacawChorusWeaken(ab,[14,16,18,20],[3,3,3,4],'🎵 Softening Measure!'),
   fading_finale: ab=>executeMacawChorusWeaken(ab,[18,20,22,24],[3,4,4,4],'🎵 Fading Finale!'),
 };
+const LYREBIRD_SKILL_ACTION_OVERRIDES = {
+  mimic_chorus: ab=>executeMacawSpell(ab,{name:'Mimic Chorus',log:'🎵 Mimic Chorus',fx:'🎵',miss:[12,10,8,6],mult:[0.92,1.00,1.08,1.16],confuseChance:[12,14,16,18],confuseTurns:[2,2,2,3],confuseSkip:[22,24,26,28],accDown:[6,8,8,10]}),
+  display_step: ab=>executeMacawTaunt(ab,{log:'🪶 Display Step',fx:'🪶',accDown:[8,10,12,14],turns:[2,2,2,2],taunt:[1,1,1,1]}),
+  refrain_mark: ab=>executeMacawChorusMark(ab),
+  lyre_dread_chorus: ab=>executeMacawSpell(ab,{name:'Dread Chorus',log:'😨 Dread Chorus',fx:'😨',miss:[12,10,8,6],mult:[0.96,1.04,1.12,1.20],fearChance:[18,20,22,24]}),
+  lyre_panic_verse: ab=>executeMacawSpell(ab,{name:'Panic Verse',log:'😨 Panic Verse',fx:'😨',miss:[11,9,7,5],mult:[1.08,1.16,1.24,1.32],fearChance:[22,24,26,28],accDown:[6,8,10,12]}),
+  lyre_terror_anthem: ab=>executeMacawSpell(ab,{name:'Terror Anthem',log:'😨 Terror Anthem',fx:'😨',hits:[2,2,3,3],miss:[11,10,9,8],mult:[0.52,0.56,0.50,0.54],fearChance:[28,30,32,34],bonusVsFeared:[0.10,0.11,0.12,0.13]}),
+  lyre_shock_chorus: ab=>executeMacawSpell(ab,{name:'Shock Chorus',log:'⚡ Shock Chorus',fx:'⚡',miss:[12,10,8,6],mult:[0.94,1.02,1.10,1.18],paraChance:[15,18,20,22],paraTurns:[2,2,2,3]}),
+  lyre_static_verse: ab=>executeMacawSpell(ab,{name:'Static Verse',log:'⚡ Static Verse',fx:'⚡',miss:[11,9,7,5],mult:[1.06,1.14,1.22,1.30],paraChance:[20,22,24,26],paraTurns:[2,3,3,3]}),
+  lyre_lock_anthem: ab=>executeMacawSpell(ab,{name:'Lock Anthem',log:'⚡ Lock Anthem',fx:'⚡',miss:[10,8,6,5],mult:[1.18,1.26,1.34,1.42],paraChance:[28,30,32,34],paraTurns:[3,3,3,4]}),
+  lyre_mirror_chorus: ab=>executeMacawSpell(ab,{name:'Mirror Chorus',log:'🪞 Mirror Chorus',fx:'🪞',miss:[11,9,7,5],mult:[0.98,1.06,1.14,1.22],copycatPulseMult:[0.12,0.14,0.16,0.18]}),
+  lyre_echo_verse: ab=>executeMacawSpell(ab,{name:'Echo Verse',log:'🪞 Echo Verse',fx:'🪞',hits:[2,2,3,3],miss:[11,10,9,8],mult:[0.54,0.58,0.52,0.56],copycatPulseMult:[0.10,0.11,0.12,0.13]}),
+  lyre_stolen_anthem: ab=>executeMacawSpell(ab,{name:'Stolen Anthem',log:'🪞 Stolen Anthem',fx:'🪞',miss:[10,8,6,5],mult:[1.15,1.22,1.30,1.38],copycatPulseMult:[0.08,0.09,0.10,0.11],bonusVsDebuffed:[0.06,0.07,0.08,0.09]}),
+  lyre_grace_step: ab=>executeMacawTaunt(ab,{log:'💨 Grace Step',fx:'💨',dodge:[28,32,36,40],turns:[2,2,2,3],taunt:[1,1,1,1]}),
+  lyre_feather_flourish: ab=>executeMacawTaunt(ab,{log:'💨 Feather Flourish',fx:'💨',dodge:[38,42,46,50],turns:[2,2,3,3],taunt:[1,1,1,1]}),
+  lyre_grand_display: ab=>executeMacawTaunt(ab,{log:'💨 Grand Display',fx:'💨',dodge:[48,52,56,60],turns:[3,3,3,3],taunt:[1,1,1,1]}),
+  lyre_distracting_step: ab=>executeMacawTaunt(ab,{log:'✨ Distracting Step',fx:'✨',accDown:[18,20,22,24],turns:[2,2,2,3]}),
+  lyre_mock_flourish: ab=>executeMacawTaunt(ab,{log:'✨ Mock Flourish',fx:'✨',accDown:[26,28,30,32],turns:[2,2,3,3]}),
+  lyre_blinding_display: ab=>executeMacawTaunt(ab,{log:'✨ Blinding Display',fx:'✨',accDown:[34,36,38,40],turns:[3,3,3,3]}),
+  lyre_proud_step: ab=>executeMacawTaunt(ab,{log:'😤 Proud Step',fx:'😤',accDown:[10,12,14,16],turns:[2,2,2,2],taunt:[1,1,1,1],weakenTurns:[1,1,2,2]}),
+  lyre_dominant_flourish: ab=>executeMacawTaunt(ab,{log:'😤 Dominant Flourish',fx:'😤',accDown:[14,16,18,20],turns:[2,2,3,3],taunt:[1,1,1,1],weakenTurns:[2,2,2,3]}),
+  lyre_stage_display: ab=>executeMacawTaunt(ab,{log:'😤 Stage Display',fx:'😤',accDown:[18,20,22,24],turns:[3,3,3,3],taunt:[1,1,1,1],weakenTurns:[2,3,3,3]}),
+  lyre_harmonic_measure: ab=>executeMacawMarkAmp(ab,{log:'🎯 Harmonic Measure!',fx:'🎯',amp:[0.20,0.24,0.28,0.32]}),
+  lyre_finale_mark: ab=>executeMacawMarkAmp(ab,{log:'🎯 Finale Mark!',fx:'🎯',amp:[0.30,0.34,0.38,0.42]}),
+  lyre_echo_mark: ab=>executeMacawChorusDelayedSetup(ab,[0.08,0.10,0.12,0.14],[10,14,18,22],'🎵 Echo Mark!'),
+  lyre_resonant_measure: ab=>executeMacawChorusDelayedSetup(ab,[0.12,0.14,0.16,0.18],[16,20,24,28],'🎵 Resonant Measure!'),
+  lyre_delayed_finale: ab=>executeMacawChorusDelayedSetup(ab,[0.16,0.18,0.20,0.22],[22,26,30,36],'🎵 Delayed Finale!'),
+  lyre_fault_mark: ab=>executeMacawChorusRead(ab,[0.02,0.03,0.04,0.05],[0.10,0.12,0.14,0.16],'🎵 Fault Mark!'),
+  lyre_weak_measure: ab=>executeMacawChorusRead(ab,[0.04,0.05,0.06,0.07],[0.14,0.16,0.18,0.20],'🎵 Weak Measure!'),
+  lyre_collapse_finale: ab=>executeMacawChorusRead(ab,[0.06,0.07,0.08,0.09],[0.18,0.20,0.24,0.28],'🎵 Collapse Finale!'),
+};
 Object.entries(MACAW_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
+Object.entries(LYREBIRD_SKILL_ACTION_OVERRIDES).forEach(([id, fn])=>{ ACTIONS[id]=fn; });
 
 function getBlackCockatooMasteryBonuses(ab){
   const slot=getAbilitySkillSlot(G.player, ab);
