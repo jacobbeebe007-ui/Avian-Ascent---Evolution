@@ -6103,7 +6103,6 @@ function getPanel(who)      { return document.getElementById(`${who}-panel`); }
 
 function refreshBattleUI() {
   const p = G.player.stats;
-  const storyMinimal = (G.ui?.gameMode||'story')==='story' && !G.endlessMode;
   document.getElementById('player-name').textContent = G.player.name;
   document.getElementById('player-avatar').innerHTML = renderEntityAvatarHTML(G.player, 'battle');
   setHpBar('player', p.hp, p.maxHp);
@@ -6114,39 +6113,29 @@ function refreshBattleUI() {
     pclsEl.textContent=`${pcls}`;
   }
 
+  document.getElementById('enemy-name').innerHTML = G.enemy.name + (G.enemy.isBoss?`<span class="boss-crown">👑</span>`:'');
   const ep = getPanel('enemy');
+  ep.className = 'combatant-panel enemy' + (G.enemy.isBoss?' boss-panel':'');
   const en = document.getElementById('enemy-name');
-  if(storyMinimal){
-    en.innerHTML = G.enemy.isBoss ? `Boss<span class="boss-crown">👑</span>` : 'Opponent';
-    ep.className = 'combatant-panel enemy' + (G.enemy.isBoss?' boss-panel':'');
-    en.className = 'combatant-name' + (G.enemy.isBoss?' boss-name':'');
-    document.getElementById('enemy-avatar').innerHTML = '';
+  en.className = 'combatant-name' + (G.enemy.isBoss?' boss-name':'');
+  if(G.enemy.birdKey&&BIRDS[G.enemy.birdKey]){
+    const enemyBird = Object.assign({}, BIRDS[G.enemy.birdKey], G.enemy, { portraitKey: BIRDS[G.enemy.birdKey].portraitKey || G.enemy.portraitKey });
+    document.getElementById('enemy-avatar').innerHTML = renderEntityAvatarHTML(enemyBird, 'battle');
     document.getElementById('enemy-avatar').style.fontSize='';
-    const eclsElSm=document.getElementById('enemy-class-label');
-    if(eclsElSm) eclsElSm.textContent='';
-  } else {
-    en.innerHTML = G.enemy.name + (G.enemy.isBoss?`<span class="boss-crown">👑</span>`:'');
-    ep.className = 'combatant-panel enemy' + (G.enemy.isBoss?' boss-panel':'');
-    en.className = 'combatant-name' + (G.enemy.isBoss?' boss-name':'');
-    if(G.enemy.birdKey&&BIRDS[G.enemy.birdKey]){
-      const enemyBird = Object.assign({}, BIRDS[G.enemy.birdKey], G.enemy, { portraitKey: BIRDS[G.enemy.birdKey].portraitKey || G.enemy.portraitKey });
-      document.getElementById('enemy-avatar').innerHTML = renderEntityAvatarHTML(enemyBird, 'battle');
-      document.getElementById('enemy-avatar').style.fontSize='';
-    }else if(G.enemy.portraitKey){
-      document.getElementById('enemy-avatar').innerHTML = renderEntityAvatarHTML(G.enemy, 'battle');
-      document.getElementById('enemy-avatar').style.fontSize='';
-    }else{
-      document.getElementById('enemy-avatar').textContent = G.enemy.emoji;
-      document.getElementById('enemy-avatar').style.fontSize='3.8rem';
-    }
-    const eclsEl=document.getElementById('enemy-class-label');
-    if(eclsEl){
-      const ecls=idToClassLabel(resolveFinalClass(G.enemy.class||inferEnemyClassFromStyle(G.enemy)||'predator',G.enemy.birdKey||''));
-      eclsEl.textContent = `${G.enemy.isBoss?'Boss · ':''}${ecls}`;
-    }
+  }else if(G.enemy.portraitKey){
+    document.getElementById('enemy-avatar').innerHTML = renderEntityAvatarHTML(G.enemy, 'battle');
+    document.getElementById('enemy-avatar').style.fontSize='';
+  }else{
+    document.getElementById('enemy-avatar').textContent = G.enemy.emoji;
+    document.getElementById('enemy-avatar').style.fontSize='3.8rem';
   }
   setHpBar('enemy', G.enemy.stats.hp, G.enemy.stats.maxHp);
   setEnergyBar('enemy', G.enemy.energy, G.enemy.energyMax||3);
+  const eclsEl=document.getElementById('enemy-class-label');
+  if(eclsEl){
+    const ecls=idToClassLabel(resolveFinalClass(G.enemy.class||inferEnemyClassFromStyle(G.enemy)||'predator',G.enemy.birdKey||''));
+    eclsEl.textContent = `${G.enemy.isBoss?'Boss · ':''}${ecls}`;
+  }
 
   document.getElementById('level-label').textContent = `STAGE ${getEncounterStage()}`;
   document.getElementById('turn-label').textContent = G.turn==='player'?`🟢 Your Turn · EN ${G.player.energy}/${G.player.energyMax}`:'🔴 Enemy Turn';
