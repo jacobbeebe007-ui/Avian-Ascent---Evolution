@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -455,8 +455,9 @@ function updateInfo(){
 }
 
 function setHL(id,on){const n=NODES[id];if(!n||!n._sh)return;n._sh.setAttribute('stroke-width',on?3.5:2);if(n._topRing)n._topRing.setAttribute('stroke-width',on?3.5:2);}
-function setPos(nId){if(isMoving||nId===curPos)return;isMoving=true;setHL(curPos,false);curPos=nId;setHL(curPos,true);const pl=document.getElementById('player');pl.className='moving';updateCamera(true);updateInfo();clearTimeout(moveTimer);moveTimer=setTimeout(()=>{isMoving=false;pl.className='arrive';setTimeout(()=>{pl.className='idle';},500);},520);}
-function openOv(){const n=NODES[curPos],vc=nvc(n);if(n.type==='start')return;const bk=NODE_BIRDS[n.id];_owSprite('ov-img',bk&&SPRITES[bk]?SPRITES[bk]:(SPRITES[BIRDS[birdIdx].k]||''));document.getElementById('ov-frame').style.borderColor=vc.ring;document.getElementById('ov-name').textContent=n.name;document.getElementById('ov-name').style.color=n.final?'#e890ff':n.type==='boss'?'#ff9090':'var(--gold-l)';document.getElementById('ov-loc').textContent=n.terrain?'\u2767 '+n.terrain:'';const oe=document.getElementById('ov-enemies');oe.innerHTML='';if(n.enemies)n.enemies.forEach(e=>{const d=document.createElement('div');d.textContent=e;d.style.color=(n.type==='boss'||n.final)?'#ff9090':'var(--parch)';oe.appendChild(d);});document.getElementById('ov').classList.add('on');}
+function _openNodeOv(){const n=NODES[curPos];if(!n||n.type==='start')return;openOv();const cb=document.getElementById('ov-confirm-btn');if(!cb)return;const ok=typeof isActionable==='function'?isActionable(n):false;cb.style.display=ok?'block':'none';cb.disabled=!ok;cb.className='';if(ok){if(n.type==='shop'){cb.textContent='ENTER SHOP \u25B6';cb.classList.add('is-shop');}else if(n.type==='boss'||n.final){cb.textContent='FACE BOSS \u25B6';cb.classList.add('is-boss');}else{cb.textContent='ENTER STAGE '+n.stage+' \u25B6';}}else{cb.textContent=n.type==='shop'?'SHOP LOCKED':'STAGE LOCKED';}}
+function setPos(nId){if(isMoving)return;if(nId===curPos){_openNodeOv();return;}isMoving=true;setHL(curPos,false);curPos=nId;setHL(curPos,true);const pl=document.getElementById('player');pl.className='moving';updateCamera(true);updateInfo();clearTimeout(moveTimer);moveTimer=setTimeout(()=>{isMoving=false;pl.className='arrive';setTimeout(()=>{pl.className='idle';},500);_openNodeOv();},520);}
+function openOv(){const n=NODES[curPos],vc=nvc(n);if(n.type==='start')return;const bk=NODE_BIRDS[n.id];_owSprite('ov-img',bk&&SPRITES[bk]?SPRITES[bk]:(SPRITES[BIRDS[birdIdx].k]||''));document.getElementById('ov-frame').style.borderColor=vc.ring;const lbl=document.querySelector('.ov-lbl');if(lbl)lbl.textContent=n.type==='shop'?'THE STORK EMPORIUM':n.final?'FINAL CONFRONTATION':n.type==='boss'?'BOSS \u00B7 STAGE '+n.stage:'STAGE '+n.stage;document.getElementById('ov-name').textContent=n.name;document.getElementById('ov-name').style.color=n.final?'#e890ff':n.type==='boss'?'#ff9090':n.type==='shop'?'#f0c020':'var(--gold-l)';document.getElementById('ov-loc').textContent=n.terrain?'\u2767 '+n.terrain:'';const oe=document.getElementById('ov-enemies');oe.innerHTML='';if(n.enemies&&n.enemies.length){const lbl2=document.createElement('div');lbl2.style.cssText='font-size:9px;letter-spacing:2px;color:var(--gold-d);margin-bottom:4px;';lbl2.textContent='VERSUS';oe.appendChild(lbl2);n.enemies.forEach(e=>{const d=document.createElement('div');d.textContent=e;d.style.cssText='font-size:14px;font-family:Cinzel,serif;color:'+(n.type==='boss'||n.final?'#ff9090':'var(--parch)');oe.appendChild(d);});}else if(n.type==='shop'){const d=document.createElement('div');d.style.cssText='font-family:EB Garamond,serif;font-style:italic;font-size:13px;color:var(--gold-d)';d.textContent='Trade your Shinies for power.';oe.appendChild(d);}document.getElementById('ov').classList.add('on');}
 document.getElementById('ov').addEventListener('click',()=>document.getElementById('ov').classList.remove('on'));
 document.getElementById('enter-btn').addEventListener('click',openOv);
 
@@ -695,13 +696,10 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
     old.parentNode.replaceChild(fresh, old);
 
     fresh.addEventListener('click', function() {
-      openOv(); // existing overlay open
+      _openNodeOv();
       if (!confirmBtn) return;
       const n = NODES[curPos];
       const ok = isActionable(n);
-      confirmBtn.style.display = ok ? 'block' : 'none';
-      confirmBtn.disabled = !ok;
-      confirmBtn.className = '';
       if (ok) {
         if (n.type === 'shop')
           { confirmBtn.textContent = 'ENTER SHOP \u25B6'; confirmBtn.classList.add('is-shop'); }
