@@ -1,4 +1,4 @@
-﻿// ===== 01_script_01.js =====
+// ===== 01_script_01.js =====
 
 /* ===== Dove enemy + Stage 20 Blakiston boss ===== */
 (function(){
@@ -7141,6 +7141,7 @@ function continueStageTransitionAfterRewards(){
     // If there are more enemies queued for this stage, fight the next one
     if (G._owStageEnemies && G._owEnemyIndex < (G._owStageEnemies.length - 1)) {
       G._owEnemyIndex++;
+      G.stage--; // undo the premature advance; this stage only fully completes after all enemies fall
       saveRun();
       loadStage();
       return;
@@ -13940,18 +13941,18 @@ function postCombat() {
     let shinyGain=0;
     if(G.enemy.isBoss){
       if(isStoryMode){
-        if(stage>=20) shinyGain=roll(40,60);
-        else if(stage>=10) shinyGain=roll(25,35);
-        else shinyGain=roll(20,30);
+        if(stage>=20) shinyGain=roll(75,110);
+        else if(stage>=10) shinyGain=roll(55,75);
+        else shinyGain=roll(40,55);
       } else {
-        shinyGain=roll(30,45);
+        shinyGain=roll(60,85);
       }
     } else {
       if(isStoryMode){
-        shinyGain = (stage<10) ? roll(8,14) : roll(12,18);
+        shinyGain = (stage<10) ? roll(20,30) : roll(30,45);
       } else {
-        const infl=Math.min(6,Math.floor(endlessBattle/12));
-        shinyGain = roll(10,16) + infl;
+        const infl=Math.min(12,Math.floor(endlessBattle/8));
+        shinyGain = roll(18,28) + infl;
       }
     }
 
@@ -14138,7 +14139,7 @@ function confirmReward() {
 
   const lastEnemyWasBoss = !!(G.enemy && G.enemy.isBoss);
   G.phase='REWARD';
-  const shopDue = lastEnemyWasBoss || isGreyShopStage(G.stage);
+  const shopDue = (lastEnemyWasBoss || isGreyShopStage(G.stage)) && !G._owStageEnemies;
   const shopMode = lastEnemyWasBoss ? 'boss' : 'grey';
 
   if(G._pendingLevelUp){
