@@ -23,6 +23,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 #scaler{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;}
 #mw{position:absolute;top:0;left:0;width:1536px;height:1024px;}
 #bg-img{position:absolute;top:0;left:0;width:1536px;height:1024px;display:block;}
+/* Sprite-sheet frame 0 (top-left quadrant) for all overworld portrait divs */
+#hdr-bird-img,#player-img,#p-img,#ov-img{background-size:200% 200%;background-position:0% 0%;background-repeat:no-repeat;image-rendering:pixelated;}
 #node-svg{position:absolute;top:0;left:0;width:1536px;height:1024px;display:block;}
 #player{position:absolute;z-index:30;pointer-events:none;transition:left .5s cubic-bezier(.25,.46,.45,.94),top .5s cubic-bezier(.25,.46,.45,.94);}
 #player-portrait{width:52px;height:52px;border:2px solid var(--gold);border-radius:50%;background:#0a1808;overflow:hidden;box-shadow:0 0 12px rgba(200,160,32,.75),0 0 28px rgba(200,160,32,.35),0 4px 12px rgba(0,0,0,.9);}
@@ -149,7 +151,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
     <span id="hdr-hint">Arrows &middot; Enter &middot; B = Bird &middot; Scroll = Zoom &middot; Drag = Pan</span>
     <div style="display:flex;align-items:center;gap:8px;">
       <div id="hdr-bird-btn">
-        <img id="hdr-bird-img" src="" alt="" style="width:26px;height:26px;object-fit:contain;image-rendering:pixelated;">
+        <div id="hdr-bird-img" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;overflow:hidden;"></div>
         <span id="hdr-bird-name">SPARROW</span>
       </div>
       <button id="hdr-nest-btn">&#x1F3E0; NEST</button>
@@ -162,7 +164,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
         <img id="bg-img" src="assets/overworld_map.png" alt="">
         <svg id="node-svg" xmlns="http://www.w3.org/2000/svg"></svg>
         <div id="player" class="idle">
-          <div id="player-portrait"><img id="player-img" src="" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;"></div>
+          <div id="player-portrait"><div id="player-img" style="width:100%;height:100%;"></div></div>
         </div>
       </div>
     </div>
@@ -175,7 +177,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
   </div>
   <div id="panel">
     <div id="p-portrait">
-      <div id="p-frame"><img id="p-img" src="" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;"></div>
+      <div id="p-frame"><div id="p-img" style="width:100%;height:100%;"></div></div>
       <div id="p-name">SPARROW</div>
     </div>
     <div id="p-info">
@@ -192,7 +194,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
   </div>
   <div id="ov">
     <div id="ov-frame">
-      <div id="ov-port"><img id="ov-img" src="" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;border-radius:50%;"></div>
+      <div id="ov-port"><div id="ov-img" style="width:100%;height:100%;border-radius:50%;"></div></div>
       <div class="ov-lbl">ENTERING</div>
       <div id="ov-name"></div><div id="ov-loc"></div>
       <div id="ov-enemies"></div>
@@ -442,9 +444,9 @@ function updateInfo(){
   if(n.enemies&&n.enemies.length){const l=document.createElement('span');l.className='el';l.textContent='VERSUS:';ie.appendChild(l);n.enemies.forEach(e=>{const s=document.createElement('span');s.className='ec'+(n.type==='boss'||n.final?' boss':'');s.textContent=e;ie.appendChild(s);});}
   if(n.type==='shop'){const s=document.createElement('span');s.style.cssText='font-family:EB Garamond,serif;font-style:italic;font-size:12px;color:var(--gold-d)';s.textContent='Trade your Shinies for power.';ie.appendChild(s);}
   const bk=NODE_BIRDS[n.id],pimg=document.getElementById('p-img');
-  if(bk&&SPRITES[bk]){pimg.src=SPRITES[bk];pimg.style.borderRadius='0';document.getElementById('p-name').textContent=(n.enemies&&n.enemies[0]||'').toUpperCase();}
-  else if(n.type==='shop'){pimg.src='';pimg.style.borderRadius='0';document.getElementById('p-frame').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:32px;color:#c89010;">$</div>';document.getElementById('p-name').textContent='EMPORIUM';}
-  else{pimg.src=SPRITES[BIRDS[birdIdx].k]||'';pimg.style.borderRadius='0';document.getElementById('p-name').textContent=BIRDS[birdIdx].n.toUpperCase();}
+  if(bk&&SPRITES[bk]){_owSprite('p-img',SPRITES[bk]);pimg.style.borderRadius='0';document.getElementById('p-name').textContent=(n.enemies&&n.enemies[0]||'').toUpperCase();}
+  else if(n.type==='shop'){_owSprite('p-img','');pimg.style.borderRadius='0';document.getElementById('p-frame').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:32px;color:#c89010;">$</div>';document.getElementById('p-name').textContent='EMPORIUM';}
+  else{_owSprite('p-img',SPRITES[BIRDS[birdIdx].k]||'');pimg.style.borderRadius='0';document.getElementById('p-name').textContent=BIRDS[birdIdx].n.toUpperCase();}
   const eb=document.getElementById('enter-btn');
   if(n.type==='start'){eb.style.display='none';}
   else{eb.style.display='block';const isBoss=n.type==='boss'||n.final,isShop=n.type==='shop';eb.style.background=n.final?'rgba(120,32,160,.14)':isBoss?'rgba(160,40,32,.12)':isShop?'rgba(200,160,32,.1)':'rgba(120,100,32,.08)';eb.style.borderColor=vc.ring;eb.style.color=n.final?'#e890ff':isBoss?'#ff9090':isShop?'#f0c020':'#d4b040';eb.textContent=isShop?'ENTER SHOP \u25B6':isBoss?'FACE BOSS \u25B6':'ENTER STAGE \u25B6';}
@@ -454,13 +456,14 @@ function updateInfo(){
 
 function setHL(id,on){const n=NODES[id];if(!n||!n._sh)return;n._sh.setAttribute('stroke-width',on?3.5:2);if(n._topRing)n._topRing.setAttribute('stroke-width',on?3.5:2);}
 function setPos(nId){if(isMoving||nId===curPos)return;isMoving=true;setHL(curPos,false);curPos=nId;setHL(curPos,true);const pl=document.getElementById('player');pl.className='moving';updateCamera(true);updateInfo();clearTimeout(moveTimer);moveTimer=setTimeout(()=>{isMoving=false;pl.className='arrive';setTimeout(()=>{pl.className='idle';},500);},520);}
-function openOv(){const n=NODES[curPos],vc=nvc(n);if(n.type==='start')return;const bk=NODE_BIRDS[n.id];document.getElementById('ov-img').src=bk&&SPRITES[bk]?SPRITES[bk]:(SPRITES[BIRDS[birdIdx].k]||'');document.getElementById('ov-frame').style.borderColor=vc.ring;document.getElementById('ov-name').textContent=n.name;document.getElementById('ov-name').style.color=n.final?'#e890ff':n.type==='boss'?'#ff9090':'var(--gold-l)';document.getElementById('ov-loc').textContent=n.terrain?'\u2767 '+n.terrain:'';const oe=document.getElementById('ov-enemies');oe.innerHTML='';if(n.enemies)n.enemies.forEach(e=>{const d=document.createElement('div');d.textContent=e;d.style.color=(n.type==='boss'||n.final)?'#ff9090':'var(--parch)';oe.appendChild(d);});document.getElementById('ov').classList.add('on');}
+function openOv(){const n=NODES[curPos],vc=nvc(n);if(n.type==='start')return;const bk=NODE_BIRDS[n.id];_owSprite('ov-img',bk&&SPRITES[bk]?SPRITES[bk]:(SPRITES[BIRDS[birdIdx].k]||''));document.getElementById('ov-frame').style.borderColor=vc.ring;document.getElementById('ov-name').textContent=n.name;document.getElementById('ov-name').style.color=n.final?'#e890ff':n.type==='boss'?'#ff9090':'var(--gold-l)';document.getElementById('ov-loc').textContent=n.terrain?'\u2767 '+n.terrain:'';const oe=document.getElementById('ov-enemies');oe.innerHTML='';if(n.enemies)n.enemies.forEach(e=>{const d=document.createElement('div');d.textContent=e;d.style.color=(n.type==='boss'||n.final)?'#ff9090':'var(--parch)';oe.appendChild(d);});document.getElementById('ov').classList.add('on');}
 document.getElementById('ov').addEventListener('click',()=>document.getElementById('ov').classList.remove('on'));
 document.getElementById('enter-btn').addEventListener('click',openOv);
 
 const pg=document.getElementById('pick-grid');
 BIRDS.forEach((b,i)=>{const c=document.createElement('div');c.className='bc'+(i===0?' sel':'');const pf=document.createElement('div');pf.className='cp';const ps=document.createElement('img');ps.src=SPRITES[b.k]||'';ps.alt=b.n;ps.style.cssText='width:100%;height:100%;object-fit:contain;image-rendering:pixelated;';pf.appendChild(ps);const lb=document.createElement('span');lb.textContent=b.n;c.appendChild(pf);c.appendChild(lb);c.addEventListener('click',()=>{pg.querySelectorAll('.bc').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');birdIdx=i;applyBird();});pg.appendChild(c);});
-function applyBird(){const b=BIRDS[birdIdx];const src=SPRITES[b.k]||'';document.getElementById('player-img').src=src;document.getElementById('hdr-bird-img').src=src;document.getElementById('hdr-bird-name').textContent=b.n.toUpperCase();}
+function _owSprite(id,src){const el=document.getElementById(id);if(!el)return;el.style.backgroundImage=src?'url('+JSON.stringify(src)+')':'';}
+function applyBird(){const b=BIRDS[birdIdx];const src=SPRITES[b.k]||'';_owSprite('player-img',src);_owSprite('hdr-bird-img',src);document.getElementById('hdr-bird-name').textContent=b.n.toUpperCase();}
 document.getElementById('hdr-bird-btn').addEventListener('click',()=>document.getElementById('pick').classList.add('on'));
 document.getElementById('pick-ok').addEventListener('click',()=>{document.getElementById('pick').classList.remove('on');document.getElementById('root').focus();});
 
@@ -564,8 +567,8 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
       // Sprite exists but no BIRDS array entry (shouldn't happen after full sync)
       const src = SPRITES[activeBirdKey];
       const label = activeBirdKey.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
-      document.getElementById('player-img').src = src;
-      document.getElementById('hdr-bird-img').src = src;
+      _owSprite('player-img', src);
+      _owSprite('hdr-bird-img', src);
       document.getElementById('hdr-bird-name').textContent = label.toUpperCase();
     }
   }
@@ -603,15 +606,10 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
       return n.stage === currentStage;
     }
     if (n.type === 'shop') {
-      // A shop sits between two stage nodes. It's open when the stage
-      // immediately before it has been beaten (currentStage equals the
-      // stage of the node right after the shop).
+      // Shop unlocks once the stage immediately before it has been beaten,
+      // and stays open for the rest of the run (player can return to spend shinies).
       const prev = NODES[n.id - 1];
-      const next = NODES[n.id + 1];
-      if (prev && next) {
-        return currentStage >= (prev.stage || 0) + 1 &&
-               currentStage <= (next.stage || 99);
-      }
+      return currentStage > (prev?.stage ?? -1);
     }
     return false;
   }
@@ -681,7 +679,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
           try { localStorage.setItem(SAVE_KEY, JSON.stringify(fresh)); } catch(_) {}
         }
         try {
-          localStorage.setItem(NAV_KEY, JSON.stringify({action:'battle', nodeId:curPos, stage:n.stage}));
+          localStorage.setItem(NAV_KEY, JSON.stringify({action:'battle', nodeId:curPos, stage:n.stage, enemies:n.enemies||[]}));
         } catch(_) {}
       }
 

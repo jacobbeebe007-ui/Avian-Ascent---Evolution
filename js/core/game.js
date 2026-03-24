@@ -4945,6 +4945,11 @@ function handleOverworldReturn() {
   if (!save?.player) return false;
 
   if (intent.action === 'battle') {
+    // Store the two-enemy list from the overworld node so stages fight them in sequence
+    if (Array.isArray(intent.enemies) && intent.enemies.length > 0) {
+      G._owStageEnemies = intent.enemies.map(e => e.toLowerCase().replace(/\s+/g,''));
+      G._owEnemyIndex   = 0;
+    }
     continueRun(); // restores state; continueRun ends with loadStage()
     return true;
   }
@@ -5761,6 +5766,18 @@ function loadStage() {
   G._breakClampStreak=0;
   G.abilityCooldowns=G.abilityCooldowns||{};
   let ed;
+  // Overworld stage: use the specific enemy listed for this index
+  if (!G.endlessMode && G._owStageEnemies?.length > 0) {
+    const bk = G._owStageEnemies[G._owEnemyIndex || 0];
+    const bEnemy = BIRD_ENEMIES.find(e => e.birdKey === bk) || ENEMIES.find(e => (e.birdKey||e.portraitKey||'') === bk);
+    if (bEnemy) {
+      ed = {name:bEnemy.name,emoji:bEnemy.emoji||'',birdKey:bk,portraitKey:bk,
+        hp:bEnemy.hp,maxHp:bEnemy.hp,atk:bEnemy.atk,def:bEnemy.def,spd:bEnemy.spd,
+        acc:bEnemy.acc,dodge:bEnemy.dodge,size:bEnemy.size||'medium',
+        enemyClass:bEnemy.enemyClass||inferEnemyClassFromStyle(bEnemy.aiStyle||'aggressive'),
+        aiStyle:bEnemy.aiStyle||'aggressive',abilities:bEnemy.abilities||[],tier:bEnemy.tier||[1]};
+    }
+  }
   const diffMult = DIFFICULTIES[G.difficulty||'juvenile'].mult;
 
   if (G.endlessMode && G.stage > 20) {
@@ -7121,6 +7138,16 @@ function continueStageTransitionAfterRewards(){
   G.phase='PLAYER';
   // Return to the overworld after winning a battle (story mode only)
   if (_isOverworldRun()) {
+    // If there are more enemies queued for this stage, fight the next one
+    if (G._owStageEnemies && G._owEnemyIndex < (G._owStageEnemies.length - 1)) {
+      G._owEnemyIndex++;
+      saveRun();
+      loadStage();
+      return;
+    }
+    // All enemies defeated - clear queue and return to overworld
+    G._owStageEnemies = null;
+    G._owEnemyIndex = 0;
     saveRun();
     try { window.location.href = 'blackstone_overworld_new.html'; return; } catch(_) {}
   }
