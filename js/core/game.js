@@ -5103,11 +5103,38 @@ function _isOverworldRun() {
   try { return !!localStorage.getItem(_OW_STATE_KEY); } catch(_) { return false; }
 }
 
+/** Map overworld node enemy labels to valid birdKey / template ids so loadStage can resolve BIRD_ENEMIES / ENEMIES. */
+function normalizeOwEnemyListForBattle(enemies){
+  if(!Array.isArray(enemies)||!enemies.length) return [];
+  const aliases={
+    wardenrook:'crow',wardenrooks:'crow',rookwarden:'crow',
+    dukblakiston:'duke_blakiston',dukeblakiston:'duke_blakiston',
+  };
+  return enemies.map(raw=>{
+    const compact=String(raw||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9_]/g,'');
+    if(aliases[compact]) return aliases[compact];
+    if(BIRD_ENEMIES.some(e=>e.birdKey===compact)) return compact;
+    const nk=normalizeEnemyNameKey(raw);
+    const fromEnemy=ENEMIES.find(e=>normalizeEnemyNameKey(e.name)===nk);
+    if(fromEnemy){
+      if(fromEnemy.birdKey) return fromEnemy.birdKey;
+      if(fromEnemy.portraitKey) return fromEnemy.portraitKey;
+    }
+    if(BIRDS){
+      const flat=String(raw||'').toLowerCase().replace(/[^a-z]/g,'');
+      const birdKey=Object.keys(BIRDS).find(k=>k.toLowerCase().replace(/[^a-z]/g,'')===flat);
+      if(birdKey) return birdKey;
+    }
+    return compact;
+  });
+}
+
 /**
  * Called on index.html startup. If the player navigated here from the overworld
  * (entering a stage or shop node), restore the run and route correctly.
  * Returns true if it handled the intent so initSelectionSafe can bail out early.
  */
+
 function handleOverworldReturn() {
   let intent = null;
   try { intent = JSON.parse(localStorage.getItem(_OW_NAV_KEY) || 'null'); } catch(_) {}
@@ -5126,10 +5153,16 @@ function handleOverworldReturn() {
     G._owSequenceShiny = 0;
     // Store the two-enemy list from the overworld node so stages fight them in sequence
     if (Array.isArray(intent.enemies) && intent.enemies.length > 0) {
-      G._owStageEnemies = intent.enemies.map(e => e.toLowerCase().replace(/\s+/g,''));
+      G._owStageEnemies = normalizeOwEnemyListForBattle(intent.enemies);
       G._owEnemyIndex   = 0;
     }
-    continueRun(); // restores state; continueRun ends with loadStage()
+    try{
+      continueRun(); // restores state; continueRun ends with loadStage()
+    }catch(err){
+      console.error('handleOverworldReturn battle failed', err);
+      try{ localStorage.setItem(_OW_NAV_KEY, JSON.stringify(intent)); }catch(_){ }
+      return false;
+    }
     return true;
   }
   if (intent.action === 'shop') {
@@ -5959,6 +5992,10 @@ function loadStage() {
   // Overworld stage: use the specific enemy listed for this index
   if (!G.endlessMode && G._owStageEnemies?.length > 0) {
     const bk = G._owStageEnemies[G._owEnemyIndex || 0];
+    const bkNorm = String(bk||'').toLowerCase();
+    if((bkNorm==='duke_blakiston'||bkNorm==='dukeblakiston') && encounterStage>=20){
+      ed = makeDukeBlakiston();
+    } else {
     const bEnemy = BIRD_ENEMIES.find(e => e.birdKey === bk) || ENEMIES.find(e => (e.birdKey||e.portraitKey||'') === bk);
     if (bEnemy) {
       ed = {name:bEnemy.name,emoji:bEnemy.emoji||'',birdKey:bk,portraitKey:bk,
@@ -5966,6 +6003,7 @@ function loadStage() {
         acc:bEnemy.acc,dodge:bEnemy.dodge,size:bEnemy.size||'medium',
         enemyClass:bEnemy.enemyClass||inferEnemyClassFromStyle(bEnemy.aiStyle||'aggressive'),
         aiStyle:bEnemy.aiStyle||'aggressive',abilities:bEnemy.abilities||[],tier:bEnemy.tier||[1]};
+    }
     }
   }
   const diffMult = DIFFICULTIES[G.difficulty||'juvenile'].mult;
@@ -5986,20 +6024,20 @@ function loadStage() {
     // Boss stages: 10, 20
     const isBossStage = (stage%10===0);
     
-    if(tier===5 || stage===20){
+    if(!ed && (tier===5 || stage===20)){
       // Stage 20 special boss
       if(stage===20){
         ed = makeDukeBlakiston();
       } else {
         ed = JSON.parse(JSON.stringify(ENEMIES[ENEMIES.length-1]));
       }
-    } else if(isBossStage){
+    } else if(!ed && isBossStage){
       // Pick the boss from this tier
       const bosses = ENEMIES.filter(e=>e.isBoss);
       const bossIdx = Math.floor(stage/10)-1;
       ed = JSON.parse(JSON.stringify(bosses[Math.min(bossIdx, bosses.length-2)]));
     } else {
-      if(stage<=5){
+      if(!ed && stage<=5){
         ed = pickEarlyStageEnemyTemplate(stage);
       }
       // Bird-character enemies: mirror roster birds; tier/elite is decided in buildScaledEnemy (elite = endless only, stage>20).
@@ -6095,7 +6133,7 @@ function loadStage() {
   if(G.turn==='player') startPlayerTurn(G.player);
   G.enemyNextAction = planEnemyAction();
   showScreen('screen-battle');
-  document.getElementById('battle-log').innerHTML='';
+  const _battleLogEl=document.getElementById('battle-log'); if(_battleLogEl) _battleLogEl.innerHTML='';
   updateBattleArena();
   initBattleLogDrawer();
   updateStageProgress();
@@ -15874,14 +15912,14 @@ function pickUniqueRewardByTier(tier,used){
 const _SHOP_UTILS_REGULAR = [
   {id:'shop_util_heal_missing20',tier:'green',icon:'🌿',name:'Field Rations',desc:'Restore 20% of missing HP',costOverride:22,apply:p=>{const miss=Math.max(0,p.stats.maxHp-p.stats.hp);const h=Math.max(1,Math.floor(miss*0.20));p.stats.hp=Math.min(p.stats.hp+h,p.stats.maxHp);}},
   {id:'shop_util_cleanse_missing35',tier:'green',icon:'🌿',name:'Spring Cleanse',desc:'Cleanse active debuffs and restore 35% of missing HP',costOverride:36,apply:p=>{G.playerStatus={};const miss=Math.max(0,p.stats.maxHp-p.stats.hp);const h=Math.max(1,Math.floor(miss*0.35));p.stats.hp=Math.min(p.stats.hp+h,p.stats.maxHp);}},
-  {id:'shop_util_refresh',tier:'blue',icon:'🔄',name:'Coupon Wing',desc:'Next shop refresh is free',apply:p=>{G._freeShopRefresh=(G._freeShopRefresh||0)+1;}},
+  {id:'shop_util_refresh',tier:'purple',icon:'🔄',name:'Coupon Wing',desc:'Next shop refresh is free',apply:p=>{G._freeShopRefresh=(G._freeShopRefresh||0)+1;}},
   {id:'shop_util_energy',tier:'green',icon:'⚡',name:'Spark Draft',desc:'Gain +1 max energy this run (max +3)',apply:p=>{p.energyBonus=Math.min(3,(p.energyBonus||0)+1);p.energyMax=Math.max(1,(p.energyMax||3)+1);}},
   {id:'shop_util_focus',tier:'green',icon:'🎯',name:'Hunter Focus',desc:'ACC +5 and Crit +3%',apply:p=>{p.stats.acc=Math.min(100,(p.stats.acc||80)+5);p.stats.critChance=(p.stats.critChance||5)+3;}},
 ];
 const _SHOP_UTILS_BOSS = [
   {id:'shop_util_heal_boss_missing35',tier:'blue',icon:'🌿',name:'Boss First Aid',desc:'Cleanse and restore 35% of missing HP',costOverride:36,apply:p=>{G.playerStatus={};const miss=Math.max(0,p.stats.maxHp-p.stats.hp);const h=Math.max(1,Math.floor(miss*0.35));p.stats.hp=Math.min(p.stats.hp+h,p.stats.maxHp);}},
   {id:'shop_util_discount',tier:'purple',icon:'💎',name:'Royal Voucher',desc:'Your next purchase costs 2 less shiny',apply:p=>{G._nextShopDiscount=Math.max(G._nextShopDiscount||0,2);}},
-  {id:'shop_util_refresh2',tier:'blue',icon:'💎',name:'Double Refresh Pass',desc:'Gain 2 free shop refreshes',apply:p=>{G._freeShopRefresh=(G._freeShopRefresh||0)+2;}},
+  {id:'shop_util_refresh2',tier:'gold',icon:'💎',name:'Double Refresh Pass',desc:'Gain 2 free shop refreshes',apply:p=>{G._freeShopRefresh=(G._freeShopRefresh||0)+2;}},
   {id:'shop_util_bossward',tier:'purple',icon:'🛡️',name:'Boss Ward',desc:'MDEF +3 and cleanse one debuff now',apply:p=>{p.stats.mdef=(p.stats.mdef||0)+3;const bad=['weaken','paralyzed','slow','burning','poison','bleed','feared','lullabied'];const hit=bad.find(k=>G.playerStatus[k]);if(hit) delete G.playerStatus[hit];}},
   {id:'shop_util_apex',tier:'purple',icon:'🦅',name:'Apex Talon Oil',desc:'ATK +3, MATK +3',apply:p=>{p.stats.atk+=3;p.stats.matk=(p.stats.matk||0)+3;}},
 ];
@@ -16006,7 +16044,8 @@ function shopLockVisitState(){
   _shopSelectedIdx = null;
 }
 function getShopRefreshCost(){
-  return 10 + 6*Math.max(0,G._shopRefreshCount||0);
+  const c=Math.max(0,G._shopRefreshCount||0);
+  return 20+12*c+6*c*c;
 }
 
 function renderShopItems() {
