@@ -757,7 +757,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
         try { localStorage.setItem(NAV_KEY, JSON.stringify({action:'shop', nodeId:curPos})); } catch(_) {}
       } else {
         try {
-          localStorage.setItem(NAV_KEY, JSON.stringify({action:'battle', nodeId:curPos, stage:n.stage, enemies:n.enemies||[]}));
+          localStorage.setItem(NAV_KEY, JSON.stringify({action:'battle', nodeId:curPos, stage:n.stage, enemies:n.enemies||[], terrain:n.terrain||''}));
         } catch(_) {}
       }
 
