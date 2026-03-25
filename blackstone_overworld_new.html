@@ -87,6 +87,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 #ov-confirm-btn:disabled{opacity:.35;cursor:not-allowed;}
 .node-done>circle:first-of-type,.node-done>ellipse{opacity:.35!important;}
 .node-done .node-label-txt{fill:rgba(136,112,48,.3)!important;}
+.node-locked>circle:first-of-type,.node-locked>ellipse{opacity:.22!important;filter:grayscale(.85) brightness(.55);}
+.node-locked .node-label-txt{fill:rgba(80,72,48,.22)!important;}
+.node-available>circle:first-of-type,.node-available>ellipse{filter:drop-shadow(0 0 6px rgba(200,160,48,.55));}
 #pick{display:none;position:fixed;inset:0;z-index:110;background:rgba(2,4,2,.98);flex-direction:column;align-items:center;padding:18px;gap:10px;overflow-y:auto;}
 #pick.on{display:flex;}
 #pick h2{font-family:'Cinzel Decorative',serif;font-size:12px;color:var(--gold-l);letter-spacing:3px;}
@@ -268,6 +271,25 @@ function isActionable(n){
   }
   return false;
 }
+function isNodeUnlocked(n){
+  if(!n||n.type==='start') return true;
+  if(n.type==='shop'){
+    const prev=NODES[n.id-1];
+    return (OVERWORLD_PROGRESS.completedStage||0) >= Number(prev?.stage||0);
+  }
+  if(isCombatNode(n)){
+    return (OVERWORLD_PROGRESS.completedStage||0) >= Number(n.stage||1)-1;
+  }
+  return false;
+}
+function syncNodeVisualState(){
+  NODES.forEach(n=>{
+    if(!n._g||n.type==='start') return;
+    n._g.classList.remove('node-locked','node-available');
+    if(!isNodeUnlocked(n)) n._g.classList.add('node-locked');
+    else if(isActionable(n)) n._g.classList.add('node-available');
+  });
+}
 function getNodeLockReason(n){
   if(!n || n.type==='start') return '';
   if(isActionable(n)) return 'Available now';
@@ -386,7 +408,7 @@ const NODES=[
   {id:8,  type:'stage', name:'Mossy Track',          x:578,  y:656,  stage:7,  enemies:['Snowy Owl','Raven'],               terrain:'Ancient Trail', portraitBird:'snowyOwl'},
   {id:9,  type:'stage', name:'The Stone Bridge',     x:738,  y:617,  stage:8,  enemies:['Secretary Bird','Peregrine'],     terrain:'Stone Bridge', portraitBird:'baldEagle'},
   {id:10, type:'stage', name:'Far Bank',             x:924,  y:600,  stage:9,  enemies:['Bald Eagle','Harpy Eagle'],       terrain:'Bridge Crossing', portraitBird:'raven'},
-  {id:11, type:'boss',  name:'Forest Keep',          x:1171, y:469,  stage:10, enemies:['Warden Rook','Duke Blakiston'],   terrain:'Abandoned Keep'},
+  {id:11, type:'boss',  name:'Forest Keep',          x:1171, y:469,  stage:10, enemies:['Crow','Raven'],   terrain:'Abandoned Keep'},
   {id:12, type:'shop',  name:'Stork Emporium',       x:1078, y:448},
   {id:13, type:'stage', name:'Ashwood Glen',         x:851,  y:476,  stage:11, enemies:['Cassowary','Emu'],                terrain:'Ashen Forest', portraitBird:'cassowary'},
   {id:14, type:'stage', name:'Ridgeline Path',       x:603,  y:486,  stage:12, enemies:['Ostrich','Swan'],                 terrain:'Highland Ridge', portraitBird:'swan'},
@@ -445,8 +467,8 @@ ns.appendChild(pathG);
 
 NODES.forEach(n=>{
   const reach=n.id<=UNLOCKED,vc=nvc(n),g=mk('g');
-  g.style.cursor=(reach&&n.id>0)?'pointer':'default';
-  if(reach&&n.id>0)g.addEventListener('click',()=>setPos(n.id));
+  g.style.cursor=(reach&&n.id>0&&isNodeUnlocked(n))?'pointer':'default';
+  if(reach&&n.id>0&&isNodeUnlocked(n))g.addEventListener('click',()=>setPos(n.id));
   n._g=g;n._vc=vc;
   if(!reach){
     const sh=mk('circle',{cx:n.x,cy:n.y,r:vc.r,fill:'rgba(18,18,12,.65)',stroke:vc.lock,'stroke-width':'1.2',opacity:'.38'});
@@ -537,9 +559,11 @@ function updateInfo(){
   else{_owSprite('p-img',SPRITES[BIRDS[birdIdx].k]||'');pimg.style.borderRadius='0';document.getElementById('p-name').textContent=BIRDS[birdIdx].n.toUpperCase();}
   const eb=document.getElementById('enter-btn');
   if(n.type==='start'){eb.style.display='none';}
-  else{eb.style.display='block';const isBoss=n.type==='boss'||n.final,isShop=n.type==='shop';eb.style.background=n.final?'rgba(120,32,160,.14)':isBoss?'rgba(160,40,32,.12)':isShop?'rgba(200,160,32,.1)':'rgba(120,100,32,.08)';eb.style.borderColor=vc.ring;eb.style.color=n.final?'#e890ff':isBoss?'#ff9090':isShop?'#f0c020':'#d4b040';eb.textContent=isShop?'ENTER SHOP \u25B6':isBoss?'FACE BOSS \u25B6':(`ENTER STAGE ${n.stage} \u25B6`);eb.disabled=false;}
+  else{eb.style.display='block';applyNodeActionButton(eb,n);}
   document.getElementById('btn-prev').disabled=curPos<=0;
-  document.getElementById('btn-next').disabled=curPos>=UNLOCKED||nodeBlocksAdvance(NODES[curPos]);
+  const nextNd=NODES[curPos+1];
+  document.getElementById('btn-next').disabled=curPos>=UNLOCKED||!nextNd||!isNodeUnlocked(nextNd)||nodeBlocksAdvance(NODES[curPos]);
+  syncNodeVisualState();
 }
 
 function setHL(id,on){const n=NODES[id];if(!n||!n._sh)return;n._sh.setAttribute('stroke-width',on?3.5:2);if(n._topRing)n._topRing.setAttribute('stroke-width',on?3.5:2);}
@@ -580,8 +604,9 @@ document.getElementById('root').addEventListener('keydown',e=>{
   if(!dirs.includes(e.key))return;e.preventDefault();if(isMoving)return;
   const cn=NODES[curPos],cands=[];
   if(curPos>0)cands.push(NODES[curPos-1]);if(curPos<UNLOCKED)cands.push(NODES[curPos+1]);
-  if(!cands.length)return;let best=null,bs=-Infinity;
-  for(const c of cands){const dx=c.x-cn.x,dy=c.y-cn.y;const sc=e.key==='ArrowRight'?dx-Math.abs(dy)*.4:e.key==='ArrowLeft'?-dx-Math.abs(dy)*.4:e.key==='ArrowUp'?-dy-Math.abs(dx)*.4:dy-Math.abs(dx)*.4;if(sc>bs){bs=sc;best=c.id;}}
+  const openCands=cands.filter(c=>isNodeUnlocked(c));
+  if(!openCands.length)return;let best=null,bs=-Infinity;
+  for(const c of openCands){const dx=c.x-cn.x,dy=c.y-cn.y;const sc=e.key==='ArrowRight'?dx-Math.abs(dy)*.4:e.key==='ArrowLeft'?-dx-Math.abs(dy)*.4:e.key==='ArrowUp'?-dy-Math.abs(dx)*.4:dy-Math.abs(dx)*.4;if(sc>bs){bs=sc;best=c.id;}}
   if(best!==null)setPos(best);
 });
 document.getElementById('root').addEventListener('mousedown',()=>document.getElementById('root').focus());
@@ -596,8 +621,13 @@ function nodeBlocksAdvance(n){
 document.getElementById('btn-prev').addEventListener('click',()=>{if(curPos>0&&!isMoving)setPos(curPos-1);});
 document.getElementById('btn-next').addEventListener('click',()=>{
   if(isMoving||curPos>=UNLOCKED) return;
+  const next=NODES[curPos+1];
+  if(!next||!isNodeUnlocked(next)){
+    const eb=document.getElementById('enter-btn');
+    if(eb&&eb.style.display!=='none'){eb.style.outline='2px solid rgba(120,80,40,.5)';setTimeout(()=>{eb.style.outline='';},650);}
+    return;
+  }
   if(nodeBlocksAdvance(NODES[curPos])){
-    // Flash the enter button to hint the player should clear this node first
     const eb=document.getElementById('enter-btn');
     if(eb&&eb.style.display!=='none'){eb.style.outline='2px solid var(--gold)';setTimeout(()=>{eb.style.outline='';},600);}
     return;
@@ -686,6 +716,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
 
   // ── Expose completed stage count to the global movement-gating logic ────
   syncOverworldProgress(overworldProgress);
+  try{ syncNodeVisualState(); }catch(_){ }
 
   // ── Update shinies counter in the static header element ─────────────────
   const shinyEl = document.getElementById('hdr-shiny-count');
