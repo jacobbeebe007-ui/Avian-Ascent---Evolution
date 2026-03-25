@@ -170,6 +170,12 @@
 </div><!-- /#screen-select -->
 <!-- BATTLE -->
 <div class="screen" id="screen-battle">
+<div class="battle-screen-inner">
+<div class="battle-arena-layer" id="battle-arena-layer" aria-hidden="true">
+<div class="battle-arena-backdrop" id="battle-arena-backdrop"></div>
+<div class="battle-arena-vignette" aria-hidden="true"></div>
+<div class="battle-arena-floor" aria-hidden="true"></div>
+</div>
 <div class="battle-layout">
 <div class="battle-top tactical-topbar">
 <div class="topbar-left">
@@ -261,11 +267,15 @@
 </div>
 
 <div class="battle-support-area">
-<div class="battle-log" id="battle-log"></div>
+<div class="battle-log-section" id="battle-log-section">
+<button type="button" class="battle-log-toggle" id="battle-log-toggle" aria-expanded="true" aria-controls="battle-log">Battle log</button>
+<div class="battle-log" id="battle-log" role="log" aria-live="polite"></div>
+</div>
 <div class="menu-row tactical-utility-row">
 <button class="nest-btn" onclick="openNest()">🪺 Nest</button>
 <button class="menu-btn" onclick="openSettingsModal()">⚙ Settings</button>
 <button class="menu-btn" onclick="openAbandonModal()" style="color:var(--red-light);border-color:rgba(201,76,76,.4)">⟨ Abandon</button>
+</div>
 </div>
 </div>
 </div>
