@@ -8540,43 +8540,30 @@ function canPlayerAct(){
 function renderEnemyPlan(){
   const host=document.getElementById('enemy-intent-panel');
   if(!host || !G.enemy) return;
-  const planned=(G.enemyNextAction&&Array.isArray(G.enemyNextAction.actions)) ? G.enemyNextAction.actions.slice(0,MAX_ENEMY_ACTIONS_PER_TURN) : [];
-  const live=(G.enemyLastPlan||[]).slice(0,MAX_ENEMY_ACTIONS_PER_TURN);
-  const plan=(G.turnPhase===TURN.ENEMY && live.length) ? live : planned;
   const maxE=Math.max(0,G.enemy.energyMax||3);
   const curE=(G.turnPhase===TURN.ENEMY) ? Math.max(0,G.enemy.energy||0) : maxE;
-  const used=(G.turnPhase===TURN.ENEMY) ? Math.max(0,(G.enemyActionsThisTurn||0)) : 0;
   let label='🤔 Thinking...';
   let title='';
-  let intentCategory='Plan';
   if(G.enemyNextAction){
     label=G.enemyNextAction.label||'Enemy Plan';
+    if(/^\[[^\]]+\]\s+/.test(String(label))){ const i=String(label).indexOf('] '); if(i>=0) label=String(label).slice(i+2).trim(); }
     if(G.enemyNextAction.type==='plan'){
-      intentCategory='Pressure';
       const parts=(G.enemyNextAction.actions||[]).slice(0,3);
-      title=parts.map(a=>{
+      const blocks=parts.map(a=>{
         if(a.type==='ability') return buildEnemyAbilityTooltipHtml(a.abilityId, G.enemy.stats);
         if(a.type==='strike'){const lo=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.8));const hi=Math.max(lo,Math.floor((G.enemy.stats.atk||8)*1.2));return `<div class="tt-name">Basic Attack</div><div class="tt-type">Offensive</div><div class="tt-row"><span class="tt-lbl">Damage</span><span class="tt-val">${lo}–${hi}</span></div>`;}
         return `<div class="tt-name">${escapeEncounterPreviewHtml(a.label||a.type)}</div>`;
       }).filter(Boolean).join('<hr style="border:0;border-top:1px solid var(--border);margin:6px 0">');
+      title=(parts.length>1?`<div class="tt-desc" style="margin-bottom:6px;opacity:.9">Planned turn — ${parts.length} actions</div>`:'')+blocks;
     } else if(G.enemyNextAction.type==='ability'){
-      intentCategory='Control';
       title=buildEnemyAbilityTooltipHtml(G.enemyNextAction.abilityId, G.enemy.stats);
     } else if(G.enemyNextAction.type==='strike'){
-      intentCategory='Attack';
       const low=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.8));
       const high=Math.max(low,Math.floor((G.enemy.stats.atk||8)*1.2));
       title=`<div class="tt-name">Basic Attack</div><div class="tt-type">Offensive</div><div class="tt-row"><span class="tt-lbl">Damage</span><span class="tt-val">${low}–${high}</span></div><div class="tt-desc">Standard physical hit.</div>`;
     }
   }
-  const chips=plan.length ? plan.map((a,i)=>{
-    const nm=a.type==='ability'?(ENEMY_ABILITY_POOL[a.abilityId]?.name||a.abilityId):(a.label||a.type);
-    const icon=a.icon || (a.type==='strike'?'⚔':a.type==='heavy'?'💢':a.type==='defend'?'🛡':'✦');
-    const cost=Number.isFinite(a.energyCost)?a.energyCost:getEnemyActionEnergyCost(a);
-    return `<span class="intent-chip${i<used?' spent':''}">${icon} ${nm}<span class="intent-cost-sm">${cost}AP</span></span>`;
-  }).join('') : '<span class="intent-chip wait">🤔 Planning</span>';
-  const headCost=(plan[0] && Number.isFinite(plan[0].energyCost)) ? plan[0].energyCost : (plan[0] ? getEnemyActionEnergyCost(plan[0]) : 0);
-  host.innerHTML=`<div class="intent-row"><span class="intent-name">${label}</span><span class="intent-meta"><span class="intent-type">${intentCategory}</span>${headCost?`<span class="intent-cost">${headCost} AP</span>`:''}<span class="intent-ap">EN ${curE}/${maxE}</span></span></div><div class="intent-list">${chips}</div>`;
+  host.innerHTML=`<div class="intent-row intent-row--compact"><span class="intent-name">${escapeEncounterPreviewHtml(label)}</span><span class="intent-meta"><span class="intent-ap">EN ${curE}/${maxE}</span></span></div>`;
   host.removeAttribute('title');
   if(title){
     host.onmouseenter=(e)=>showTooltip(e,title,e.clientX+10,e.clientY+10);
@@ -8982,29 +8969,13 @@ function renderActions() {
   });
 
   const endWrap=document.createElement('div');
-  endWrap.style.cssText='grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(120,140,170,.25);display:flex;align-items:center;justify-content:space-between;gap:8px';
-  const lbl=document.createElement('span');
-  lbl.textContent='End Turn';
-  lbl.style.cssText='font-size:.66rem;letter-spacing:.08em;color:var(--text-dim);text-transform:uppercase';
-  const right=document.createElement('div');
-  right.style.cssText='display:flex;gap:6px';
+  endWrap.className='actions-grid-footer';
   const endBtn=document.createElement('button');
-  endBtn.className='action-btn endturn-mini';
+  endBtn.className='action-btn endturn-mini end-turn-bar__btn';
   endBtn.textContent='End Turn';
   endBtn.disabled=locked;
   endBtn.onclick=()=>endPlayerTurn();
-  right.appendChild(endBtn);
-  const mini=(ab)=>{
-    const b=document.createElement('button');
-    b.className='action-btn endturn-mini';
-    b.textContent=ab.name;
-    b.disabled=locked;
-    b.onclick=()=>enqueueAction(()=>playerAction(ab,true));
-    return b;
-  };
-  right.appendChild(mini({...ABILITY_SITTING_DUCK,level:1,energyCost:getEnergyCost({id:'sittingDuck',level:1})}));
-  endWrap.appendChild(lbl);
-  endWrap.appendChild(right);
+  endWrap.appendChild(endBtn);
   grid.appendChild(endWrap);
 }
 
@@ -18184,8 +18155,10 @@ function planEnemyAction() {
   G.enemyPlannedActions=actions;
   const persona=(e.aiPersonality||'tactical');
   const preview=actions.slice(0,2).map(a=>`${a.icon||'•'} ${a.type==='ability'?(ENEMY_ABILITY_POOL[a.abilityId]?.name||a.abilityId):a.label}`).join(' → ');
-  const more=actions.length>2?' +':'';
-  return {label:`[${persona}|${String(plan.archetype||'striker').toUpperCase()}|${String(plan.intent||'attack').toUpperCase()}] ${preview}${more}`,type:'plan',actions,mode:plan.mode,archetype:plan.archetype||'striker',intent:plan.intent||'attack',energySpendCap:plan.energySpendCap||0,personality:persona};
+  const extraCount=Math.max(0,actions.length-2);
+  const more=extraCount>0?` +${extraCount}`:'';
+  const labelText=((preview||'…')+more).trim();
+  return {label:labelText,type:'plan',actions,mode:plan.mode,archetype:plan.archetype||'striker',intent:plan.intent||'attack',energySpendCap:plan.energySpendCap||0,personality:persona};
 }
 
 
