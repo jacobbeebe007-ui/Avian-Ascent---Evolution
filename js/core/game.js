@@ -58,40 +58,16 @@
 // ===== 04_script_04.js =====
 
 // ============================================================
-//  SVG PORTRAITS
+//  PORTRAITS (legacy keys; UI uses sprite4 PNG via renderBirdIconHTML)
 // ============================================================
 const PORTRAITS = {
-  robin:'',
-
-  sparrow:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="20" ry="14" fill="#8B6F47"/><ellipse cx="53" cy="52" rx="11" ry="6" fill="#6B5030" transform="rotate(20,53,52)"/><ellipse cx="27" cy="52" rx="11" ry="6" fill="#6B5030" transform="rotate(-20,27,52)"/><ellipse cx="40" cy="53" rx="12" ry="9" fill="#C9A87A"/><circle cx="40" cy="31" r="12" fill="#9E7D58"/><ellipse cx="40" cy="28" rx="7" ry="5" fill="#5A3E1B"/><circle cx="44" cy="28" r="3.2" fill="#1a1a1a"/><circle cx="45.2" cy="27" r="1.1" fill="#fff" opacity="0.85"/><polygon points="52,28 60,30 52,33" fill="#C8A040"/><path d="M21,57 Q14,65 10,72 Q15,65 19,60 Q11,68 9,76 Q16,67 23,62" fill="#6B5030"/><line x1="36" y1="63" x2="33" y2="71" stroke="#C8A040" stroke-width="1.5"/><line x1="44" y1="63" x2="47" y2="71" stroke="#C8A040" stroke-width="1.5"/><line x1="33" y1="71" x2="29" y2="73" stroke="#C8A040" stroke-width="1.5"/><line x1="33" y1="71" x2="35" y2="75" stroke="#C8A040" stroke-width="1.5"/><line x1="47" y1="71" x2="51" y2="73" stroke="#C8A040" stroke-width="1.5"/><line x1="47" y1="71" x2="49" y2="75" stroke="#C8A040" stroke-width="1.5"/></svg>`,
-  phainopepla:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="19" ry="15" fill="#121220"/><ellipse cx="53" cy="53" rx="11" ry="7" fill="#1e1e38" transform="rotate(16,53,53)"/><ellipse cx="27" cy="53" rx="11" ry="7" fill="#1e1e38" transform="rotate(-16,27,53)"/><ellipse cx="51" cy="50" rx="6" ry="3" fill="#2e2e58" transform="rotate(16,51,50)" opacity="0.9"/><ellipse cx="40" cy="55" rx="11" ry="8" fill="#1a1a32" opacity="0.7"/><circle cx="40" cy="30" r="12" fill="#121220"/><path d="M39,20 Q37,12 38,5 Q39,1 40.5,5 Q42,12 41,20 Z" fill="#0a0a18" stroke="#22225a" stroke-width="0.6"/><path d="M37,20 Q34,13 35,7 Q36.5,3.5 38,7 Q39,14 38.5,20 Z" fill="#0d0d22" opacity="0.85"/><path d="M43,20 Q46,13 45,7 Q43.5,3.5 42,7 Q41,14 41.5,20 Z" fill="#0d0d22" opacity="0.85"/><circle cx="40" cy="4" r="2.2" fill="#8844dd"/><circle cx="40" cy="4" r="4.5" fill="#9966ff" opacity="0.28"/><circle cx="34" cy="9" r="1.1" fill="#aa66ff" opacity="0.7"/><circle cx="47" cy="7" r="1.3" fill="#8844dd" opacity="0.65"/><circle cx="45" cy="28" r="4.5" fill="#cc1111"/><circle cx="45" cy="28" r="3" fill="#990000"/><circle cx="46.2" cy="27" r="1.3" fill="#ff7777" opacity="0.95"/><path d="M51,28.5 L62,30.5 L51,32" fill="#222232"/><path d="M22,60 Q15,67 10,76 Q15,66 20,62 Q12,70 10,78 Q17,68 24,64" fill="#121220"/><line x1="36" y1="65" x2="33" y2="73" stroke="#333" stroke-width="1.5"/><line x1="44" y1="65" x2="47" y2="73" stroke="#333" stroke-width="1.5"/><line x1="33" y1="73" x2="29" y2="75" stroke="#333" stroke-width="1.5"/><line x1="33" y1="73" x2="35" y2="77" stroke="#333" stroke-width="1.5"/><line x1="47" y1="73" x2="51" y2="75" stroke="#333" stroke-width="1.5"/><line x1="47" y1="73" x2="49" y2="77" stroke="#333" stroke-width="1.5"/></svg>`,
-  crow:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="21" ry="16" fill="#2a2a2a"/><ellipse cx="55" cy="52" rx="13" ry="8" fill="#1a1a1a" transform="rotate(18,55,52)"/><ellipse cx="25" cy="52" rx="13" ry="8" fill="#1a1a1a" transform="rotate(-18,25,52)"/><ellipse cx="53" cy="49" rx="7" ry="3.5" fill="#3e3e3e" transform="rotate(18,53,49)" opacity="0.7"/><ellipse cx="40" cy="54" rx="14" ry="10" fill="#333"/><circle cx="40" cy="29" r="12.5" fill="#252525"/><circle cx="44" cy="27" r="4" fill="#1a1a1a"/><circle cx="45" cy="26.5" r="2.2" fill="#4488cc"/><circle cx="46" cy="26" r="0.9" fill="#ffffff" opacity="0.9"/><path d="M51,26.5 L64,29 L64,33.5 L51,31.5 Z" fill="#303030"/><path d="M20,61 L12,73 L18,64 L14,75 L22,66 L18,76 L26,67" fill="#1a1a1a"/><line x1="36" y1="65" x2="32" y2="73" stroke="#555" stroke-width="2"/><line x1="44" y1="65" x2="48" y2="73" stroke="#555" stroke-width="2"/><line x1="32" y1="73" x2="27" y2="75" stroke="#555" stroke-width="2"/><line x1="32" y1="73" x2="34" y2="77" stroke="#555" stroke-width="2"/><line x1="48" y1="73" x2="53" y2="75" stroke="#555" stroke-width="2"/><line x1="48" y1="73" x2="50" y2="77" stroke="#555" stroke-width="2"/></svg>`,
-  goose:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="54" rx="27" ry="20" fill="#e8e8e0"/><ellipse cx="58" cy="55" rx="17" ry="9" fill="#d0d0c8" transform="rotate(12,58,55)"/><ellipse cx="22" cy="55" rx="17" ry="9" fill="#d0d0c8" transform="rotate(-12,22,55)"/><ellipse cx="55" cy="52" rx="9" ry="4.5" fill="#c0c0b8" transform="rotate(12,55,52)" opacity="0.7"/><path d="M36,40 Q33,29 35,18 Q37,11 40.5,9 Q44,11 45,18 Q47,29 44,40" fill="#1a1a1a"/><ellipse cx="40" cy="10" rx="9.5" ry="8.5" fill="#1a1a1a"/><ellipse cx="41" cy="12" rx="5.5" ry="4.5" fill="#e8e8e0"/><circle cx="45" cy="9" r="3.8" fill="#cc6600"/><circle cx="45" cy="9" r="2.2" fill="#1a1a1a"/><circle cx="46" cy="8.2" r="0.9" fill="#fff" opacity="0.9"/><path d="M49,8.5 L60,10 L60,13.5 L49,12 Z" fill="#E87020"/><path d="M13,63 L7,74 L13,67 L9,76 L17,69" fill="#d0d0c8"/><line x1="36" y1="72" x2="32" y2="78" stroke="#E87020" stroke-width="2.5"/><line x1="44" y1="72" x2="48" y2="78" stroke="#E87020" stroke-width="2.5"/><line x1="32" y1="78" x2="27" y2="80" stroke="#E87020" stroke-width="2.5"/><line x1="48" y1="78" x2="53" y2="80" stroke="#E87020" stroke-width="2.5"/></svg>`,
-  kookaburra:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="21" ry="16" fill="#a07840"/><ellipse cx="54" cy="52" rx="13" ry="7" fill="#7a5828" transform="rotate(14,54,52)"/><ellipse cx="26" cy="52" rx="13" ry="7" fill="#7a5828" transform="rotate(-14,26,52)"/><ellipse cx="40" cy="54" rx="13" ry="9" fill="#e8d0a0" opacity="0.8"/><circle cx="40" cy="30" r="13" fill="#c8a060"/><ellipse cx="40" cy="27" rx="9" ry="6" fill="#5a3810" opacity="0.7"/><circle cx="44" cy="27" r="4" fill="#c8a060"/><circle cx="45" cy="26" r="2.5" fill="#1a1200"/><circle cx="46" cy="25" r="1" fill="#fff" opacity="0.9"/><path d="M34,24 Q30,22 28,24 Q30,26 34,26 Z" fill="#5a3810"/><path d="M51,26 L66,28 L66,32 L51,30 Z" fill="#8a5e20" rx="2"/><path d="M15,62 Q9,70 7,78 Q14,69 19,64 Q11,72 9,79 Q17,69 24,65" fill="#7a5828"/><line x1="36" y1="65" x2="32" y2="73" stroke="#c8a060" stroke-width="1.5"/><line x1="44" y1="65" x2="48" y2="73" stroke="#c8a060" stroke-width="1.5"/></svg>`,
-  toucan:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="20" ry="15" fill="#1a1a1a"/><ellipse cx="54" cy="52" rx="12" ry="7" fill="#111" transform="rotate(15,54,52)"/><ellipse cx="26" cy="52" rx="12" ry="7" fill="#111" transform="rotate(-15,26,52)"/><ellipse cx="40" cy="55" rx="12" ry="9" fill="#f0e060" opacity="0.9"/><circle cx="40" cy="29" r="12" fill="#1a1a1a"/><path d="M47,24 Q64,20 68,27 Q70,33 64,36 Q57,38 47,34 Z" fill="#60c840"/><path d="M49,25 Q63,22 66,27 Q68,32 62,34 Q56,36 49,33 Z" fill="#e8c820"/><path d="M51,26 Q62,24 64,28 Q65,31 60,32 Q55,33 51,31 Z" fill="#e86020"/><circle cx="44" cy="27" r="4" fill="#1a1a1a"/><circle cx="45" cy="26" r="2.5" fill="#ffffff"/><circle cx="46" cy="25" r="1" fill="#1a1a1a" opacity="0.9"/><path d="M15,62 Q8,70 7,78 Q14,69 20,64 Q12,72 10,79 Q18,68 25,64" fill="#111"/><line x1="36" y1="64" x2="32" y2="72" stroke="#e8c820" stroke-width="2"/><line x1="44" y1="64" x2="48" y2="72" stroke="#e8c820" stroke-width="2"/><line x1="32" y1="72" x2="28" y2="74" stroke="#e8c820" stroke-width="2"/><line x1="48" y1="72" x2="52" y2="74" stroke="#e8c820" stroke-width="2"/></svg>`,
-  // === UNLOCKABLE BIRD PORTRAITS ===
-  peregrine:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="18" ry="13" fill="#3a4a6a"/><ellipse cx="53" cy="52" rx="10" ry="6" fill="#2a3a5a" transform="rotate(18,53,52)"/><ellipse cx="27" cy="52" rx="10" ry="6" fill="#2a3a5a" transform="rotate(-18,27,52)"/><ellipse cx="40" cy="53" rx="11" ry="8" fill="#e8dfc8"/><circle cx="40" cy="29" r="11" fill="#2a3040"/><ellipse cx="36" cy="26" rx="6" ry="4" fill="#1a1a2a"/><circle cx="44" cy="27" r="3.5" fill="#2a3040"/><circle cx="45" cy="26" r="2.2" fill="#f0f0ff"/><circle cx="46" cy="25" r="0.9" fill="#000" opacity="0.9"/><path d="M28,30 Q22,34 20,38 Q24,35 30,33" fill="#1a1a2a"/><path d="M50,27 L62,28 L62,31 L50,30 Z" fill="#c8b870" rx="2"/><path d="M20,58 Q13,67 10,75 Q16,66 20,61 Q13,69 11,77 Q18,67 23,63" fill="#2a3a5a"/><line x1="36" y1="62" x2="32" y2="70" stroke="#c8b870" stroke-width="1.5"/><line x1="44" y1="62" x2="48" y2="70" stroke="#c8b870" stroke-width="1.5"/><line x1="32" y1="70" x2="28" y2="72" stroke="#c8b870" stroke-width="1.5"/><line x1="48" y1="70" x2="52" y2="72" stroke="#c8b870" stroke-width="1.5"/></svg>`,
-  secretary:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="52" rx="19" ry="14" fill="#c8c8c0"/><ellipse cx="53" cy="53" rx="11" ry="7" fill="#a8a8a0" transform="rotate(14,53,53)"/><ellipse cx="27" cy="53" rx="11" ry="7" fill="#a8a8a0" transform="rotate(-14,27,53)"/><ellipse cx="40" cy="55" rx="11" ry="8" fill="#e8e8e0"/><circle cx="40" cy="30" r="11" fill="#d8d8d0"/><path d="M46,20 Q52,12 58,10 Q54,16 50,22 Q56,13 60,12 Q56,18 52,23" fill="#ff8030" stroke="#cc5500" stroke-width="0.5"/><path d="M34,20 Q28,12 22,10 Q26,16 30,22 Q24,13 20,12 Q24,18 28,23" fill="#ff8030" stroke="#cc5500" stroke-width="0.5"/><circle cx="36" cy="28" r="3.5" fill="#cc2020"/><circle cx="36" cy="28" r="2" fill="#880000"/><circle cx="37" cy="27" r="0.8" fill="#ff9999" opacity="0.9"/><path d="M46,27 L58,29 L58,32 L46,30.5 Z" fill="#d0c890"/><path d="M18,61 Q11,70 9,78 Q15,68 19,64 Q12,72 10,79 Q17,68 23,64" fill="#a8a8a0"/><line x1="36" y1="65" x2="32" y2="73" stroke="#e0a060" stroke-width="2"/><line x1="44" y1="65" x2="48" y2="73" stroke="#e0a060" stroke-width="2"/></svg>`,
-  lyrebird:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="18" ry="13" fill="#7a4a28"/><ellipse cx="53" cy="52" rx="10" ry="6" fill="#5a3018" transform="rotate(16,53,52)"/><ellipse cx="27" cy="52" rx="10" ry="6" fill="#5a3018" transform="rotate(-16,27,52)"/><ellipse cx="40" cy="54" rx="10" ry="7" fill="#c8a060" opacity="0.8"/><circle cx="40" cy="30" r="11" fill="#8a5a30"/><circle cx="44" cy="28" r="3.5" fill="#1a1208"/><circle cx="45" cy="27" r="2.2" fill="#c8a010"/><circle cx="46" cy="26" r="0.9" fill="#fff" opacity="0.9"/><path d="M50,27 L62,29 L62,32 L50,31 Z" fill="#c89040"/><path d="M24,32 Q14,20 10,5 Q10,3 12,5 Q18,18 28,30 Q16,18 15,3 Q16,1 18,4 Q24,20 32,31" fill="#a87040" stroke="#7a4a20" stroke-width="0.5"/><path d="M56,32 Q66,20 70,5 Q70,3 68,5 Q62,18 52,30 Q64,18 65,3 Q64,1 62,4 Q56,20 48,31" fill="#a87040" stroke="#7a4a20" stroke-width="0.5"/><ellipse cx="40" cy="3" rx="5" ry="12" fill="#c8a040" opacity="0.6"/><path d="M20,60 Q13,69 10,77 Q16,67 21,62" fill="#5a3018"/><line x1="36" y1="63" x2="32" y2="71" stroke="#c89040" stroke-width="1.5"/><line x1="44" y1="63" x2="48" y2="71" stroke="#c89040" stroke-width="1.5"/></svg>`,
-  shoebill:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="22" ry="16" fill="#4a5a70"/><ellipse cx="55" cy="51" rx="14" ry="8" fill="#3a4a60" transform="rotate(14,55,51)"/><ellipse cx="25" cy="51" rx="14" ry="8" fill="#3a4a60" transform="rotate(-14,25,51)"/><ellipse cx="40" cy="54" rx="13" ry="9" fill="#5a6a80" opacity="0.7"/><circle cx="40" cy="28" r="13" fill="#4a5a70"/><ellipse cx="40" cy="26" rx="9" ry="6" fill="#3a4a60" opacity="0.6"/><path d="M30,33 Q25,38 23,43 Q35,37 50,37 Q55,38 57,43 Q55,38 50,33 Z" fill="#c8a840" stroke="#a08020" stroke-width="0.8"/><circle cx="34" cy="27" r="4" fill="#3a4a60"/><circle cx="34" cy="27" r="2.5" fill="#ffe8a0"/><circle cx="35" cy="26" r="1" fill="#1a2030" opacity="0.95"/><circle cx="46" cy="27" r="4" fill="#3a4a60"/><circle cx="46" cy="27" r="2.5" fill="#ffe8a0"/><circle cx="47" cy="26" r="1" fill="#1a2030" opacity="0.95"/><path d="M18,62 Q11,72 9,79 Q16,69 20,64" fill="#3a4a60"/><line x1="36" y1="65" x2="32" y2="73" stroke="#7a8a9a" stroke-width="2.5"/><line x1="44" y1="65" x2="48" y2="73" stroke="#7a8a9a" stroke-width="2.5"/><line x1="32" y1="73" x2="27" y2="75" stroke="#7a8a9a" stroke-width="2.5"/><line x1="48" y1="73" x2="53" y2="75" stroke="#7a8a9a" stroke-width="2.5"/></svg>`,
-  harpy:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="24" ry="17" fill="#2a2a2a"/><ellipse cx="56" cy="51" rx="15" ry="9" fill="#1a1a1a" transform="rotate(16,56,51)"/><ellipse cx="24" cy="51" rx="15" ry="9" fill="#1a1a1a" transform="rotate(-16,24,51)"/><ellipse cx="40" cy="54" rx="14" ry="10" fill="#e8e0d0"/><circle cx="40" cy="27" r="13" fill="#e8e0d0"/><path d="M28,18 Q24,10 26,4 Q28,1 30,5 Q32,10 33,18 Z" fill="#2a2a2a"/><path d="M52,18 Q56,10 54,4 Q52,1 50,5 Q48,10 47,18 Z" fill="#2a2a2a"/><path d="M35,16 Q32,8 34,3 Q36,0 38,4 Q39,9 39,16 Z" fill="#1a1a1a"/><path d="M45,16 Q48,8 46,3 Q44,0 42,4 Q41,9 41,16 Z" fill="#1a1a1a"/><circle cx="35" cy="26" r="4" fill="#e8e0d0"/><circle cx="35" cy="26" r="2.5" fill="#2a1a0a"/><circle cx="36" cy="25" r="1" fill="#ff4400" opacity="0.9"/><circle cx="45" cy="26" r="4" fill="#e8e0d0"/><circle cx="45" cy="26" r="2.5" fill="#2a1a0a"/><circle cx="46" cy="25" r="1" fill="#ff4400" opacity="0.9"/><path d="M33,33 Q32,38 40,40 Q48,38 47,33 Q44,36 40,36 Q36,36 33,33 Z" fill="#c0a080"/><path d="M16,60 Q9,71 7,79 Q14,68 18,62 Q11,72 9,79 Q17,68 22,63" fill="#1a1a1a"/><line x1="36" y1="66" x2="31" y2="75" stroke="#888" stroke-width="2.5"/><line x1="44" y1="66" x2="49" y2="75" stroke="#888" stroke-width="2.5"/><line x1="31" y1="75" x2="26" y2="77" stroke="#888" stroke-width="2.5"/><line x1="49" y1="75" x2="54" y2="77" stroke="#888" stroke-width="2.5"/></svg>`,
-  flamingo:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="42" cy="44" rx="14" ry="18" fill="#e8609a" transform="rotate(-8,42,44)"/><ellipse cx="44" cy="42" rx="9" ry="12" fill="#f090ba" opacity="0.7" transform="rotate(-8,44,42)"/><circle cx="36" cy="22" r="10" fill="#e8609a"/><circle cx="36" cy="19" r="7" fill="#f8a0c8" opacity="0.5"/><circle cx="39" cy="21" r="3" fill="#1a0a10"/><circle cx="40" cy="20" r="1.1" fill="#fff" opacity="0.9"/><path d="M27,20 Q21,17 20,21 Q22,25 28,24" fill="#e03080" opacity="0.8"/><path d="M43,25 Q46,32 46,45 Q50,50 52,58 Q56,64 54,70 Q58,64 56,56 Q53,48 50,42 Q50,30 45,22" fill="#e8609a"/><line x1="52" y1="68" x2="48" y2="76" stroke="#e8609a" stroke-width="2.5"/><line x1="56" y1="70" x2="60" y2="76" stroke="#e8609a" stroke-width="2.5"/><line x1="48" y1="76" x2="44" y2="78" stroke="#e8609a" stroke-width="2"/><line x1="60" y1="76" x2="64" y2="78" stroke="#e8609a" stroke-width="2"/></svg>`,
-  baldEagle:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="52" rx="21" ry="14" fill="#3a2a18"/><ellipse cx="54" cy="54" rx="13" ry="6" fill="#2a1e10" transform="rotate(15,54,54)"/><ellipse cx="26" cy="54" rx="13" ry="6" fill="#2a1e10" transform="rotate(-15,26,54)"/><ellipse cx="40" cy="55" rx="13" ry="9" fill="#c8b090" opacity="0.7"/><circle cx="40" cy="28" r="13" fill="#e8e4d8"/><circle cx="40" cy="25" r="9" fill="#f8f4e8" opacity="0.6"/><circle cx="43.5" cy="27" r="3.8" fill="#e8e4d8"/><circle cx="45" cy="25.8" r="2.5" fill="#1a0a00"/><circle cx="46.2" cy="24.8" r="1" fill="#fff" opacity="0.9"/><polygon points="51,27 64,25 63,31 51,31" fill="#e8a020"/><path d="M15,60 Q7,68 5,76 Q13,66 18,61 Q9,70 8,78 Q16,67 23,62" fill="#2a1e10"/><line x1="36" y1="66" x2="32" y2="74" stroke="#c8a060" stroke-width="1.5"/><line x1="44" y1="66" x2="48" y2="74" stroke="#c8a060" stroke-width="1.5"/></svg>`,
-  macaw:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="18" ry="15" fill="#1a6aba"/><ellipse cx="53" cy="52" rx="11" ry="6" fill="#228020" transform="rotate(18,53,52)"/><ellipse cx="27" cy="52" rx="11" ry="6" fill="#228020" transform="rotate(-18,27,52)"/><ellipse cx="40" cy="53" rx="11" ry="8" fill="#f0e840" opacity="0.75"/><circle cx="40" cy="28" r="12" fill="#e83030"/><circle cx="40" cy="26" r="8" fill="#f06050" opacity="0.5"/><circle cx="44" cy="27" r="3.2" fill="#c02020"/><circle cx="45.5" cy="26" r="2.2" fill="#0a0a0a"/><circle cx="46.5" cy="25.2" r="0.9" fill="#fff" opacity="0.9"/><ellipse cx="38" cy="28" rx="6" ry="4" fill="#f0f0e0" opacity="0.7"/><path d="M30,26 Q24,23 23,27 Q26,31 31,30" fill="#808080"/><path d="M16,62 Q9,70 7,78 Q14,68 19,63 Q11,72 9,79 Q17,68 24,64" fill="#228020"/><line x1="36" y1="65" x2="32" y2="73" stroke="#e8c040" stroke-width="1.5"/><line x1="44" y1="65" x2="48" y2="73" stroke="#e8c040" stroke-width="1.5"/></svg>`,
-  snowyOwl:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="52" rx="22" ry="18" fill="#e8f0f8"/><ellipse cx="55" cy="55" rx="14" ry="8" fill="#d0d8e4" transform="rotate(10,55,55)"/><ellipse cx="25" cy="55" rx="14" ry="8" fill="#d0d8e4" transform="rotate(-10,25,55)"/><ellipse cx="40" cy="56" rx="14" ry="10" fill="#f4f8fc"/><circle cx="40" cy="28" r="16" fill="#f0f4f8"/><ellipse cx="35" cy="28" rx="6" ry="7" fill="#e0e8f0"/><ellipse cx="45" cy="28" rx="6" ry="7" fill="#e0e8f0"/><circle cx="35" cy="28" r="4" fill="#f5c518"/><circle cx="45" cy="28" r="4" fill="#f5c518"/><circle cx="35" cy="28" r="2.5" fill="#0a0a18"/><circle cx="45" cy="28" r="2.5" fill="#0a0a18"/><circle cx="36" cy="27" r="0.9" fill="#fff"/><circle cx="46" cy="27" r="0.9" fill="#fff"/><polygon points="38,32 40,36 42,32" fill="#d0a040" opacity="0.9"/><path d="M18,62 Q12,70 10,78 Q17,68 22,63 Q13,72 12,79 Q20,68 27,64" fill="#c8d0d8"/><line x1="36" y1="70" x2="32" y2="76" stroke="#c8d0e0" stroke-width="1.5"/><line x1="44" y1="70" x2="48" y2="76" stroke="#c8d0e0" stroke-width="1.5"/></svg>`,
-  raven:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="20" ry="14" fill="#1a1a2a"/><ellipse cx="54" cy="53" rx="12" ry="6" fill="#0e0e1a" transform="rotate(14,54,53)"/><ellipse cx="26" cy="53" rx="12" ry="6" fill="#0e0e1a" transform="rotate(-14,26,53)"/><ellipse cx="40" cy="54" rx="12" ry="8" fill="#3a3050" opacity="0.65"/><circle cx="40" cy="28" r="13" fill="#1e1e30"/><circle cx="40" cy="26" r="9" fill="#2e2848" opacity="0.5"/><circle cx="44" cy="28" r="3.8" fill="#1a1a28"/><circle cx="45.5" cy="26.5" r="2.8" fill="#6030d0" opacity="0.9"/><circle cx="46.8" cy="25.5" r="1.1" fill="#a060ff" opacity="0.9"/><polygon points="31,26 21,24 22,31 31,30" fill="#2a2038"/><path d="M15,60 Q8,68 6,76 Q13,67 18,62 Q10,70 9,78 Q17,67 24,62" fill="#0e0e1a"/><line x1="36" y1="65" x2="32" y2="73" stroke="#3a2868" stroke-width="1.5"/><line x1="44" y1="65" x2="48" y2="73" stroke="#3a2868" stroke-width="1.5"/></svg>`,
-  swan:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="44" cy="52" rx="20" ry="14" fill="#f0f2f8" transform="rotate(-5,44,52)"/><ellipse cx="57" cy="54" rx="12" ry="6" fill="#e0e4f0" transform="rotate(12,57,54)"/><ellipse cx="28" cy="55" rx="12" ry="6" fill="#e0e4f0" transform="rotate(-12,28,55)"/><ellipse cx="43" cy="56" rx="13" ry="9" fill="#f8fafc"/><circle cx="32" cy="22" r="11" fill="#f4f6fa"/><circle cx="32" cy="19" r="7" fill="#fff" opacity="0.6"/><circle cx="35" cy="21" r="2.8" fill="#181830"/><circle cx="36.2" cy="20.1" r="1" fill="#fff" opacity="0.95"/><path d="M24,19 Q18,16 17,21 Q20,25 26,23" fill="#e08020" opacity="0.9"/><path d="M38,25 Q44,32 50,42 Q54,50 56,58" fill="none" stroke="#e8ecf4" stroke-width="3" stroke-linecap="round"/><line x1="38" y1="67" x2="34" y2="75" stroke="#d8dce8" stroke-width="2"/><line x1="50" y1="68" x2="54" y2="75" stroke="#d8dce8" stroke-width="2"/><line x1="34" y1="75" x2="30" y2="77" stroke="#d8dce8" stroke-width="1.5"/><line x1="54" y1="75" x2="58" y2="77" stroke="#d8dce8" stroke-width="1.5"/></svg>`,
-  // === NEW BIRD PORTRAITS ===
-  hummingbird:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="12" ry="9" fill="#20c8a0"/><ellipse cx="52" cy="51" rx="14" ry="5" fill="#18a080" transform="rotate(8,52,51)" opacity="0.9"/><ellipse cx="28" cy="51" rx="14" ry="5" fill="#18a080" transform="rotate(-8,28,51)" opacity="0.9"/><circle cx="40" cy="34" r="10" fill="#20c8a0"/><circle cx="40" cy="32" r="6" fill="#40e8c0" opacity="0.6"/><circle cx="43" cy="32" r="2.5" fill="#0a1a14"/><circle cx="44" cy="31" r="0.9" fill="#fff" opacity="0.9"/><path d="M50,32 L72,30 L72,32.5 L50,34" fill="#30a888" opacity="0.9"/><path d="M24,43 Q14,35 10,26" stroke="#18a080" stroke-width="4" fill="none" opacity="0.7"/><path d="M24,43 Q14,50 10,56" stroke="#20c8a0" stroke-width="4" fill="none" opacity="0.7"/><line x1="36" y1="58" x2="33" y2="65" stroke="#28b890" stroke-width="1.5"/><line x1="44" y1="58" x2="47" y2="65" stroke="#28b890" stroke-width="1.5"/></svg>`,
-  kiwi:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="54" rx="22" ry="18" fill="#7a5830"/><ellipse cx="40" cy="52" rx="16" ry="13" fill="#9a7848" opacity="0.8"/><circle cx="40" cy="30" r="12" fill="#8a6838"/><circle cx="43" cy="28" r="3" fill="#3a2010"/><circle cx="44" cy="27" r="1.8" fill="#2a4a10"/><circle cx="45" cy="26" r="0.8" fill="#fff" opacity="0.9"/><path d="M50,28 L74,24 L73,30 L50,32" fill="#7a5830" stroke="#5a3810" stroke-width="0.5"/><ellipse cx="40" cy="60" rx="14" ry="6" fill="#5a3810" opacity="0.6"/><line x1="34" y1="72" x2="30" y2="78" stroke="#9a7040" stroke-width="2"/><line x1="46" y1="72" x2="50" y2="78" stroke="#9a7040" stroke-width="2"/></svg>`,
-  penguin:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="54" rx="18" ry="20" fill="#1a1a2a"/><ellipse cx="40" cy="56" rx="12" ry="14" fill="#e8f0f8"/><ellipse cx="55" cy="52" rx="8" ry="14" fill="#1a1a2a" transform="rotate(18,55,52)"/><ellipse cx="25" cy="52" rx="8" ry="14" fill="#1a1a2a" transform="rotate(-18,25,52)"/><circle cx="40" cy="26" r="13" fill="#1a1a2a"/><circle cx="43" cy="26" r="4" fill="#1a1a2a"/><circle cx="44.5" cy="25" r="2.8" fill="#fffae0"/><circle cx="45.8" cy="24" r="1.1" fill="#1a1a2a" opacity="0.95"/><path d="M34,26 Q28,23 27,27 Q30,31 36,30" fill="#e87020" opacity="0.9"/><ellipse cx="40" cy="28" rx="6" ry="5" fill="#f4e8c0" opacity="0.7"/><line x1="34" y1="74" x2="30" y2="78" stroke="#e87020" stroke-width="2.5"/><line x1="46" y1="74" x2="50" y2="78" stroke="#e87020" stroke-width="2.5"/></svg>`,
-  ostrich:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="55" rx="24" ry="18" fill="#2a1a0a"/><ellipse cx="40" cy="53" rx="16" ry="12" fill="#c0a070" opacity="0.7"/><path d="M40,38 Q36,28 37,16 Q38,10 40.5,8 Q43,10 43,16 Q44,28 40,38" fill="#e8c888"/><circle cx="40" cy="9" r="10" fill="#f0d8a0"/><circle cx="43.5" cy="8" r="3.5" fill="#e0c890"/><circle cx="45" cy="7" r="2.2" fill="#1a1200"/><circle cx="46" cy="6" r="0.9" fill="#fff" opacity="0.9"/><path d="M31,9 Q24,7 23,11 Q25,15 32,14" fill="#e87020" opacity="0.8"/><ellipse cx="40" cy="61" rx="18" ry="8" fill="#1a1200" opacity="0.5"/><line x1="33" y1="72" x2="29" y2="79" stroke="#c09050" stroke-width="2.5"/><line x1="47" y1="72" x2="51" y2="79" stroke="#c09050" stroke-width="2.5"/></svg>`,
-  seagull:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="50" rx="19" ry="13" fill="#e8ecf4"/><ellipse cx="54" cy="51" rx="14" ry="6" fill="#c8d0e0" transform="rotate(15,54,51)"/><ellipse cx="26" cy="51" rx="14" ry="6" fill="#c8d0e0" transform="rotate(-15,26,51)"/><ellipse cx="40" cy="54" rx="12" ry="8" fill="#f4f8fc"/><circle cx="40" cy="29" r="12" fill="#f0f4f8"/><circle cx="44" cy="28" r="3.5" fill="#e8ecf4"/><circle cx="45.5" cy="27" r="2.2" fill="#1a1830"/><circle cx="46.5" cy="26" r="0.9" fill="#fff" opacity="0.9"/><path d="M51,28 Q57,26 60,29 Q58,32 52,31" fill="#e87020" opacity="0.9"/><path d="M28,27 Q22,24 20,27 Q22,30 28,29" fill="#808090" opacity="0.6"/><path d="M18,58 Q10,66 7,75 Q14,65 19,60" fill="#a0a8b8"/><line x1="36" y1="62" x2="32" y2="70" stroke="#c8d0e0" stroke-width="1.5"/><line x1="44" y1="62" x2="48" y2="70" stroke="#c8d0e0" stroke-width="1.5"/></svg>`,
-  magpie:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="19" ry="14" fill="#1a1a1a"/><ellipse cx="54" cy="52" rx="12" ry="7" fill="#0e0e0e" transform="rotate(14,54,52)"/><ellipse cx="26" cy="52" rx="12" ry="7" fill="#0e0e0e" transform="rotate(-14,26,52)"/><ellipse cx="40" cy="55" rx="12" ry="9" fill="#e8f0f8" opacity="0.9"/><ellipse cx="40" cy="52" rx="7" ry="5" fill="#e8e8f4"/><circle cx="40" cy="29" r="12" fill="#1a1a1a"/><path d="M25,22 Q19,14 21,7 Q23,3 26,7 Q29,13 30,21" fill="#1a1a1a" stroke="#303030" stroke-width="0.5"/><path d="M55,22 Q61,14 59,7 Q57,3 54,7 Q51,13 50,21" fill="#1a1a1a" stroke="#303030" stroke-width="0.5"/><circle cx="44" cy="28" r="3.5" fill="#1a1a1a"/><circle cx="45.5" cy="27" r="2.2" fill="#ffffff"/><circle cx="46.5" cy="26" r="0.9" fill="#1a1a1a" opacity="0.95"/><path d="M50,27 L62,28 L62,31 L50,30" fill="#222222"/><line x1="36" y1="64" x2="32" y2="72" stroke="#606070" stroke-width="1.5"/><line x1="44" y1="64" x2="48" y2="72" stroke="#606070" stroke-width="1.5"/></svg>`,
-  blackCockatoo:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="51" rx="19" ry="14" fill="#0a0a14"/><ellipse cx="54" cy="52" rx="11" ry="6" fill="#050510" transform="rotate(16,54,52)"/><ellipse cx="26" cy="52" rx="11" ry="6" fill="#050510" transform="rotate(-16,26,52)"/><ellipse cx="40" cy="54" rx="11" ry="8" fill="#1a1030" opacity="0.8"/><circle cx="40" cy="28" r="12" fill="#0a0a18"/><path d="M30,17 Q28,9 30,3 Q31.5,0 33,3 Q35,9 34,18 Z" fill="#050510"/><path d="M40,16 Q38,8 40,2 Q41.5,-1 43,2 Q45,8 44,17 Z" fill="#050510"/><path d="M50,17 Q52,9 50,3 Q48.5,0 47,3 Q45,9 46,18 Z" fill="#050510"/><circle cx="30" cy="3" r="2.5" fill="#7020a0"/><circle cx="40" cy="2" r="2.5" fill="#7020a0"/><circle cx="50" cy="3" r="2.5" fill="#7020a0"/><circle cx="44" cy="27" r="3.8" fill="#0a0a18"/><circle cx="45.5" cy="26" r="2.5" fill="#6010c0"/><circle cx="46.5" cy="25" r="1" fill="#c060ff" opacity="0.9"/><path d="M50,27 L63,28 L63,31 L50,30" fill="#141420"/><line x1="36" y1="64" x2="32" y2="72" stroke="#1a1428" stroke-width="1.5"/><line x1="44" y1="64" x2="48" y2="72" stroke="#1a1428" stroke-width="1.5"/></svg>`,
-  emu:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="56" rx="26" ry="19" fill="#2a2010"/><ellipse cx="40" cy="54" rx="17" ry="13" fill="#5a4820" opacity="0.8"/><path d="M40,38 Q36,26 37,14 Q38.5,8 40.5,7 Q42.5,8 43,14 Q44,26 40,38" fill="#1a1408"/><circle cx="40" cy="8" r="11" fill="#3a2810"/><circle cx="40" cy="7" r="7" fill="#5a4020" opacity="0.6"/><circle cx="44" cy="7" r="3.5" fill="#2a1808"/><circle cx="45.5" cy="6" r="2.2" fill="#e07030"/><circle cx="46.5" cy="5" r="0.9" fill="#fff" opacity="0.9"/><path d="M32,8 Q25,6 24,10 Q27,14 33,13" fill="#e87020" opacity="0.8"/><ellipse cx="40" cy="63" rx="20" ry="7" fill="#1a1000" opacity="0.6"/><line x1="33" y1="74" x2="28" y2="79" stroke="#8a6830" stroke-width="3"/><line x1="47" y1="74" x2="52" y2="79" stroke="#8a6830" stroke-width="3"/></svg>`,
+  robin:'', sparrow:'', phainopepla:'', crow:'', goose:'',
+  kookaburra:'', toucan:'', peregrine:'', secretary:'',
+  lyrebird:'', shoebill:'', harpy:'', flamingo:'', baldEagle:'',
+  macaw:'', snowyOwl:'', raven:'', swan:'', hummingbird:'',
+  kiwi:'', penguin:'', ostrich:'', seagull:'', magpie:'',
+  blackCockatoo:'', emu:''
 };
-
 // ============================================================
 //  AILMENT DEFINITIONS
 // ============================================================
@@ -3004,7 +2980,7 @@ function renderUnlockPopupsOnGameover(){
   pops.forEach(p=>{
     const b=BIRDS[p.birdKey];
     if(!b) return;
-    const portrait=(b.portraitKey&&PORTRAITS[b.portraitKey])?PORTRAITS[b.portraitKey]:'';
+    const portrait=renderBirdIconHTML(b.portraitKey||b.birdKey||p.birdKey,'small',false);
     const div=document.createElement('div');
     div.className='unlock-popup';
     div.innerHTML=`<div class="unlock-title">${p.titleText} You have unlocked "<strong>${b.name}</strong>".</div><div class="unlock-card"><div class="bird-portrait" style="width:56px;height:56px;">${portrait}</div><div class="unlock-statline">HP ${b.stats.maxHp} · ATK ${b.stats.atk} · DEF ${b.stats.def} · SPD ${b.stats.spd}</div></div>`;
@@ -6420,38 +6396,6 @@ function ensureOwEncounterMaterialized(encounterStage){
   });
 }
 
-function escapeEncounterPreviewHtml(s){
-  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/** Four skill names: evolved story kit when present, else pool keys or synced ability objects. */
-function getEnemyPreviewSkillNames(enemy){
-  const names=[];
-  if(!enemy) return ['—','—','—','—'];
-  if(enemy.id==='duke_blakiston'){
-    return ["River Grip","Royal Decree","Court Wardens","Owl's Verdict"];
-  }
-  if(Array.isArray(enemy.storyAbilityKit) && enemy.storyAbilityKit.length){
-    enemy.storyAbilityKit.slice(0,4).forEach(id=>{
-      const t=ABILITY_TEMPLATES[id];
-      names.push(t?.name||String(id));
-    });
-  } else if(Array.isArray(enemy.abilities) && enemy.abilities.length){
-    enemy.abilities.slice(0,4).forEach(entry=>{
-      if(typeof entry==='string'){
-        const eab=ENEMY_ABILITY_POOL[entry];
-        const t=ABILITY_TEMPLATES[entry];
-        names.push(eab?.name||t?.name||String(entry));
-      } else if(entry && typeof entry==='object'){
-        const t=ABILITY_TEMPLATES[entry.id];
-        names.push(String(entry.name||t?.name||entry.id||'—'));
-      }
-    });
-  }
-  while(names.length<4) names.push('—');
-  return names.slice(0,4);
-}
-
 function getEnemyPreviewLevel(enemy){
   if(!enemy) return 1;
   if(Number.isFinite(enemy.storyLevel)) return enemy.storyLevel;
@@ -6478,86 +6422,93 @@ function getEnemyPreviewThreatLine(enemy){
   return {short:'—', detail:'Threat: —'};
 }
 
-/** Source of truth for encounter preview + tooltips: materialized OW chain, else current G.enemy. */
-function getCurrentStageEncounterPreviewData(){
-  const st=getEncounterStage();
-  ensureOwEncounterMaterialized(st);
-  const idx=G._owEnemyIndex||0;
-  if(!G.endlessMode && G._owStageEnemies?.length && Array.isArray(G._owEncounterMaterialized)){
-    return G._owEncounterMaterialized.map((en,i)=>({
-      enemy:en,
-      slotIndex:i,
-      isCurrent:i===idx,
-    })).filter(x=>x.enemy);
-  }
-  if(G.enemy) return [{enemy:G.enemy, slotIndex:0, isCurrent:true}];
-  return [];
+function escapeEnemyInfoPopupHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function buildEncounterPreviewTooltipHtml(enemy){
-  if(!enemy) return '';
-  const nm=escapeEncounterPreviewHtml(enemy.name||'Enemy');
-  const cls=idToClassLabel(resolveFinalClass(enemy.class||enemy.enemyClass||inferEnemyClassFromStyle(enemy.aiStyle), enemy.birdKey||''));
-  const sz=SIZE_LABELS[String(enemy.size||'medium').toLowerCase()]||escapeEncounterPreviewHtml(enemy.size||'');
-  const lv=getEnemyPreviewLevel(enemy);
-  const thr=getEnemyPreviewThreatLine(enemy);
-  const skills=getEnemyPreviewSkillNames(enemy).map(s=>`<li>${escapeEncounterPreviewHtml(s)}</li>`).join('');
-  const mini=enemy.portraitKey||enemy.birdKey||'';
-  const icon=(PORTRAITS[mini]||PORTRAITS[String(mini).toLowerCase()]||enemy.emoji||'🪶');
-  return `<div class="enc-preview-tt"><div class="enc-preview-tt-head">${icon} <strong>${nm}</strong></div>
-<div class="enc-preview-tt-meta">Class: ${escapeEncounterPreviewHtml(cls)}<br/>Size: ${escapeEncounterPreviewHtml(sz)}<br/>LVL ${lv}<br/>${escapeEncounterPreviewHtml(thr.detail)}</div>
-<div class="enc-preview-tt-skills"><div class="enc-preview-tt-skills-h">Skills</div><ul class="enc-preview-tt-ul">${skills}</ul></div></div>`;
-}
-
-function renderEncounterPreview(){
-  const wrap=document.getElementById('encounter-preview-wrap');
-  if(!wrap) return;
-  if(!document.getElementById('screen-battle')?.classList.contains('active')){
-    wrap.style.display='none';
-    return;
+function buildEnemyInfoPopupAbilitiesHtml(enemy){
+  if(!enemy) return '<em>No special abilities</em>';
+  if(enemy.id==='duke_blakiston'){
+    const lines=[
+      ['River Grip','Physical pressure and control.'],
+      ['Royal Decree','Shifts the flow of battle.'],
+      ['Court Wardens','Summons aid.'],
+      ["Owl's Verdict",'Devastating finisher phases.'],
+    ];
+    return '<ul>'+lines.map(([n,d])=>`<li><strong>${escapeEnemyInfoPopupHtml(n)}</strong> — ${escapeEnemyInfoPopupHtml(d)}</li>`).join('')+'</ul>';
   }
-  wrap.style.display='block';
-  const rows=getCurrentStageEncounterPreviewData();
-  const inner=wrap.querySelector('.encounter-preview-inner');
-  if(!inner) return;
-  if(!rows.length){
-    inner.innerHTML='<div class="enc-preview-empty">No encounter data</div>';
-    return;
-  }
-  inner.classList.toggle('encounter-preview--single', rows.length===1);
-  inner.innerHTML=rows.map(({enemy,isCurrent},i)=>{
-    const pk=enemy.portraitKey||enemy.birdKey||'';
-    const sprite=(PORTRAITS[pk]||PORTRAITS[String(pk).toLowerCase()]||`<span class="enc-preview-emoji">${enemy.emoji||'🪶'}</span>`);
-    const nm=escapeEncounterPreviewHtml(enemy.name||'—');
-    const lv=getEnemyPreviewLevel(enemy);
-    const thr=getEnemyPreviewThreatLine(enemy);
-    const tt=buildEncounterPreviewTooltipHtml(enemy);
-    const cur=isCurrent?' enc-preview-card--current':'';
-    return `<div class="enc-preview-card${cur}" data-enc-idx="${i}" tabindex="0" aria-label="${nm}, level ${lv}, ${thr.short}">
-<div class="enc-preview-sprite">${sprite}</div>
-<div class="enc-preview-text">
-<div class="enc-preview-name">${nm}${enemy.isBoss?' <span class="enc-preview-crown" aria-hidden="true">👑</span>':''}</div>
-<div class="enc-preview-sub">LVL ${lv} · ${escapeEncounterPreviewHtml(thr.short)}</div>
-</div>
-</div>`;
-  }).join('');
-  inner.querySelectorAll('.enc-preview-card').forEach(card=>{
-    const idx=Number(card.getAttribute('data-enc-idx'));
-    const row=rows[idx];
-    if(!row) return;
-    const html=buildEncounterPreviewTooltipHtml(row.enemy);
-    const show=e=>{
-      showTooltip(e, html, e.clientX+14, e.clientY+14);
-    };
-    card.addEventListener('mouseenter', show);
-    card.addEventListener('mousemove', e=>moveTooltip(e.clientX+14, e.clientY+14));
-    card.addEventListener('mouseleave', hideTooltip);
-    card.addEventListener('focus', ev=>{
-      const r = card.getBoundingClientRect();
-      showTooltip(ev, html, r.right + 12, r.top + 4);
+  const parts=[];
+  if(Array.isArray(enemy.abilities) && enemy.abilities.length){
+    enemy.abilities.forEach(abKey=>{
+      if(typeof abKey!=='string') return;
+      const eab=ENEMY_ABILITY_POOL[abKey];
+      if(!eab) return;
+      const dmgNote=eab.dmg?` <em>(${escapeEnemyInfoPopupHtml(String(eab.dmg))})</em>`:'';
+      parts.push(`<li><strong>${escapeEnemyInfoPopupHtml(eab.name)}</strong> — ${escapeEnemyInfoPopupHtml(eab.desc||'')}${dmgNote}</li>`);
     });
-    card.addEventListener('blur', hideTooltip);
-  });
+  }
+  if(!parts.length && Array.isArray(enemy.storyAbilityKit) && enemy.storyAbilityKit.length){
+    enemy.storyAbilityKit.slice(0,8).forEach(id=>{
+      const t=ABILITY_TEMPLATES[id];
+      if(t) parts.push(`<li><strong>${escapeEnemyInfoPopupHtml(t.name||id)}</strong> — ${escapeEnemyInfoPopupHtml(String(t.levels?.[0]?.desc||t.desc||''))}</li>`);
+    });
+  }
+  return parts.length?`<ul>${parts.join('')}</ul>`:'<em>No special abilities</em>';
+}
+
+function closeEnemyInfoPopup(){
+  const popup=document.getElementById('enemy-info-popup');
+  if(popup) popup.style.display='none';
+}
+
+function openEnemyInfoPopup(){
+  if(!G.enemy) return;
+  const popup=document.getElementById('enemy-info-popup');
+  if(!popup) return;
+  wireEnemyInfoPopupOnce();
+  const spriteEl=document.getElementById('enemy-info-popup-sprite');
+  if(spriteEl){
+    let ent=G.enemy;
+    if(G.enemy.birdKey&&BIRDS[G.enemy.birdKey]){
+      ent=Object.assign({}, BIRDS[G.enemy.birdKey], G.enemy, { portraitKey: BIRDS[G.enemy.birdKey].portraitKey || G.enemy.portraitKey });
+    }
+    spriteEl.innerHTML=renderEntityAvatarHTML(ent,'battle');
+  }
+  const nm=escapeEnemyInfoPopupHtml(String(G.enemy.name||'Enemy'));
+  const hdr=document.getElementById('enemy-info-popup-header');
+  if(hdr) hdr.innerHTML=`<strong>${nm}</strong>${G.enemy.isBoss?' <span aria-hidden="true">👑</span>':''}`;
+  const lv=Number.isFinite(G.enemy.storyLevel)?G.enemy.storyLevel:(Number.isFinite(G.enemy.effectiveLevel)?G.enemy.effectiveLevel:getEnemyPreviewLevel(G.enemy));
+  const cls=idToClassLabel(resolveFinalClass(G.enemy.class||G.enemy.enemyClass||inferEnemyClassFromStyle(G.enemy.aiStyle||'tactical'), G.enemy.birdKey||''));
+  const szRaw=SIZE_LABELS[String(G.enemy.size||'medium').toLowerCase()]||String(G.enemy.size||'');
+  const sz=escapeEnemyInfoPopupHtml(szRaw);
+  const thr=getEnemyPreviewThreatLine(G.enemy);
+  const meta=document.getElementById('enemy-info-popup-meta');
+  if(meta) meta.innerHTML=`Class: ${escapeEnemyInfoPopupHtml(cls)} · Size: ${sz}<br/>LVL ${lv} · ${escapeEnemyInfoPopupHtml(thr.detail)}`;
+  const ab=document.getElementById('enemy-info-popup-abilities');
+  if(ab) ab.innerHTML=buildEnemyInfoPopupAbilitiesHtml(G.enemy);
+  popup.style.display='flex';
+  popup.classList.add('enemy-info-popup--open');
+}
+
+function wireEnemyInfoPopupOnce(){
+  if(G._enemyInfoPopupWired) return;
+  G._enemyInfoPopupWired=true;
+  const root=document.getElementById('enemy-info-popup');
+  if(root){
+    root.querySelector('.enemy-info-popup-backdrop')?.addEventListener('click',closeEnemyInfoPopup);
+    root.querySelector('.enemy-info-popup-close')?.addEventListener('click',closeEnemyInfoPopup);
+  }
+  const wrap=document.getElementById('enemy-avatar-wrap');
+  if(wrap){
+    wrap.style.cursor='pointer';
+    wrap.setAttribute('role','button');
+    wrap.setAttribute('tabindex','0');
+    wrap.setAttribute('aria-label','View enemy abilities');
+    wrap.addEventListener('click',e=>{ e.stopPropagation(); openEnemyInfoPopup(); });
+    wrap.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openEnemyInfoPopup(); }
+    });
+  }
 }
 
 /** PNG: assets/arenas/arena-{id}.png — see assets/arenas/README.md */
@@ -6976,7 +6927,8 @@ function showNextStagePreview() {
   } else {
     enemy=ENEMIES[Math.min(nextStage-1,ENEMIES.length-1)];
     const sizeLabel={tiny:'Tiny',small:'Small',medium:'Medium',large:'Large',xl:'Extra Large'}[enemy.size]||'?';
-    el.innerHTML=`<div class="nsp-title">⟩ Next Stage ${nextStage}</div><div class="nsp-enemy">${enemy.portraitKey&&PORTRAITS[enemy.portraitKey]?PORTRAITS[enemy.portraitKey]:enemy.emoji}</div><div class="nsp-name">${enemy.isBoss?`👑 ${enemy.bossTitle}: `:''} ${enemy.name}</div><div class="nsp-stats">HP ${enemy.hp} · ATK ${enemy.atk} · ${sizeLabel}${enemy.isBoss?' · <span class="rage-badge">BOSS</span>':''}</div>`;
+    const nspSprite=enemy.portraitKey?renderBirdIconHTML(enemy.portraitKey,'small',false):`<span class="nsp-emoji">${enemy.emoji||'⚔'}</span>`;
+    el.innerHTML=`<div class="nsp-title">⟩ Next Stage ${nextStage}</div><div class="nsp-enemy">${nspSprite}</div><div class="nsp-name">${enemy.isBoss?`👑 ${enemy.bossTitle}: `:''} ${enemy.name}</div><div class="nsp-stats">HP ${enemy.hp} · ATK ${enemy.atk} · ${sizeLabel}${enemy.isBoss?' · <span class="rage-badge">BOSS</span>':''}</div>`;
   }
   el.style.display='block';
 }
@@ -7430,23 +7382,16 @@ function neutralBirdFallbackHTML(sizeClass){
 }
 function renderBirdIconHTML(birdKey, sizeClass, locked){
   const k = normalizeSpriteBirdKey(birdKey);
-  const spriteBirds = /^(sparrow|goose|blackbird|crow|macaw|robin|hummingbird|shoebill|secretarybird|secretary|magpie|kookaburra|kiwi|penguin|flamingo|seagull|swan|emu|bowerbird|raven|lyrebird|peregrine|snowyowl|toucan|dukeblakiston|albatross|harpy|harpyeagle|baldeagle|blackcockatoo|ostrich|cassowary)$/;
+  const spriteBirds = /^(sparrow|goose|blackbird|crow|macaw|robin|dove|hummingbird|shoebill|secretarybird|secretary|magpie|kookaburra|kiwi|penguin|flamingo|seagull|swan|emu|bowerbird|raven|lyrebird|peregrine|snowyowl|toucan|dukeblakiston|albatross|harpy|harpyeagle|baldeagle|blackcockatoo|ostrich|cassowary)$/;
   if(spriteBirds.test(k)){
     return `<div class="sprite4 ${sizeClass||''} sprite-${k} frame-0 ${locked?'locked':''}"></div>`;
   }
-  const portrait = (globalThis.PORTRAITS && (PORTRAITS[birdKey] || PORTRAITS[k])) || '';
-  if(portrait) return `<div class="bird-emo">${portrait}</div>`;
   return neutralBirdFallbackHTML(sizeClass);
 }
 function renderEntityAvatarHTML(entity, context='battle', locked=false){
   const key = normalizeSpriteBirdKey(entity?.portraitKey || entity?.birdKey || entity?.id || '');
   const sizeClass = getUISizeClass(entity, context);
-  const html = renderBirdIconHTML(key, sizeClass, locked);
-  if(/sprite4|bird-fallback-svg/.test(html)) return html;
-  if(globalThis.PORTRAITS && (PORTRAITS[key] || PORTRAITS[String(key).toLowerCase()])){
-    return (PORTRAITS[key] || PORTRAITS[String(key).toLowerCase()]);
-  }
-  return neutralBirdFallbackHTML(sizeClass);
+  return renderBirdIconHTML(key, sizeClass, locked);
 }
 function syncSelectTakeFlightButton(){
   const btn=document.getElementById('take-flight-select-btn');
@@ -8169,7 +8114,7 @@ Estimated damage: ${eab.dmg||(`${low}-${high}`)}`;
   wireCombatDropdownStateSync();
   applyUIStateToDOM();
   renderActions();
-  renderEncounterPreview();
+  wireEnemyInfoPopupOnce();
 }
 
 function setHpBar(who,hp,max) {
@@ -19865,7 +19810,6 @@ function updateStageProgress() {
       bossEl.appendChild(pip);
     });
   }
-  if(typeof renderEncounterPreview==='function') renderEncounterPreview();
 }
 
 // ============================================================
@@ -19906,8 +19850,12 @@ document.addEventListener('keydown', e => {
         if(btn&&!btn.disabled) { btn.click(); return; }
       }
     }
-    // Escape = menu
-    if(e.key==='Escape') { if(!G.animLock) document.getElementById('nest-modal')?.classList.toggle('open'); }
+    // Escape: close enemy info popup first, else nest menu
+    if(e.key==='Escape') {
+      const eip=document.getElementById('enemy-info-popup');
+      if(eip && eip.classList.contains('enemy-info-popup--open')){ closeEnemyInfoPopup(); return; }
+      if(!G.animLock) document.getElementById('nest-modal')?.classList.toggle('open');
+    }
     // M = mute
     if(e.key.toLowerCase()==='m') toggleSound();
   }
@@ -20686,7 +20634,7 @@ applyUIStateToDOM();
      3 power/buff
    ============================================================ */
 (function(){
-  const SPRITE_KEYS = new Set(['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','secretary','magpie','kookaburra','kiwi','penguin','robin','flamingo','seagull','swan','emu','bowerbird','raven','lyrebird','peregrine','snowyowl','toucan','dukeblakiston','albatross','harpy','harpyeagle','baldeagle','blackcockatoo','ostrich','cassowary']);
+  const SPRITE_KEYS = new Set(['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','secretary','magpie','kookaburra','kiwi','penguin','robin','dove','flamingo','seagull','swan','emu','bowerbird','raven','lyrebird','peregrine','snowyowl','toucan','dukeblakiston','albatross','harpy','harpyeagle','baldeagle','blackcockatoo','ostrich','cassowary']);
   const CASTERS = new Set(['singer','trickster']);
 
   function normKey(k){ return String(k||'').toLowerCase().replace(/[^a-z]/g,''); } // secretaryBird -> secretarybird
@@ -20822,7 +20770,7 @@ applyUIStateToDOM();
    - Forces all UI locations using PORTRAITS[...] to show sprites
    ============================================================ */
 (function(){
-  const SPRITE_KEYS = ['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','secretary','magpie','kookaburra','flamingo','seagull','swan','emu','bowerbird','raven','lyrebird','peregrine','snowyowl','toucan','dukeblakiston','albatross','harpy','harpyeagle','baldeagle','blackcockatoo','ostrich','cassowary'];
+  const SPRITE_KEYS = ['sparrow','goose','blackbird','crow','macaw','hummingbird','shoebill','secretarybird','secretary','magpie','kookaburra','robin','kiwi','penguin','dove','flamingo','seagull','swan','emu','bowerbird','raven','lyrebird','peregrine','snowyowl','toucan','dukeblakiston','albatross','harpy','harpyeagle','baldeagle','blackcockatoo','ostrich','cassowary'];
   function mk(k, small=true){
     const cls = small ? 'sprite4 small' : 'sprite4';
     return `<div class="${cls} sprite-${k} frame-0"></div>`;
@@ -20832,8 +20780,7 @@ applyUIStateToDOM();
     SPRITE_KEYS.forEach(k=>{
       PORTRAITS[k] = mk(k, true);
     });
-    // common portraitKey variants
-    if(PORTRAITS['secretaryBird']) PORTRAITS['secretaryBird'] = mk('secretarybird', true);
+    PORTRAITS['secretaryBird'] = mk('secretarybird', true);
   }
 
   // Also make sure buildBirdCard locked branch is not stuck on emoji after render
@@ -21373,7 +21320,7 @@ SPRITE_KEYS_ALL.add('magpie');
 /* ===== FINAL PENGUIN RENDER PATCH ===== */
 (function(){
   const spriteBirds = new Set([
-    'sparrow','goose','blackbird','crow','macaw','robin','hummingbird','shoebill',
+    'sparrow','goose','blackbird','crow','macaw','robin','dove','hummingbird','shoebill',
     'secretarybird','secretary','magpie','kookaburra','kiwi','penguin','flamingo','seagull',
     'swan','emu','bowerbird','raven','lyrebird','peregrine','snowyowl','toucan','dukeblakiston',
     'albatross','harpy','harpyeagle','baldeagle','blackcockatoo','ostrich','cassowary'

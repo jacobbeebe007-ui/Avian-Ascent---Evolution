@@ -78,7 +78,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 #ov-meta{display:flex;flex-direction:column;gap:4px;align-items:center;max-width:340px;}
 #ov-meta .ov-meta-line{font-family:'EB Garamond',serif;font-size:13px;color:var(--parch);text-align:center;line-height:1.35;}
 #ov-meta .ov-meta-line strong{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--gold-d);margin-right:6px;text-transform:uppercase;}
-#ov-enemies{font-family:'EB Garamond',serif;font-size:12px;color:var(--parch);text-align:center;line-height:2.2;}
+#ov-enemies{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:stretch;max-width:440px;margin:8px auto 0;line-height:normal;font-family:'EB Garamond',serif;font-size:12px;color:var(--parch);text-align:center;}
+.ov-enemy-card{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:10px 12px;border:1px solid rgba(200,160,32,.22);background:rgba(200,160,32,.06);border-radius:8px;transition:background .2s,border-color .2s;max-width:160px;}
+.ov-enemy-card:hover,.ov-enemy-card:focus-visible{border-color:var(--gold);background:rgba(200,160,32,.14);outline:none;}
+.ov-enemy-sprite{width:56px;height:56px;border-radius:6px;background-size:200% 200%;background-position:0% 0%;image-rendering:pixelated;background-color:rgba(0,0,0,.28);}
+.ov-enemy-name{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--gold-l);text-transform:uppercase;}
+.ov-enemy-meta{font-size:11px;color:var(--parch);line-height:1.3;}
+#ov-bird-popup{display:none;position:fixed;inset:0;z-index:1200;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.62);}
+#ov-bird-popup.on{display:flex;}
+.ov-bird-popup-frame{position:relative;max-width:340px;width:100%;padding:22px 20px 18px;border:1px solid rgba(200,160,32,.35);border-radius:10px;background:linear-gradient(145deg,#050905,#0c120a);box-shadow:0 16px 48px rgba(0,0,0,.5);}
+#ov-bird-popup-close{position:absolute;top:6px;right:10px;background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;}
+#ov-bird-popup-close:hover{color:var(--gold-l);}
+#ov-bird-popup-sprite{width:72px;height:72px;margin:0 auto 10px;border-radius:8px;background-size:200% 200%;background-position:0% 0%;image-rendering:pixelated;background-color:rgba(0,0,0,.35);}
+#ov-bird-popup-sprite.ov-bird-popup-sprite--empty{opacity:.4;}
+#ov-bird-popup-name{font-family:'Cinzel Decorative',serif;font-size:15px;color:var(--gold-l);text-align:center;margin-bottom:8px;}
+#ov-bird-popup-meta{font-family:'EB Garamond',serif;font-size:13px;color:var(--parch);line-height:1.45;text-align:center;margin-bottom:12px;}
+#ov-bird-popup-abilities{font-family:'EB Garamond',serif;font-size:13px;color:var(--parch);line-height:1.4;}
+#ov-bird-popup-abilities ul{margin:0;padding-left:1.1em;}
+#ov-bird-popup-abilities li{margin:5px 0;}
 .ov-dismiss{font-family:'Cinzel',serif;font-size:7px;color:rgba(200,160,32,.22);margin-top:4px;letter-spacing:3px;}
 #ov-confirm-btn{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:10px 30px;cursor:pointer;border:1px solid var(--gold-d);background:rgba(200,160,32,.08);color:var(--gold);transition:all .2s;margin-top:10px;display:none;}
 #ov-confirm-btn:hover{background:rgba(200,160,32,.22);border-color:var(--gold);color:var(--gold-l);}
@@ -214,6 +231,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
       <div id="ov-enemies"></div>
       <button id="ov-confirm-btn">ENTER &#9654;</button>
       <div class="ov-dismiss">ESC TO DISMISS · CLICK BACKDROP TO CLOSE</div>
+    </div>
+  </div>
+  <div id="ov-bird-popup" aria-hidden="true">
+    <div class="ov-bird-popup-frame">
+      <button type="button" id="ov-bird-popup-close" aria-label="Close">&times;</button>
+      <div id="ov-bird-popup-sprite"></div>
+      <div id="ov-bird-popup-name"></div>
+      <div id="ov-bird-popup-meta"></div>
+      <div id="ov-bird-popup-abilities"></div>
     </div>
   </div>
   <div id="pick">
@@ -382,7 +408,147 @@ const SPRITES = {
   bowerbird:     'assets/sprites/bowerbird.png',
   secretaryBird: 'assets/sprites/Secretary Bird.png',
   albatross:     'assets/sprites/Albatross.png',
+  dove:          'assets/sprites/dove.png',
+  dukeBlakiston: 'assets/sprites/Duke Blakiston.png',
 };
+
+const OW_THREAT_LABELS={1:'Low',2:'Moderate',3:'High',4:'Extreme',6:'Final'};
+function owLevelBand(st){
+  const s=Math.max(1,Math.floor(Number(st)||1));
+  if(s<=4)return[0,2];
+  if(s<=9)return[1,3];
+  if(s<=14)return[4,6];
+  return[7,10];
+}
+function normOwKey(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function owThreatForSpriteKey(sk){
+  const c=normOwKey(sk);
+  const map={sparrow:1,robin:1,blackbird:1,seagull:1,kiwi:1,dove:1,hummingbird:2,macaw:2,crow:2,magpie:2,goose:2,penguin:2,emperorpenguin:2,peregrine:3,snowyowl:3,kookaburra:3,lyrebird:3,raven:3,bowerbird:3,toucan:3,swan:3,flamingo:3,albatross:3,blackcockatoo:4,secretarybird:4,shoebill:4,harpy:4,harpyeagle:4,baldeagle:4,ostrich:4,cassowary:4,emu:4,dukeblakiston:6};
+  return map[c]!=null?map[c]:2;
+}
+const OW_BIRD_INFO={
+  sparrow:{cls:'Bruiser',size:'Tiny',abs:[['Wing Dust','Reduces your ACC by 15%.']]},
+  robin:{cls:'Striker',size:'Small',abs:[['Wing Dust','Reduces your ACC by 15%.']]},
+  crow:{cls:'Trickster',size:'Medium',abs:[['Screech','Applies Chicken Pox (reduced damage/dodge).'],['Body Slam','Physical damage; chance to stun.']]},
+  dove:{cls:'Cautious',size:'Small',abs:[['Screech','Applies Chicken Pox (reduced damage/dodge).']]},
+  magpie:{cls:'Trickster',size:'Medium',abs:[['Wing Dust','Reduces your ACC by 15%.'],['Screech','Applies Chicken Pox.']]},
+  seagull:{cls:'Skirmisher',size:'Medium',abs:[['Wing Dust','Reduces your ACC.'],['Plague Bite','Applies strong Poison stacks.']]},
+  goose:{cls:'Tank',size:'XL',abs:[['Shriek','Applies Fear.'],['Screech','Applies Chicken Pox.']]},
+  toucan:{cls:'Tank',size:'Large',abs:[['Fire Feathers','Applies Feather Disease.'],['Plague Bite','Applies strong Poison.']]},
+  kookaburra:{cls:'Bruiser',size:'Medium',abs:[['Shriek','Applies Fear.'],['Fury','Raises enemy ATK.']]},
+  macaw:{cls:'Singer',size:'Small',abs:[['Fire Feathers','Applies Feather Disease.'],['Screech','Applies Chicken Pox.']]},
+  flamingo:{cls:'Singer',size:'Large',abs:[['Plague Bite','Applies strong Poison.'],['Screech','Applies Chicken Pox.']]},
+  lyrebird:{cls:'Singer',size:'Medium',abs:[['Shriek','Applies Fear.'],['Plague Bite','Applies strong Poison.']]},
+  snowyowl:{cls:'Singer',size:'Small',abs:[['Shriek','Applies Fear.'],['Wing Dust','Reduces your ACC.']]},
+  raven:{cls:'Singer',size:'Medium',abs:[['Shriek','Applies Fear.'],['Wing Dust','Reduces your ACC.'],['Screech','Applies Chicken Pox.']]},
+  secretarybird:{cls:'Predator',size:'Large',abs:[['Body Slam','Physical damage; chance to stun.'],['Iron Feathers','Defends for 2 turns.']]},
+  peregrine:{cls:'Predator',size:'Small',abs:[['Body Slam','Physical damage; chance to stun.'],['Wing Dust','Reduces your ACC.']]},
+  baldeagle:{cls:'Predator',size:'Large',abs:[['Fury','Raises enemy ATK.'],['Fire Feathers','Applies Feather Disease.'],['Body Slam','Physical damage; chance to stun.']]},
+  harpyeagle:{cls:'Predator',size:'Large',abs:[['Fury','Raises enemy ATK.'],['Fire Feathers','Applies Feather Disease.'],['Plague Bite','Applies strong Poison.']]},
+  cassowary:{cls:'Tank',size:'XL',abs:[['Fury','Raises enemy ATK.'],['Screech','Applies Chicken Pox.']]},
+  emu:{cls:'Tank',size:'XL',abs:[['Fury','Raises enemy ATK.'],['Screech','Applies Chicken Pox.']]},
+  ostrich:{cls:'Bruiser',size:'XL',abs:[['Body Slam','Physical damage; chance to stun.']]},
+  swan:{cls:'Tank',size:'Large',abs:[['Preen','Heals the enemy.'],['Screech','Applies Chicken Pox.']]},
+  blackcockatoo:{cls:'Predator',size:'Medium',abs:[['Wing Dust','Reduces your ACC.'],['Iron Feathers','Defends for 2 turns.']]},
+  shoebill:{cls:'Tank',size:'XL',abs:[['Iron Feathers','Defends for 2 turns.'],['Body Slam','Physical damage; chance to stun.']]},
+  kiwi:{cls:'Skirmisher',size:'Small',abs:[['Wing Dust','Reduces your ACC.']]},
+  penguin:{cls:'Tank',size:'XL',abs:[['Iron Feathers','Defends for 2 turns.'],['Screech','Applies Chicken Pox.']]},
+  albatross:{cls:'Skirmisher',size:'Large',abs:[['Shriek','Applies Fear.'],['Plague Bite','Applies strong Poison.']]},
+  bowerbird:{cls:'Trickster',size:'Medium',abs:[['Screech','Applies Chicken Pox.']]},
+  hummingbird:{cls:'Striker',size:'Tiny',abs:[['Wing Dust','Reduces your ACC.']]},
+  dukeblakiston:{cls:'Boss',size:'XL',abs:[['River Grip','Crushing control.'],['Royal Decree','Shifts battle rules.'],['Court Wardens','Summons aid.'],["Owl's Verdict",'Devastating finisher.']]},
+};
+function resolveOwEnemySpriteKey(label){
+  const t=normOwKey(label);
+  const aliases={dukeblakiston:'dukeBlakiston',dukblakiston:'dukeBlakiston'};
+  if(aliases[t])return aliases[t];
+  const hit=BIRDS.find(b=>normOwKey(b.n)===t);
+  if(hit)return hit.k;
+  return t;
+}
+function owBirdMetaForKey(sk){
+  const c=normOwKey(sk);
+  if(c==='secretarybird')return OW_BIRD_INFO.secretarybird;
+  if(c==='emperorpenguin')return OW_BIRD_INFO.penguin;
+  if(c==='snowyowl')return OW_BIRD_INFO.snowyowl;
+  if(c==='harpyeagle')return OW_BIRD_INFO.harpyeagle;
+  if(c==='baldeagle')return OW_BIRD_INFO.baldeagle;
+  if(c==='blackcockatoo')return OW_BIRD_INFO.blackcockatoo;
+  return OW_BIRD_INFO[c];
+}
+function escapeOvHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function closeOvBirdPopup(){
+  const p=document.getElementById('ov-bird-popup');
+  if(p){p.classList.remove('on');p.setAttribute('aria-hidden','true');}
+}
+function openOvBirdInfoPopup(spriteKey,displayLabel,threat,band){
+  const meta=owBirdMetaForKey(spriteKey)||{};
+  const src=SPRITES[spriteKey]||'';
+  const sp=document.getElementById('ov-bird-popup-sprite');
+  if(sp){
+    sp.style.backgroundImage=src?'url('+JSON.stringify(src)+')':'none';
+    sp.classList.toggle('ov-bird-popup-sprite--empty',!src);
+  }
+  document.getElementById('ov-bird-popup-name').innerHTML='<strong>'+escapeOvHtml(displayLabel)+'</strong>';
+  const thrLbl=OW_THREAT_LABELS[threat]||'?';
+  document.getElementById('ov-bird-popup-meta').innerHTML=
+    'Class: '+escapeOvHtml(meta.cls||'—')+' · Size: '+escapeOvHtml(meta.size||'—')+'<br/>'+
+    'Threat: '+escapeOvHtml(thrLbl)+' · LVL '+band[0]+'–'+band[1];
+  const ul=document.getElementById('ov-bird-popup-abilities');
+  if(meta.abs&&meta.abs.length){
+    ul.innerHTML='<ul>'+meta.abs.map(([n,d])=>'<li><strong>'+escapeOvHtml(n)+'</strong> — '+escapeOvHtml(d)+'</li>').join('')+'</ul>';
+  }else{
+    ul.innerHTML='<em>Abilities revealed in combat.</em>';
+  }
+  const pop=document.getElementById('ov-bird-popup');
+  if(!pop)return;
+  pop.classList.add('on');
+  pop.setAttribute('aria-hidden','false');
+}
+function fillOvEnemiesPanel(n){
+  const oe=document.getElementById('ov-enemies');
+  oe.innerHTML='';
+  if(n.type==='shop'){
+    const d=document.createElement('div');
+    d.style.cssText='font-family:EB Garamond,serif;font-style:italic;font-size:13px;color:var(--gold-d)';
+    d.textContent='Trade your Shinies for power.';
+    oe.appendChild(d);
+    return;
+  }
+  if(!Array.isArray(n.enemies)||!n.enemies.length)return;
+  const band=owLevelBand(n.stage);
+  n.enemies.forEach(function(label){
+    const sk=resolveOwEnemySpriteKey(label);
+    const threat=owThreatForSpriteKey(sk);
+    const threatLbl=OW_THREAT_LABELS[threat]||'?';
+    const src=SPRITES[sk]||'';
+    const card=document.createElement('div');
+    card.className='ov-enemy-card';
+    card.tabIndex=0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label','View abilities: '+label);
+    const sp=document.createElement('div');
+    sp.className='ov-enemy-sprite';
+    if(src) sp.style.backgroundImage='url('+JSON.stringify(src)+')';
+    const nm=document.createElement('div');
+    nm.className='ov-enemy-name';
+    nm.textContent=label;
+    const mt=document.createElement('div');
+    mt.className='ov-enemy-meta';
+    mt.textContent='Threat: '+threatLbl+' · LVL '+band[0]+'–'+band[1];
+    card.appendChild(sp);
+    card.appendChild(nm);
+    card.appendChild(mt);
+    function openP(){openOvBirdInfoPopup(sk,label,threat,band);}
+    card.addEventListener('click',function(e){e.stopPropagation();openP();});
+    card.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();openP();}
+    });
+    oe.appendChild(card);
+  });
+}
 
 const BIRDS=[
   {k:'sparrow',n:'Sparrow'},{k:'robin',n:'Robin'},{k:'crow',n:'Crow'},
@@ -569,8 +735,50 @@ function updateInfo(){
 function setHL(id,on){const n=NODES[id];if(!n||!n._sh)return;n._sh.setAttribute('stroke-width',on?3.5:2);if(n._topRing)n._topRing.setAttribute('stroke-width',on?3.5:2);}
 function _openNodeOv(){const n=NODES[curPos];if(!n||n.type==='start')return;openOv();applyNodeActionButton(document.getElementById('ov-confirm-btn'),n);}
 function setPos(nId){if(isMoving)return;if(nId===curPos){_openNodeOv();return;}isMoving=true;setHL(curPos,false);curPos=nId;setHL(curPos,true);const pl=document.getElementById('player');pl.className='moving';updateCamera(true);updateInfo();clearTimeout(moveTimer);moveTimer=setTimeout(()=>{isMoving=false;pl.className='arrive';setTimeout(()=>{pl.className='idle';},500);_openNodeOv();},520);}
-function openOv(){const n=NODES[curPos],vc=nvc(n);if(n.type==='start')return;const playSrc=SPRITES[BIRDS[birdIdx].k]||'';const ovImg=document.getElementById('ov-img');if(n.type==='shop'){ovImg.style.backgroundImage='none';ovImg.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:48px;color:#c89010;">$</div>';}else{ovImg.innerHTML='';_owSprite('ov-img',playSrc);}document.getElementById('ov-frame').style.borderColor=vc.ring;const lbl=document.querySelector('.ov-lbl');if(lbl)lbl.textContent=n.type==='shop'?'THE STORK EMPORIUM':n.final?'FINAL CONFRONTATION':n.type==='boss'?'BOSS \u00B7 STAGE '+n.stage:'STAGE '+n.stage;document.getElementById('ov-name').textContent=n.name;document.getElementById('ov-name').style.color=n.final?'#e890ff':n.type==='boss'?'#ff9090':n.type==='shop'?'#f0c020':'var(--gold-l)';document.getElementById('ov-loc').textContent=n.terrain?'\u2767 '+n.terrain:'';document.getElementById('ov-status').textContent=getNodeLockReason(n);const meta=document.getElementById('ov-meta');meta.innerHTML='';if(n.type==='shop'){meta.insertAdjacentHTML('beforeend','<div class="ov-meta-line"><strong>Shop</strong>Static stock after first visit.</div><div class="ov-meta-line"><strong>Refresh</strong>Rerolls the shelf and locks the new stock in.</div>');}else{const battleCount=getNodeBattleCount(n);meta.insertAdjacentHTML('beforeend',`<div class="ov-meta-line"><strong>Sequence</strong>${battleCount} battle${battleCount===1?'':'s'} in this node.</div><div class="ov-meta-line"><strong>Reward</strong>${getNodeRewardPreview(n).replace(/^Reward Preview:\\s*/,'')}</div>`);}const oe=document.getElementById('ov-enemies');oe.innerHTML='';if(n.type==='shop'){const d=document.createElement('div');d.style.cssText='font-family:EB Garamond,serif;font-style:italic;font-size:13px;color:var(--gold-d)';d.textContent='Trade your Shinies for power.';oe.appendChild(d);}document.getElementById('ov').classList.add('on');}
-document.getElementById('ov').addEventListener('click',(e)=>{if(e.target===document.getElementById('ov'))document.getElementById('ov').classList.remove('on');});
+function openOv(){
+  const n=NODES[curPos],vc=nvc(n);
+  if(n.type==='start')return;
+  closeOvBirdPopup();
+  const playSrc=SPRITES[BIRDS[birdIdx].k]||'';
+  const ovImg=document.getElementById('ov-img');
+  if(n.type==='shop'){
+    ovImg.style.backgroundImage='none';
+    ovImg.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:48px;color:#c89010;">$</div>';
+  }else{
+    ovImg.innerHTML='';
+    _owSprite('ov-img',playSrc);
+  }
+  document.getElementById('ov-frame').style.borderColor=vc.ring;
+  const lbl=document.querySelector('.ov-lbl');
+  if(lbl)lbl.textContent=n.type==='shop'?'THE STORK EMPORIUM':n.final?'FINAL CONFRONTATION':n.type==='boss'?'BOSS · STAGE '+n.stage:'STAGE '+n.stage;
+  document.getElementById('ov-name').textContent=n.name;
+  document.getElementById('ov-name').style.color=n.final?'#e890ff':n.type==='boss'?'#ff9090':n.type==='shop'?'#f0c020':'var(--gold-l)';
+  document.getElementById('ov-loc').textContent=n.terrain?'❧ '+n.terrain:'';
+  document.getElementById('ov-status').textContent=getNodeLockReason(n);
+  const meta=document.getElementById('ov-meta');
+  meta.innerHTML='';
+  if(n.type==='shop'){
+    meta.insertAdjacentHTML('beforeend','<div class="ov-meta-line"><strong>Shop</strong>Static stock after first visit.</div><div class="ov-meta-line"><strong>Refresh</strong>Rerolls the shelf and locks the new stock in.</div>');
+  }else{
+    const battleCount=getNodeBattleCount(n);
+    meta.insertAdjacentHTML('beforeend','<div class="ov-meta-line"><strong>Sequence</strong>'+battleCount+' battle'+(battleCount===1?'':'s')+' in this node.</div><div class="ov-meta-line"><strong>Reward</strong>'+getNodeRewardPreview(n).replace(/^Reward Preview:\s*/,'')+'</div>');
+  }
+  fillOvEnemiesPanel(n);
+  document.getElementById('ov').classList.add('on');
+}
+document.getElementById('ov').addEventListener('click',function(e){
+  if(e.target===document.getElementById('ov')){
+    closeOvBirdPopup();
+    document.getElementById('ov').classList.remove('on');
+  }
+});
+(function(){
+  const bp=document.getElementById('ov-bird-popup');
+  const fr=document.querySelector('.ov-bird-popup-frame');
+  if(fr) fr.addEventListener('click',function(e){e.stopPropagation();});
+  if(bp) bp.addEventListener('click',function(){closeOvBirdPopup();});
+  document.getElementById('ov-bird-popup-close')?.addEventListener('click',function(e){e.stopPropagation();closeOvBirdPopup();});
+})();
 document.getElementById('enter-btn').addEventListener('click',_openNodeOv);
 
 const pg=document.getElementById('pick-grid');
@@ -594,7 +802,13 @@ window.addEventListener('mousemove',e=>{if(!_dr)return;const dx=(e.clientX-_dsx)
 window.addEventListener('mouseup',()=>{if(!_dr)return;_dr=false;vp.classList.remove('panning');document.getElementById('scaler').style.transition='transform .5s cubic-bezier(.25,.46,.45,.94)';document.getElementById('mw').style.transition='transform .5s cubic-bezier(.25,.46,.45,.94)';});
 document.getElementById('root').addEventListener('keydown',e=>{
   if(document.getElementById('pick').classList.contains('on')){if(e.key==='Escape'){document.getElementById('pick').classList.remove('on');document.getElementById('root').focus();}return;}
-  if(document.getElementById('ov').classList.contains('on')){if(e.key==='Escape')document.getElementById('ov').classList.remove('on');return;}
+  if(document.getElementById('ov').classList.contains('on')){
+    if(e.key==='Escape'){
+      if(document.getElementById('ov-bird-popup').classList.contains('on')) closeOvBirdPopup();
+      else document.getElementById('ov').classList.remove('on');
+    }
+    return;
+  }
   if(e.key==='b'||e.key==='B'){document.getElementById('hdr-bird-btn').click();return;}
   if(e.key==='='||e.key==='+'){e.preventDefault();setZoom(zoom+ZOOM_STEP);return;}
   if(e.key==='-'){e.preventDefault();setZoom(zoom-ZOOM_STEP);return;}
