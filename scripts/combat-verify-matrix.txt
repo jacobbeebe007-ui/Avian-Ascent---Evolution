@@ -1,0 +1,24 @@
+Manual combat verification matrix (run after code changes)
+============================================================
+
+Pending strike (Crow opening_focus / Battle Plan / Perfect Hunt + shared buff)
+- Cast opening utility, then main physical attack: damage and crit should reflect queued mult/hit/crit for the whole offensive action (multi-hit included).
+- Cast opening utility, then spell: matk-based spells should gain the same mult add; spellMissChance should respect queued hit bonus.
+- Queued row appears on damaging ability tooltips while pendingStrikeBuff is stored.
+
+Hunter's Mark style (huntersMarkBonusPct)
+- Still consumed on first dealDamage to enemy (unchanged).
+
+Burning + hit
+- getPlayerMissChance now applies getPlayerHitBonus (burning +20 and pending strike). Confirm expected miss reduction on any physical using template miss.
+
+Passives / relics
+- Opening Crown: first physical hit each turn +20% (unchanged logic in dealDamage).
+
+Energy / cooldown smoke
+- Spot-check one bird per class: button EN matches template; abilities with cooldownByLevel show non-zero CD when appropriate.
+
+Duration policy (amended)
+- **Stat buffs/debuffs** (anything that raises/lowers ATK, MATK, DEF, MDEF, ACC, dodge/mdodge, SPD, etc.): target **1 turn** by default unless the skill is an explicit sustained exception; descriptions should match tick/cleanup.
+- **Ailments** (Fear, Poison, Burn, Confused, Paralyze, etc.): **do not** force 1 turn—longer / level-scaled durations are OK when templates and applyAilment paths say so.
+- Fear / poison / burn / confuse durations scale via ailment paths, not the pending-strike helper.
