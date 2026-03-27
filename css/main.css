@@ -1567,9 +1567,9 @@ header p{color:var(--text-dim);font-style:italic;font-size:1rem;margin-top:4px;}
 .action-btn.utility .btn-type{color:var(--green-light);}
 
 .stat-hp{color:#6ae86a}.stat-atk{color:#ff8c70}.stat-def{color:#90c0ff}.stat-spd{color:#ffd36a}.stat-dodge{color:#b0f0ff}.stat-acc{color:#e8e0a0}.stat-crit{color:#f0a0ff}.stat-magic{color:#6ae8e8}
-.action-btn.endturn-mini{padding:6px 10px;min-width:auto;font-size:.7rem;line-height:1;border-width:1px;background:rgba(40,45,58,.9)}
+.action-btn.endturn-mini{min-height:auto;padding:4px 9px;min-width:auto;font-size:.62rem;line-height:1.15;border-width:1px;border-radius:6px;background:rgba(40,45,58,.9);justify-content:center;align-items:center;}
 .actions-grid-footer{grid-column:1/-1;width:100%;flex-basis:100%;margin-top:8px;padding-top:10px;border-top:1px solid rgba(120,140,170,.22);display:flex;justify-content:center;align-items:center;}
-.actions-grid-footer .end-turn-bar__btn{min-width:132px;}
+.actions-grid-footer .end-turn-bar__btn{min-width:0;padding:3px 8px;font-size:.58rem;}
 .ab-lv-badge{position:absolute;top:4px;right:6px;font-size:.65rem;font-family:'Cinzel',serif;color:var(--gold);}
 
 /* Ailment icons on buttons */
@@ -2688,6 +2688,7 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
 #screen-battle .actions-grid-footer{border-top-color:rgba(200,160,32,.2);}
 .actions-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
 .action-btn{min-height:108px;min-width:0;padding:9px 10px;border-radius:10px;gap:4px;}
+#screen-battle .action-btn.endturn-mini{min-height:auto;align-self:center;}
 .btn-name{font-size:.83rem;line-height:1.2;}
 .btn-type{font-size:.62rem;opacity:.95;}
 .btn-cost{font-size:.72rem;}
