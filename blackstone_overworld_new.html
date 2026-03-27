@@ -10,7 +10,10 @@
 :root{--gold:#c8a020;--gold-l:#f0d060;--gold-d:#8a6010;--parch:#d4c090;--mist:#8aaa98;}
 html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 #root{width:100vw;height:100vh;display:flex;flex-direction:column;overflow:hidden;outline:none;}
-#hdr{flex-shrink:0;height:52px;z-index:10;position:relative;background:linear-gradient(180deg,#020402,#080c06);border-bottom:1px solid var(--gold-d);display:flex;align-items:center;justify-content:space-between;padding:0 20px;}
+#hdr{flex-shrink:0;height:52px;z-index:10;position:relative;background:linear-gradient(180deg,#020402,#080c06);border-bottom:1px solid var(--gold-d);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:0 20px;}
+.hdr-title-wrap{display:flex;align-items:center;justify-self:start;}
+#hdr-hint{justify-self:center;text-align:center;}
+.hdr-spacer{justify-self:end;min-width:0;}
 #hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),#f0d060,var(--gold),transparent);}
 #hdr h1{font-family:'Cinzel Decorative',serif;font-size:14px;font-weight:700;color:var(--gold-l);letter-spacing:3px;text-shadow:0 0 18px rgba(200,160,32,.5),0 2px 4px rgba(0,0,0,.9);}
 .orn{color:var(--gold);opacity:.6;margin:0 10px;font-size:16px;}
@@ -20,7 +23,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 #hdr-bird-btn span{font-family:'Cinzel',serif;font-size:9px;color:var(--gold);letter-spacing:1px;}
 #vp{flex:1;overflow:hidden;position:relative;cursor:grab;}
 #vp.panning{cursor:grabbing;}
-#scaler{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;}
+#scaler{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform,left,top;}
 #mw{position:absolute;top:0;left:0;width:1536px;height:1024px;}
 #bg-img{position:absolute;top:0;left:0;width:1536px;height:1024px;display:block;}
 /* Sprite-sheet frame 0 (top-left quadrant) for all overworld portrait divs */
@@ -42,6 +45,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 .zbtn:hover{background:rgba(200,160,32,.14);border-color:var(--gold);}
 #zlabel{font-family:'Cinzel',serif;font-size:8px;color:var(--gold-d);letter-spacing:1px;padding:2px 6px;background:rgba(2,4,2,.88);border:1px solid rgba(200,160,32,.16);min-width:36px;text-align:center;}
 #panel{flex-shrink:0;height:154px;z-index:10;position:relative;background:linear-gradient(180deg,#040804,#080d06);border-top:1px solid var(--gold-d);display:flex;align-items:stretch;overflow:hidden;}
+#panel-footer-mid{flex:0 0 auto;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:14px;padding:10px 16px;border-left:1px solid rgba(200,160,32,.1);border-right:1px solid rgba(200,160,32,.1);background:linear-gradient(180deg,rgba(6,10,6,.5),rgba(4,8,4,.35));min-width:0;}
+#panel-footer-mid #hdr-bird-btn{padding:5px 10px;}
+#panel-footer-mid #hdr-nest-btn{padding:6px 14px;font-size:8px;}
+#panel-footer-mid #hdr-shiny-count{padding:6px 12px;font-size:9px;}
 #panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold-l),var(--gold),transparent);}
 #p-portrait{flex-shrink:0;width:138px;background:linear-gradient(135deg,#030603,#0a1207);border-right:1px solid rgba(200,160,32,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px;position:relative;}
 #p-portrait::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(200,160,32,.05) 0%,transparent 70%);}
@@ -58,12 +65,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 #i-enemies .el{font-family:'Cinzel',serif;font-size:7px;color:var(--gold-d);letter-spacing:2px;}
 .ec{font-family:'EB Garamond',serif;font-size:11px;background:rgba(200,160,32,.07);border:1px solid rgba(200,160,32,.18);color:var(--parch);padding:1px 7px;}
 .ec.boss{background:rgba(139,26,26,.14);border-color:rgba(200,80,80,.28);color:#ff9090;}
-#p-nav{flex-shrink:0;width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;border-left:1px solid rgba(200,160,32,.1);}
-.nbtn{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;background:rgba(200,160,32,.06);border:1px solid rgba(200,160,32,.22);color:var(--gold);padding:6px 12px;cursor:pointer;width:100%;text-align:center;transition:all .2s;}
+#p-nav{flex-shrink:0;width:168px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;padding:12px 14px;border-left:1px solid rgba(200,160,32,.1);}
+.nbtn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(200,160,32,.06);border:1px solid rgba(200,160,32,.22);color:var(--gold);padding:12px 14px;cursor:pointer;width:100%;text-align:center;transition:all .2s;border-radius:8px;}
 .nbtn:hover:not(:disabled){background:rgba(200,160,32,.15);border-color:var(--gold);}
 .nbtn:disabled{opacity:.16;cursor:default;}
-#enter-btn{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;padding:8px 12px;cursor:pointer;width:100%;text-align:center;border:1px solid;transition:all .2s;display:none;}
-#enter-btn:hover{filter:brightness(1.3);}
 #ov{display:none;position:fixed;inset:0;z-index:100;background:rgba(2,4,2,.97);flex-direction:column;align-items:center;justify-content:center;gap:13px;cursor:pointer;}
 #ov.on{display:flex;}
 #ov-frame{border:1px solid var(--gold-d);padding:28px 36px;display:flex;flex-direction:column;align-items:center;gap:11px;background:linear-gradient(135deg,#050905,#090e07);box-shadow:0 0 36px rgba(200,160,32,.12);position:relative;}
@@ -134,11 +139,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
   #hdr h1{font-size:10px;letter-spacing:1px;}
   .orn{margin:0 4px;font-size:12px;}
   #hdr-hint{display:none;}
-  #hdr-bird-btn{padding:4px 8px;}
-  #hdr-bird-btn span{font-size:8px;}
-  #hdr-bird-img{width:22px;height:22px;}
-  #hdr-nest-btn{font-size:7px;padding:4px 8px;letter-spacing:1px;}
-  #hdr-shiny-count{font-size:8px;padding:4px 6px;}
+  #panel-footer-mid{flex-wrap:wrap;gap:8px;padding:8px 10px;border-left:none;border-right:none;border-top:1px solid rgba(200,160,32,.14);order:3;width:100%;justify-content:center;}
+  #panel-footer-mid #hdr-bird-btn{padding:4px 8px;}
+  #panel-footer-mid #hdr-bird-btn span{font-size:8px;}
+  #panel-footer-mid #hdr-bird-img{width:22px;height:22px;}
+  #panel-footer-mid #hdr-nest-btn{font-size:7px;padding:4px 8px;letter-spacing:1px;}
+  #panel-footer-mid #hdr-shiny-count{font-size:8px;padding:4px 6px;}
   /* Map viewport fills remaining space above bottom nav */
   #vp{flex:1;min-height:0;}
   /* Panel becomes a slim row + full-width nav bar below it */
@@ -152,15 +158,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
     width:100%;
     flex-direction:row;
     justify-content:stretch;
-    height:52px;
-    gap:8px;
+    align-items:stretch;
+    min-height:56px;
+    gap:10px;
     padding:8px 12px;
     border-left:none;
     border-top:1px solid rgba(200,160,32,.18);
     background:rgba(4,8,4,.96);
+    order:4;
   }
-  .nbtn{flex:1;padding:8px 4px;font-size:8px;}
-  #enter-btn{flex:1.6;padding:8px 4px;font-size:8px;}
+  .nbtn{flex:1;padding:12px 8px;font-size:10px;}
   /* Minimap: smaller + shifted */
   #mm-wrap{top:6px;right:6px;}
   /* Zoom controls: smaller */
@@ -172,18 +179,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
 <body>
 <div id="root" tabindex="0">
   <header id="hdr">
-    <div style="display:flex;align-items:center;">
+    <div class="hdr-title-wrap">
       <span class="orn">&#10022;</span><h1>BLACKSTONE FOREST</h1><span class="orn">&#10022;</span>
     </div>
     <span id="hdr-hint">Arrows &middot; Enter &middot; B = Bird &middot; Scroll = Zoom &middot; Drag = Pan</span>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div id="hdr-bird-btn">
-        <div id="hdr-bird-img" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;overflow:hidden;"></div>
-        <span id="hdr-bird-name">SPARROW</span>
-      </div>
-      <button id="hdr-nest-btn">&#x1F3E0; NEST</button>
-      <span id="hdr-shiny-count">&#11088; 0</span>
-    </div>
+    <div class="hdr-spacer" aria-hidden="true"></div>
   </header>
   <div id="vp">
     <div id="scaler">
@@ -215,10 +215,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060d05;}
       <div id="i-rewards"></div>
       <div id="i-enemies"></div>
     </div>
+    <div id="panel-footer-mid">
+      <div id="hdr-bird-btn">
+        <div id="hdr-bird-img" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;overflow:hidden;"></div>
+        <span id="hdr-bird-name">SPARROW</span>
+      </div>
+      <button type="button" id="hdr-nest-btn">&#x1F3E0; NEST</button>
+      <span id="hdr-shiny-count">&#11088; 0</span>
+    </div>
     <div id="p-nav">
-      <button class="nbtn" id="btn-prev">&#9664; PREV</button>
-      <button class="nbtn" id="btn-next">NEXT &#9654;</button>
-      <button id="enter-btn"></button>
+      <button type="button" class="nbtn" id="btn-prev">&#9664; PREV</button>
+      <button type="button" class="nbtn" id="btn-next">NEXT &#9654;</button>
     </div>
   </div>
   <div id="ov">
@@ -690,8 +697,15 @@ function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
 
 function applyCamera(anim){
   const sc=document.getElementById('scaler'),mw=document.getElementById('mw');
-  const tr=anim?'transform .5s cubic-bezier(.25,.46,.45,.94)':'none';
-  sc.style.transition=tr;mw.style.transition=anim?'transform .5s cubic-bezier(.25,.46,.45,.94)':'none';
+  const vp=document.getElementById('vp');
+  const vw=vp.offsetWidth||900,vh=vp.offsetHeight||420;
+  const contentW=MAP_W*zoom,contentH=MAP_H*zoom;
+  const padL=Math.max(0,(vw-contentW)/2);
+  const padT=Math.max(0,(vh-contentH)/2);
+  const tr=anim?'transform .5s cubic-bezier(.25,.46,.45,.94),left .35s ease,top .35s ease':'none';
+  const trM=anim?'transform .5s cubic-bezier(.25,.46,.45,.94)':'none';
+  sc.style.transition=tr;mw.style.transition=trM;
+  sc.style.left=padL+'px';sc.style.top=padT+'px';
   sc.style.transform=`scale(${zoom})`;mw.style.transform=`translate(${-_cx}px,${-_cy}px)`;
   document.getElementById('zlabel').textContent=Math.round(zoom*100)+'%';drawMM();
 }
@@ -723,9 +737,6 @@ function updateInfo(){
   const pframe=document.getElementById('p-frame');pframe.innerHTML='<div id="p-img" style="width:100%;height:100%;"></div>';const pimg=document.getElementById('p-img');
   if(n.type==='shop'){_owSprite('p-img','');pimg.style.borderRadius='0';document.getElementById('p-frame').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:32px;color:#c89010;">$</div>';document.getElementById('p-name').textContent='EMPORIUM';}
   else{_owSprite('p-img',SPRITES[BIRDS[birdIdx].k]||'');pimg.style.borderRadius='0';document.getElementById('p-name').textContent=BIRDS[birdIdx].n.toUpperCase();}
-  const eb=document.getElementById('enter-btn');
-  if(n.type==='start'){eb.style.display='none';}
-  else{eb.style.display='block';applyNodeActionButton(eb,n);}
   document.getElementById('btn-prev').disabled=curPos<=0;
   const nextNd=NODES[curPos+1];
   document.getElementById('btn-next').disabled=curPos>=UNLOCKED||!nextNd||!isNodeUnlocked(nextNd)||nodeBlocksAdvance(NODES[curPos]);
@@ -779,8 +790,6 @@ document.getElementById('ov').addEventListener('click',function(e){
   if(bp) bp.addEventListener('click',function(){closeOvBirdPopup();});
   document.getElementById('ov-bird-popup-close')?.addEventListener('click',function(e){e.stopPropagation();closeOvBirdPopup();});
 })();
-document.getElementById('enter-btn').addEventListener('click',_openNodeOv);
-
 const pg=document.getElementById('pick-grid');
 BIRDS.forEach((b,i)=>{const c=document.createElement('div');c.className='bc'+(i===0?' sel':'');const pf=document.createElement('div');pf.className='cp';const ps=document.createElement('div');ps.className='pick-sprite';ps.setAttribute('aria-hidden','true');ps.style.backgroundImage=SPRITES[b.k]?'url('+JSON.stringify(SPRITES[b.k])+')':'';pf.appendChild(ps);const lb=document.createElement('span');lb.textContent=b.n;c.appendChild(pf);c.appendChild(lb);c.addEventListener('click',()=>{pg.querySelectorAll('.bc').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');birdIdx=i;applyBird();});pg.appendChild(c);});
 function _owSprite(id,src){const el=document.getElementById(id);if(!el)return;el.style.backgroundImage=src?'url('+JSON.stringify(src)+')':'';}
@@ -837,13 +846,13 @@ document.getElementById('btn-next').addEventListener('click',()=>{
   if(isMoving||curPos>=UNLOCKED) return;
   const next=NODES[curPos+1];
   if(!next||!isNodeUnlocked(next)){
-    const eb=document.getElementById('enter-btn');
-    if(eb&&eb.style.display!=='none'){eb.style.outline='2px solid rgba(120,80,40,.5)';setTimeout(()=>{eb.style.outline='';},650);}
+    const mid=document.getElementById('panel-footer-mid');
+    if(mid){mid.style.boxShadow='inset 0 0 0 2px rgba(200,160,64,.35)';setTimeout(()=>{mid.style.boxShadow='';},650);}
     return;
   }
   if(nodeBlocksAdvance(NODES[curPos])){
-    const eb=document.getElementById('enter-btn');
-    if(eb&&eb.style.display!=='none'){eb.style.outline='2px solid var(--gold)';setTimeout(()=>{eb.style.outline='';},600);}
+    const st=document.getElementById('i-status');
+    if(st){st.style.color='var(--gold-l)';setTimeout(()=>{st.style.removeProperty('color');},700);}
     return;
   }
   setPos(curPos+1);
@@ -867,9 +876,11 @@ const pl=document.getElementById('player');pl.style.transition='none';
 pl.style.left=(NODES[0].x-26)+'px';pl.style.top=(NODES[0].y-60)+'px';
 setHL(0,true);updateInfo();
 const vpInit=document.getElementById('vp');
-_cx=clamp(NODES[0].x-(vpInit.offsetWidth||900)/zoom/2,0,MAP_W);
-_cy=clamp(NODES[0].y-(vpInit.offsetHeight||420)/zoom/2,0,MAP_H);
+const viw=vpInit.offsetWidth||900,vih=vpInit.offsetHeight||420;
+_cx=clamp(NODES[0].x-viw/zoom/2,0,Math.max(0,MAP_W-viw/zoom));
+_cy=clamp(NODES[0].y-vih/zoom/2,0,Math.max(0,MAP_H-vih/zoom));
 applyCamera(false);
+window.addEventListener('resize',()=>applyCamera(false));
 requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .5s cubic-bezier(.25,.46,.45,.94),top .5s cubic-bezier(.25,.46,.45,.94)';document.getElementById('root').focus();}));
 </script>
 <script>
@@ -1009,18 +1020,6 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
       window.location.href = 'index.html';
     });
   }
-
-  // ── Replace #enter-btn handler so it always opens the popup ───────────────
-  (function() {
-    const old = document.getElementById('enter-btn');
-    if (!old) return;
-    const fresh = old.cloneNode(true); // removes existing listener
-    old.parentNode.replaceChild(fresh, old);
-
-    fresh.addEventListener('click', function() {
-      _openNodeOv();
-    });
-  })();
 
   // ── Keep ESC closing the overlay ──────────────────────────────────────────
   // (already handled by the existing keyboard listener — no changes needed)
