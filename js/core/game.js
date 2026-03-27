@@ -6305,6 +6305,7 @@ function clearOverworldPendingBattle() {
   G._owEncounterMaterialized = null;
   G._owEncounterMaterializedSig = null;
   G._battleTerrain = null;
+  G._encounterPreviewCollapsed = null;
 }
 
 /** Lock story/template rolls per stage slot (no numeric scaling). */
@@ -6396,6 +6397,42 @@ function ensureOwEncounterMaterialized(encounterStage){
   });
 }
 
+function escapeEncounterPreviewHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/** Enemy combat ability keys resolved to display names. Prefers ENEMY_ABILITY_POOL (actual combat moves). */
+function getEnemyPreviewSkillNames(enemy){
+  if(!enemy) return ['—','—','—','—'];
+  if(enemy.id==='duke_blakiston'){
+    return ["River Grip","Royal Decree","Court Wardens","Owl's Verdict"];
+  }
+  const names=[];
+  if(Array.isArray(enemy.abilities) && enemy.abilities.length){
+    enemy.abilities.slice(0,4).forEach(entry=>{
+      if(typeof entry==='string'){
+        const eab=ENEMY_ABILITY_POOL[entry];
+        names.push(eab?.name||String(entry));
+      } else if(entry && typeof entry==='object'){
+        const eab=ENEMY_ABILITY_POOL[entry.id];
+        names.push(eab?.name||String(entry.name||entry.id||'—'));
+      }
+    });
+  }
+  while(names.length<4) names.push('—');
+  return names.slice(0,4);
+}
+
+/** Enemy combat ability keys (raw pool IDs). */
+function getEnemyPreviewSkillKeys(enemy){
+  if(!enemy) return [];
+  if(enemy.id==='duke_blakiston') return ['dukeRiverGrip','dukeDecree','dukeWardens','dukeOwlsVerdict'];
+  if(Array.isArray(enemy.abilities) && enemy.abilities.length){
+    return enemy.abilities.slice(0,4).map(entry=>typeof entry==='string'?entry:(entry?.id||''));
+  }
+  return [];
+}
+
 function getEnemyPreviewLevel(enemy){
   if(!enemy) return 1;
   if(Number.isFinite(enemy.storyLevel)) return enemy.storyLevel;
@@ -6422,93 +6459,144 @@ function getEnemyPreviewThreatLine(enemy){
   return {short:'—', detail:'Threat: —'};
 }
 
-function escapeEnemyInfoPopupHtml(s){
-  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/** Source of truth for encounter preview + tooltips: materialized OW chain, else current G.enemy. */
+function getCurrentStageEncounterPreviewData(){
+  const st=getEncounterStage();
+  ensureOwEncounterMaterialized(st);
+  const idx=G._owEnemyIndex||0;
+  if(!G.endlessMode && G._owStageEnemies?.length && Array.isArray(G._owEncounterMaterialized)){
+    return G._owEncounterMaterialized.map((en,i)=>({
+      enemy:en,
+      slotIndex:i,
+      isCurrent:i===idx,
+    })).filter(x=>x.enemy);
+  }
+  if(G.enemy) return [{enemy:G.enemy, slotIndex:0, isCurrent:true}];
+  return [];
 }
 
-function buildEnemyInfoPopupAbilitiesHtml(enemy){
-  if(!enemy) return '<em>No special abilities</em>';
-  if(enemy.id==='duke_blakiston'){
-    const lines=[
-      ['River Grip','Physical pressure and control.'],
-      ['Royal Decree','Shifts the flow of battle.'],
-      ['Court Wardens','Summons aid.'],
-      ["Owl's Verdict",'Devastating finisher phases.'],
-    ];
-    return '<ul>'+lines.map(([n,d])=>`<li><strong>${escapeEnemyInfoPopupHtml(n)}</strong> — ${escapeEnemyInfoPopupHtml(d)}</li>`).join('')+'</ul>';
+/** Rich HTML tooltip for a single enemy ability (ENEMY_ABILITY_POOL entry). */
+function buildEnemyAbilityTooltipHtml(abKey, enemyStats){
+  const eab=ENEMY_ABILITY_POOL[abKey];
+  if(!eab) return '';
+  const nm=escapeEncounterPreviewHtml(eab.name||abKey);
+  const desc=escapeEncounterPreviewHtml(eab.desc||'');
+  const dmgRaw=eab.dmg||'';
+  let category='Ability';
+  if(dmgRaw==='healing') category='Heal';
+  else if(dmgRaw==='buff') category='Buff';
+  else if(abKey==='eShield'||/defend|shield/i.test(desc)) category='Shield';
+  else if(dmgRaw==='0 direct') category='Debuff';
+  else category='Offensive';
+  let dmgLine='';
+  if(category==='Offensive' && enemyStats){
+    const atk=enemyStats.atk||8;
+    const low=Math.max(1,Math.floor(atk*0.8));
+    const high=Math.max(low,Math.floor(atk*1.2));
+    dmgLine=`<div class="tt-row"><span class="tt-lbl">Damage</span><span class="tt-val">${low}–${high}</span></div>`;
+  } else if(category==='Heal' && enemyStats){
+    const heal=Math.floor((enemyStats.maxHp||enemyStats.hp||40)*0.15);
+    dmgLine=`<div class="tt-row"><span class="tt-lbl">Heal</span><span class="tt-val">~${heal} HP</span></div>`;
+  } else if(category==='Buff'){
+    dmgLine=`<div class="tt-row"><span class="tt-lbl">Effect</span><span class="tt-val">Self-buff</span></div>`;
   }
-  const parts=[];
-  if(Array.isArray(enemy.abilities) && enemy.abilities.length){
-    enemy.abilities.forEach(abKey=>{
-      if(typeof abKey!=='string') return;
-      const eab=ENEMY_ABILITY_POOL[abKey];
-      if(!eab) return;
-      const dmgNote=eab.dmg?` <em>(${escapeEnemyInfoPopupHtml(String(eab.dmg))})</em>`:'';
-      parts.push(`<li><strong>${escapeEnemyInfoPopupHtml(eab.name)}</strong> — ${escapeEnemyInfoPopupHtml(eab.desc||'')}${dmgNote}</li>`);
+  const dodge=eab.dodgeable?'<div class="tt-row"><span class="tt-lbl">Dodge</span><span class="tt-val tt-hit-good">Can be dodged</span></div>':'';
+  return `<div class="tt-name">${nm}</div><div class="tt-type">${category}</div>${dmgLine}${dodge}<div class="tt-desc">${desc}</div>`;
+}
+
+function buildEncounterPreviewTooltipHtml(enemy){
+  if(!enemy) return '';
+  const nm=escapeEncounterPreviewHtml(enemy.name||'Enemy');
+  const cls=idToClassLabel(resolveFinalClass(enemy.class||enemy.enemyClass||inferEnemyClassFromStyle(enemy.aiStyle), enemy.birdKey||''));
+  const sz=SIZE_LABELS[String(enemy.size||'medium').toLowerCase()]||escapeEncounterPreviewHtml(enemy.size||'');
+  const lv=getEnemyPreviewLevel(enemy);
+  const thr=getEnemyPreviewThreatLine(enemy);
+  const mini=enemy.portraitKey||enemy.birdKey||'';
+  const icon=(PORTRAITS[mini]||PORTRAITS[String(mini).toLowerCase()]||enemy.emoji||'🪶');
+  const keys=getEnemyPreviewSkillKeys(enemy);
+  const names=getEnemyPreviewSkillNames(enemy);
+  const eStats=enemy.stats||{atk:enemy.atk||8,maxHp:enemy.maxHp||enemy.hp||40};
+  const skillItems=names.map((n,i)=>{
+    const key=keys[i]||'';
+    const eab=ENEMY_ABILITY_POOL[key];
+    const desc=eab?escapeEncounterPreviewHtml(eab.desc):'';
+    const badge=eab?(eab.dodgeable?' <span style="color:var(--gold);font-size:.62rem">dodgeable</span>':''):'';
+    return `<li>${escapeEncounterPreviewHtml(n)}${badge}${desc?`<div style="font-size:.65rem;color:var(--text-dim);margin:1px 0 3px">${desc}</div>`:''}</li>`;
+  }).join('');
+  return `<div class="enc-preview-tt"><div class="enc-preview-tt-head">${icon} <strong>${nm}</strong></div>
+<div class="enc-preview-tt-meta">Class: ${escapeEncounterPreviewHtml(cls)}<br/>Size: ${escapeEncounterPreviewHtml(sz)}<br/>LVL ${lv}<br/>${escapeEncounterPreviewHtml(thr.detail)}</div>
+<div class="enc-preview-tt-skills"><div class="enc-preview-tt-skills-h">Combat Abilities</div><ul class="enc-preview-tt-ul">${skillItems}</ul></div></div>`;
+}
+
+function _initEncounterPreviewCollapse(){
+  const wrap=document.getElementById('encounter-preview-wrap');
+  const btn=document.getElementById('encounter-preview-toggle');
+  if(!wrap||!btn||btn._epWired) return;
+  btn._epWired=true;
+  btn.addEventListener('click',()=>{
+    const collapsed=wrap.classList.toggle('collapsed');
+    btn.setAttribute('aria-expanded', String(!collapsed));
+    G._encounterPreviewCollapsed=collapsed;
+  });
+  const mq=window.matchMedia('(max-width:720px)');
+  const applyResponsive=()=>{
+    if(G._encounterPreviewCollapsed!=null) return;
+    wrap.classList.toggle('collapsed', mq.matches);
+    btn.setAttribute('aria-expanded', String(!mq.matches));
+  };
+  mq.addEventListener('change', applyResponsive);
+  applyResponsive();
+}
+
+function renderEncounterPreview(){
+  const wrap=document.getElementById('encounter-preview-wrap');
+  if(!wrap) return;
+  if(!document.getElementById('screen-battle')?.classList.contains('active')){
+    wrap.style.display='none';
+    return;
+  }
+  wrap.style.display='block';
+  _initEncounterPreviewCollapse();
+  const rows=getCurrentStageEncounterPreviewData();
+  const inner=wrap.querySelector('.encounter-preview-inner');
+  if(!inner) return;
+  if(!rows.length){
+    inner.innerHTML='<div class="enc-preview-empty">No encounter data</div>';
+    return;
+  }
+  inner.classList.toggle('encounter-preview--single', rows.length===1);
+  inner.innerHTML=rows.map(({enemy,isCurrent},i)=>{
+    const pk=enemy.portraitKey||enemy.birdKey||'';
+    const sprite=(PORTRAITS[pk]||PORTRAITS[String(pk).toLowerCase()]||`<span class="enc-preview-emoji">${enemy.emoji||'🪶'}</span>`);
+    const nm=escapeEncounterPreviewHtml(enemy.name||'—');
+    const lv=getEnemyPreviewLevel(enemy);
+    const thr=getEnemyPreviewThreatLine(enemy);
+    const cur=isCurrent?' enc-preview-card--current':'';
+    return `<div class="enc-preview-card${cur}" data-enc-idx="${i}" tabindex="0" aria-label="${nm}, level ${lv}, ${thr.short}">
+<div class="enc-preview-sprite">${sprite}</div>
+<div class="enc-preview-text">
+<div class="enc-preview-name">${nm}${enemy.isBoss?' <span class="enc-preview-crown" aria-hidden="true">👑</span>':''}</div>
+<div class="enc-preview-sub">LVL ${lv} · ${escapeEncounterPreviewHtml(thr.short)}</div>
+</div>
+</div>`;
+  }).join('');
+  inner.querySelectorAll('.enc-preview-card').forEach(card=>{
+    const idx=Number(card.getAttribute('data-enc-idx'));
+    const row=rows[idx];
+    if(!row) return;
+    const html=buildEncounterPreviewTooltipHtml(row.enemy);
+    const show=e=>{
+      showTooltip(e, html, e.clientX+14, e.clientY+14);
+    };
+    card.addEventListener('mouseenter', show);
+    card.addEventListener('mousemove', e=>moveTooltip(e.clientX+14, e.clientY+14));
+    card.addEventListener('mouseleave', hideTooltip);
+    card.addEventListener('focus', ev=>{
+      const r = card.getBoundingClientRect();
+      showTooltip(ev, html, r.right + 12, r.top + 4);
     });
-  }
-  if(!parts.length && Array.isArray(enemy.storyAbilityKit) && enemy.storyAbilityKit.length){
-    enemy.storyAbilityKit.slice(0,8).forEach(id=>{
-      const t=ABILITY_TEMPLATES[id];
-      if(t) parts.push(`<li><strong>${escapeEnemyInfoPopupHtml(t.name||id)}</strong> — ${escapeEnemyInfoPopupHtml(String(t.levels?.[0]?.desc||t.desc||''))}</li>`);
-    });
-  }
-  return parts.length?`<ul>${parts.join('')}</ul>`:'<em>No special abilities</em>';
-}
-
-function closeEnemyInfoPopup(){
-  const popup=document.getElementById('enemy-info-popup');
-  if(popup) popup.style.display='none';
-}
-
-function openEnemyInfoPopup(){
-  if(!G.enemy) return;
-  const popup=document.getElementById('enemy-info-popup');
-  if(!popup) return;
-  wireEnemyInfoPopupOnce();
-  const spriteEl=document.getElementById('enemy-info-popup-sprite');
-  if(spriteEl){
-    let ent=G.enemy;
-    if(G.enemy.birdKey&&BIRDS[G.enemy.birdKey]){
-      ent=Object.assign({}, BIRDS[G.enemy.birdKey], G.enemy, { portraitKey: BIRDS[G.enemy.birdKey].portraitKey || G.enemy.portraitKey });
-    }
-    spriteEl.innerHTML=renderEntityAvatarHTML(ent,'battle');
-  }
-  const nm=escapeEnemyInfoPopupHtml(String(G.enemy.name||'Enemy'));
-  const hdr=document.getElementById('enemy-info-popup-header');
-  if(hdr) hdr.innerHTML=`<strong>${nm}</strong>${G.enemy.isBoss?' <span aria-hidden="true">👑</span>':''}`;
-  const lv=Number.isFinite(G.enemy.storyLevel)?G.enemy.storyLevel:(Number.isFinite(G.enemy.effectiveLevel)?G.enemy.effectiveLevel:getEnemyPreviewLevel(G.enemy));
-  const cls=idToClassLabel(resolveFinalClass(G.enemy.class||G.enemy.enemyClass||inferEnemyClassFromStyle(G.enemy.aiStyle||'tactical'), G.enemy.birdKey||''));
-  const szRaw=SIZE_LABELS[String(G.enemy.size||'medium').toLowerCase()]||String(G.enemy.size||'');
-  const sz=escapeEnemyInfoPopupHtml(szRaw);
-  const thr=getEnemyPreviewThreatLine(G.enemy);
-  const meta=document.getElementById('enemy-info-popup-meta');
-  if(meta) meta.innerHTML=`Class: ${escapeEnemyInfoPopupHtml(cls)} · Size: ${sz}<br/>LVL ${lv} · ${escapeEnemyInfoPopupHtml(thr.detail)}`;
-  const ab=document.getElementById('enemy-info-popup-abilities');
-  if(ab) ab.innerHTML=buildEnemyInfoPopupAbilitiesHtml(G.enemy);
-  popup.style.display='flex';
-  popup.classList.add('enemy-info-popup--open');
-}
-
-function wireEnemyInfoPopupOnce(){
-  if(G._enemyInfoPopupWired) return;
-  G._enemyInfoPopupWired=true;
-  const root=document.getElementById('enemy-info-popup');
-  if(root){
-    root.querySelector('.enemy-info-popup-backdrop')?.addEventListener('click',closeEnemyInfoPopup);
-    root.querySelector('.enemy-info-popup-close')?.addEventListener('click',closeEnemyInfoPopup);
-  }
-  const wrap=document.getElementById('enemy-avatar-wrap');
-  if(wrap){
-    wrap.style.cursor='pointer';
-    wrap.setAttribute('role','button');
-    wrap.setAttribute('tabindex','0');
-    wrap.setAttribute('aria-label','View enemy abilities');
-    wrap.addEventListener('click',e=>{ e.stopPropagation(); openEnemyInfoPopup(); });
-    wrap.addEventListener('keydown',e=>{
-      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openEnemyInfoPopup(); }
-    });
-  }
+    card.addEventListener('blur', hideTooltip);
+  });
 }
 
 /** PNG: assets/arenas/arena-{id}.png — see assets/arenas/README.md */
@@ -8078,15 +8166,14 @@ function refreshBattleUI() {
     eal.innerHTML='';
     (G.enemy.abilities||[]).forEach(abKey=>{
       const eab=ENEMY_ABILITY_POOL[abKey];
-      if(eab){const t=document.createElement('span');t.className='enemy-ab-tag';t.textContent=eab.name;
-        const low=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.8));
-        const high=Math.max(low,Math.floor((G.enemy.stats.atk||8)*1.2));
-        t.title=`${eab.name} — ${eab.desc||'Enemy ability'}
-Estimated damage: ${eab.dmg||(`${low}-${high}`)}`;
-        t.addEventListener('mouseenter',e=>showTooltip(e,t.title,e.clientX+12,e.clientY+12));
+      if(eab){
+        const t=document.createElement('span');t.className='enemy-ab-tag';t.textContent=eab.name;
+        const ttHtml=buildEnemyAbilityTooltipHtml(abKey, G.enemy.stats);
+        t.addEventListener('mouseenter',e=>showTooltip(e,ttHtml,e.clientX+12,e.clientY+12));
         t.addEventListener('mousemove',e=>moveTooltip(e.clientX+12,e.clientY+12));
         t.addEventListener('mouseleave',hideTooltip);
-        eal.appendChild(t);}
+        eal.appendChild(t);
+      }
     });
   }
 
@@ -8379,19 +8466,20 @@ function renderEnemyPlan(){
     label=G.enemyNextAction.label||'Enemy Plan';
     if(G.enemyNextAction.type==='plan'){
       intentCategory='Pressure';
-      const arr=(G.enemyNextAction.actions||[]).slice(0,2).map(a=>a.type==='ability'?(ENEMY_ABILITY_POOL[a.abilityId]?.name||a.abilityId):(a.label||a.type)).join(' → ');
-      title=`Planned: ${arr}${(G.enemyNextAction.actions||[]).length>2?' +':''}`;
+      const parts=(G.enemyNextAction.actions||[]).slice(0,3);
+      title=parts.map(a=>{
+        if(a.type==='ability') return buildEnemyAbilityTooltipHtml(a.abilityId, G.enemy.stats);
+        if(a.type==='strike'){const lo=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.8));const hi=Math.max(lo,Math.floor((G.enemy.stats.atk||8)*1.2));return `<div class="tt-name">Basic Attack</div><div class="tt-type">Offensive</div><div class="tt-row"><span class="tt-lbl">Damage</span><span class="tt-val">${lo}–${hi}</span></div>`;}
+        return `<div class="tt-name">${escapeEncounterPreviewHtml(a.label||a.type)}</div>`;
+      }).filter(Boolean).join('<hr style="border:0;border-top:1px solid var(--border);margin:6px 0">');
     } else if(G.enemyNextAction.type==='ability'){
       intentCategory='Control';
-      const eab=ENEMY_ABILITY_POOL[G.enemyNextAction.abilityId];
-      title=eab?`${eab.name} — ${eab.desc||'Enemy ability'}
-Estimated effect: ${eab.dmg||'special'}`:'';
+      title=buildEnemyAbilityTooltipHtml(G.enemyNextAction.abilityId, G.enemy.stats);
     } else if(G.enemyNextAction.type==='strike'){
       intentCategory='Attack';
       const low=Math.max(1,Math.floor((G.enemy.stats.atk||8)*0.8));
       const high=Math.max(low,Math.floor((G.enemy.stats.atk||8)*1.2));
-      title=`Basic Attack — physical hit
-Estimated damage: ${low}-${high}`;
+      title=`<div class="tt-name">Basic Attack</div><div class="tt-type">Offensive</div><div class="tt-row"><span class="tt-lbl">Damage</span><span class="tt-val">${low}–${high}</span></div><div class="tt-desc">Standard physical hit.</div>`;
     }
   }
   const chips=plan.length ? plan.map((a,i)=>{
@@ -8402,7 +8490,7 @@ Estimated damage: ${low}-${high}`;
   }).join('') : '<span class="intent-chip wait">🤔 Planning</span>';
   const headCost=(plan[0] && Number.isFinite(plan[0].energyCost)) ? plan[0].energyCost : (plan[0] ? getEnemyActionEnergyCost(plan[0]) : 0);
   host.innerHTML=`<div class="intent-row"><span class="intent-name">${label}</span><span class="intent-meta"><span class="intent-type">${intentCategory}</span>${headCost?`<span class="intent-cost">${headCost} AP</span>`:''}<span class="intent-ap">EN ${curE}/${maxE}</span></span></div><div class="intent-list">${chips}</div>`;
-  host.title=title;
+  host.removeAttribute('title');
   if(title){
     host.onmouseenter=(e)=>showTooltip(e,title,e.clientX+10,e.clientY+10);
     host.onmousemove=(e)=>moveTooltip(e.clientX+10,e.clientY+10);
