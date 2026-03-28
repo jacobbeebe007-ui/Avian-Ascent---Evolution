@@ -31,27 +31,6 @@
   }
   patchDoveEnemy();
 
-  // Reinforce Stage 20 boss routing to Duke Blakiston / Blakiston.
-  const _oldLoadStage = globalThis.loadStage;
-  if (typeof _oldLoadStage === 'function') {
-    globalThis.loadStage = function() {
-      const out = _oldLoadStage.apply(this, arguments);
-      try {
-        if (globalThis.G?.stage === 20 && globalThis.G?.enemy) {
-          globalThis.G.enemy = (typeof globalThis.makeDukeBlakiston === 'function')
-            ? globalThis.makeDukeBlakiston()
-            : globalThis.G.enemy;
-          globalThis.G.enemy.portraitKey = 'duke_blakiston';
-          globalThis.G.enemy.name = globalThis.G.enemy.name || 'Duke Blakiston';
-          globalThis.G.enemy.bossTitle = globalThis.G.enemy.bossTitle || '👑 Final Boss';
-          if (typeof globalThis.refreshBattleUI === 'function') globalThis.refreshBattleUI();
-        }
-      } catch (err) {
-        console.error(err);
-      }
-      return out;
-    };
-  }
 })();
 
 
