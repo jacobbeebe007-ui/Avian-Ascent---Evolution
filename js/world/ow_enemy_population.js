@@ -124,8 +124,9 @@
       if (!n || n.type !== 'stage') continue;
       var st = Math.floor(Number(n.stage));
       if (!(st >= 1 && st <= 9) && !(st >= 11 && st <= 19)) continue;
+      // Enemy identity comes from story_enemy_registry — do not patch n.enemies.
       var en = byStage[st];
-      if (Array.isArray(en) && en.length) n.enemies = en.slice();
+      void en;
       var pb = portraitByStage[st];
       if (pb) n.portraitBird = pb;
     }

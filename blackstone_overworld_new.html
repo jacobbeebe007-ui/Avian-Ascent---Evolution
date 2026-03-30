@@ -285,7 +285,7 @@ function inferCompletedStageFromNodeId(nodeId){
   if(n.type==='shop') return Math.max(0,Number(NODES[n.id-1]?.stage||0));
   return 0;
 }
-function getNodeBattleCount(n){ return Array.isArray(n?.enemies) && n.enemies.length ? n.enemies.length : (isCombatNode(n) ? 1 : 0); }
+function getNodeBattleCount(n){ if(!n)return 0; if(!isCombatNode(n))return 0; var st=Math.max(1,Math.floor(Number(n.stage)||1)); if(typeof isBossStageStory==='function'&&isBossStageStory(st))return 1; return 2; }
 function isNodeCompleted(n){
   if(!n) return false;
   if(isCombatNode(n)) return Number(n.stage||0) <= OVERWORLD_PROGRESS.completedStage;
@@ -524,10 +524,22 @@ function fillOvEnemiesPanel(n){
     oe.appendChild(d);
     return;
   }
-  if(!Array.isArray(n.enemies)||!n.enemies.length)return;
-  const band=owLevelBand(n.stage);
-  n.enemies.forEach(function(label){
-    const sk=resolveOwEnemySpriteKey(label);
+  if(!isCombatNode(n)) return;
+  const st=Math.max(1,Math.floor(Number(n.stage)||1));
+  const band=owLevelBand(st);
+  var keys=[];
+  if(typeof generateStoryEncounter==='function'){
+    var enc=generateStoryEncounter(st, window.activeBirdKeyForOwPreview||null, null);
+    if(enc&&enc.isBoss){ keys=st===20?['dukeBlakiston']:[]; }
+    else if(enc&&enc.birdKeys&&enc.birdKeys.length){ keys=enc.birdKeys; }
+  }
+  if(!keys.length) return;
+  keys.forEach(function(bk){
+    var row=BIRDS.find(function(b){return b.k===bk;});
+    var label=row?row.n:String(bk).replace(/([A-Z])/g,' $1').replace(/^./,function(c){return c.toUpperCase();}).trim();
+    var sk=resolveOwEnemySpriteKey(label);
+    if(sk==='harpy') sk='harpyEagle';
+    if(sk==='secretary') sk='secretaryBird';
     const threat=owThreatForSpriteKey(sk);
     const threatLbl=OW_THREAT_LABELS[threat]||'?';
     const src=SPRITES[sk]||'';
@@ -562,38 +574,38 @@ const BIRDS=[
   {k:'magpie',n:'Magpie'},{k:'seagull',n:'Seagull'},{k:'goose',n:'Goose'},
   {k:'kookaburra',n:'Kookaburra'},{k:'macaw',n:'Macaw'},{k:'flamingo',n:'Flamingo'},
   {k:'snowyOwl',n:'Snowy Owl'},{k:'raven',n:'Raven'},{k:'baldEagle',n:'Bald Eagle'},
-  {k:'harpyEagle',n:'Harpy Eagle'},{k:'cassowary',n:'Cassowary'},{k:'penguin',n:'Emperor Penguin'},
+  {k:'harpy',n:'Harpy Eagle'},{k:'cassowary',n:'Cassowary'},{k:'penguin',n:'Emperor Penguin'},
   {k:'shoebill',n:'Shoebill'},{k:'kiwi',n:'Kiwi'},{k:'swan',n:'Swan'},{k:'hummingbird',n:'Hummingbird'},{k:'toucan',n:'Toucan'},
   {k:'lyrebird',n:'Lyrebird'},{k:'blackbird',n:'Blackbird'},{k:'blackCockatoo',n:'Black Cockatoo'},
-  {k:'peregrine',n:'Peregrine'},{k:'bowerbird',n:'Bowerbird'},{k:'secretaryBird',n:'Secretary Bird'},{k:'albatross',n:'Albatross'},
+  {k:'secretary',n:'Secretary Bird'},{k:'peregrine',n:'Peregrine'},{k:'bowerbird',n:'Bowerbird'},{k:'albatross',n:'Albatross'},{k:'ostrich',n:'Ostrich'},{k:'emu',n:'Emu'},
 ];
 
 // Nodes matched to Blackstone image landmarks (1536x1024)
 const NODES=[
-  {id:0,  type:'start', name:'The Barn',           x:1211, y:764,  stage:0,  enemies:[],                                  terrain:'Old Farmstead'},
-  {id:1,  type:'stage', name:'Barn Gate',           x:1086, y:825,  stage:1,  enemies:['Sparrow','Robin'],                  terrain:'Overgrown Yard', portraitBird:'sparrow'},
-  {id:2,  type:'stage', name:'Riverside Crossing',  x:922,  y:853,  stage:2,  enemies:['Crow','Dove'],                     terrain:'River Ford', portraitBird:'crow'},
-  {id:3,  type:'stage', name:'Whitewater Rocks',    x:750,  y:861,  stage:3,  enemies:['Magpie','Seagull'],                terrain:'River Rapids', portraitBird:'magpie'},
-  {id:4,  type:'stage', name:'The Crags',           x:601,  y:835,  stage:4,  enemies:['Goose','Toucan'],                  terrain:'Rocky Outcrop', portraitBird:'goose'},
+  {id:0,  type:'start', name:'The Barn',           x:1211, y:764,  stage:0, terrain:'Old Farmstead'},
+  {id:1,  type:'stage', name:'Barn Gate',           x:1086, y:825,  stage:1, terrain:'Overgrown Yard', portraitBird:'sparrow'},
+  {id:2,  type:'stage', name:'Riverside Crossing',  x:922,  y:853,  stage:2, terrain:'River Ford', portraitBird:'crow'},
+  {id:3,  type:'stage', name:'Whitewater Rocks',    x:750,  y:861,  stage:3, terrain:'River Rapids', portraitBird:'magpie'},
+  {id:4,  type:'stage', name:'The Crags',           x:601,  y:835,  stage:4, terrain:'Rocky Outcrop', portraitBird:'goose'},
   {id:5,  type:'shop',  name:'Stork Emporium',      x:500,  y:812},
-  {id:6,  type:'stage', name:'Ruined Mill',          x:409,  y:791,  stage:5,  enemies:['Kookaburra','Macaw'],              terrain:'Collapsed Mill', portraitBird:'kookaburra'},
-  {id:7,  type:'stage', name:'Forest Road',          x:429,  y:671,  stage:6,  enemies:['Flamingo','Lyrebird'],             terrain:'Darkwood Path', portraitBird:'flamingo'},
-  {id:8,  type:'stage', name:'Mossy Track',          x:578,  y:656,  stage:7,  enemies:['Snowy Owl','Raven'],               terrain:'Ancient Trail', portraitBird:'snowyOwl'},
-  {id:9,  type:'stage', name:'The Stone Bridge',     x:738,  y:617,  stage:8,  enemies:['Secretary Bird','Peregrine'],     terrain:'Stone Bridge', portraitBird:'baldEagle'},
-  {id:10, type:'stage', name:'Far Bank',             x:924,  y:600,  stage:9,  enemies:['Bald Eagle','Harpy Eagle'],       terrain:'Bridge Crossing', portraitBird:'raven'},
-  {id:11, type:'boss',  name:'Forest Keep',          x:1171, y:469,  stage:10, enemies:['Crow','Raven'],   terrain:'Abandoned Keep'},
+  {id:6,  type:'stage', name:'Ruined Mill',          x:409,  y:791,  stage:5, terrain:'Collapsed Mill', portraitBird:'kookaburra'},
+  {id:7,  type:'stage', name:'Forest Road',          x:429,  y:671,  stage:6, terrain:'Darkwood Path', portraitBird:'flamingo'},
+  {id:8,  type:'stage', name:'Mossy Track',          x:578,  y:656,  stage:7, terrain:'Ancient Trail', portraitBird:'snowyOwl'},
+  {id:9,  type:'stage', name:'The Stone Bridge',     x:738,  y:617,  stage:8, terrain:'Stone Bridge', portraitBird:'baldEagle'},
+  {id:10, type:'stage', name:'Far Bank',             x:924,  y:600,  stage:9, terrain:'Bridge Crossing', portraitBird:'raven'},
+  {id:11, type:'boss',  name:'Forest Keep',          x:1171, y:469,  stage:10, terrain:'Abandoned Keep'},
   {id:12, type:'shop',  name:'Stork Emporium',       x:1078, y:448},
-  {id:13, type:'stage', name:'Ashwood Glen',         x:851,  y:476,  stage:11, enemies:['Cassowary','Emu'],                terrain:'Ashen Forest', portraitBird:'cassowary'},
-  {id:14, type:'stage', name:'Ridgeline Path',       x:603,  y:486,  stage:12, enemies:['Ostrich','Swan'],                 terrain:'Highland Ridge', portraitBird:'swan'},
-  {id:15, type:'stage', name:'Dark Hollow',          x:439,  y:415,  stage:13, enemies:['Black Cockatoo','Shoebill'],      terrain:'Shadow Hollow', portraitBird:'shoebill'},
+  {id:13, type:'stage', name:'Ashwood Glen',         x:851,  y:476,  stage:11, terrain:'Ashen Forest', portraitBird:'cassowary'},
+  {id:14, type:'stage', name:'Ridgeline Path',       x:603,  y:486,  stage:12, terrain:'Highland Ridge', portraitBird:'swan'},
+  {id:15, type:'stage', name:'Dark Hollow',          x:439,  y:415,  stage:13, terrain:'Shadow Hollow', portraitBird:'shoebill'},
   {id:16, type:'shop',  name:'Stork Emporium',       x:353,  y:337},
-  {id:17, type:'stage', name:'Fog Pass',             x:564,  y:361,  stage:14, enemies:['Kiwi','Emperor Penguin'],         terrain:'Mountain Pass', portraitBird:'kiwi'},
-  {id:18, type:'stage', name:'Cathedral Approach',   x:677,  y:319,  stage:15, enemies:['Albatross','Bowerbird'],          terrain:'Castle Road', portraitBird:'hummingbird'},
-  {id:19, type:'stage', name:'Outer Ramparts',       x:806,  y:337,  stage:16, enemies:['Peregrine','Harpy Eagle'],        terrain:'Castle Walls', portraitBird:'harpyEagle'},
-  {id:20, type:'stage', name:'Inner Court',          x:782,  y:265,  stage:17, enemies:['Bald Eagle','Secretary Bird'],    terrain:'Outer Courtyard', portraitBird:'raven'},
-  {id:21, type:'stage', name:'High Spire',           x:701,  y:233,  stage:18, enemies:['Black Cockatoo','Lyrebird'],      terrain:'Castle Spire', portraitBird:'snowyOwl'},
-  {id:22, type:'stage', name:'Throne Gate',          x:766,  y:184,  stage:19, enemies:['Raven','Snowy Owl'],              terrain:'Throne Approach', portraitBird:'baldEagle'},
-  {id:23, type:'boss',  name:"Blakiston's Court",    x:792,  y:82,   stage:20, enemies:['Duke Blakiston'],                 terrain:'Castle Throne', final:true},
+  {id:17, type:'stage', name:'Fog Pass',             x:564,  y:361,  stage:14, terrain:'Mountain Pass', portraitBird:'kiwi'},
+  {id:18, type:'stage', name:'Cathedral Approach',   x:677,  y:319,  stage:15, terrain:'Castle Road', portraitBird:'hummingbird'},
+  {id:19, type:'stage', name:'Outer Ramparts',       x:806,  y:337,  stage:16, terrain:'Castle Walls', portraitBird:'harpyEagle'},
+  {id:20, type:'stage', name:'Inner Court',          x:782,  y:265,  stage:17, terrain:'Outer Courtyard', portraitBird:'raven'},
+  {id:21, type:'stage', name:'High Spire',           x:701,  y:233,  stage:18, terrain:'Castle Spire', portraitBird:'snowyOwl'},
+  {id:22, type:'stage', name:'Throne Gate',          x:766,  y:184,  stage:19, terrain:'Throne Approach', portraitBird:'baldEagle'},
+  {id:23, type:'boss',  name:"Blakiston's Court",    x:792,  y:82,   stage:20, terrain:'Castle Throne', final:true},
 ];
 
 const NVC={
@@ -884,7 +896,7 @@ applyCamera(false);
 window.addEventListener('resize',()=>applyCamera(false));
 requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .5s cubic-bezier(.25,.46,.45,.94),top .5s cubic-bezier(.25,.46,.45,.94)';document.getElementById('root').focus();}));
 </script>
-<script src="js/world/ow_enemy_population.js"></script>
+<script src="js/data/story_enemy_registry.js"></script><script src="js/world/ow_enemy_population.js"></script>
 <script>
 // ── Avian Ascent · Overworld Integration Bootstrap ───────────────────────────
 (function(){
@@ -931,6 +943,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
     lastSummary: savedProgress?.lastSummary || null,
   };
   const activeBirdKey  = save?.player?.birdKey || owState?.birdKey || null;
+  try{ window.activeBirdKeyForOwPreview = activeBirdKey; }catch(_){}
   const currentStage   = Math.max(1, overworldProgress.completedStage + 1);
   const shinyObjects   = save ? (save.shinyObjects || 0) : null;
   const hasActiveRun   = !!(save?.player);
@@ -1037,7 +1050,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{pl.style.transition='left .
         try { localStorage.setItem(NAV_KEY, JSON.stringify({action:'shop', nodeId:curPos})); } catch(_) {}
       } else {
         try {
-          localStorage.setItem(NAV_KEY, JSON.stringify({action:'battle', nodeId:curPos, stage:n.stage, enemies:n.enemies||[], terrain:n.terrain||''}));
+          localStorage.setItem(NAV_KEY, JSON.stringify({action:'battle', nodeId:curPos, stage:n.stage, terrain:n.terrain||''}));
         } catch(_) {}
       }
 

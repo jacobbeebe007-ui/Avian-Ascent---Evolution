@@ -7033,7 +7033,8 @@ function buildStoryEnemyFromBirdKey(birdKey, stage){
   stats.hp=stats.maxHp;
   stats.atk=Math.max(1,Math.floor(stats.atk*diffMult));
   stats.matk=Math.max(1,Math.floor(stats.matk*diffMult));
-  const threat=getStoryThreatForBirdKey(birdKey);
+  const _regThreat=typeof getStoryRegistryThreatForBirdKey==='function'?getStoryRegistryThreatForBirdKey(birdKey):null;
+  const threat=Number.isFinite(_regThreat)?_regThreat:getStoryThreatForBirdKey(birdKey);
   const size=bd.size||'medium';
   const en=(size==='xl'?5:size==='large'?4:size==='medium'?4:3);
   return {
@@ -7075,6 +7076,12 @@ function pickFallbackStoryEnemyPair(pool, budget){
 }
 
 function generateStoryStageEnemyKeys(stage, playerBirdKey){
+  if(typeof globalThis.pickEnemyPair==='function'){
+    try{
+      const p=globalThis.pickEnemyPair(stage, playerBirdKey||'');
+      if(Array.isArray(p)&&p.length>=2) return p;
+    }catch(err){ console.warn('[StoryEncounter] pickEnemyPair failed', err); }
+  }
   const [minThreat,maxThreat]=getStoryAllowedThreatMinMax(stage);
   const all=Object.keys(BIRDS||{}).filter(k=>k!=='dukeBlakiston' && k!=='duke_blakiston');
   const pool=all.filter(k=>{
@@ -7101,6 +7108,29 @@ function generateStoryStageEnemyKeys(stage, playerBirdKey){
   return pickFallbackStoryEnemyPair(pool, budget);
 }
 
+function commitStoryEncounterMeta(stageNum, playerBirdKey, owBirdKeys){
+  const st=Math.max(1,Math.floor(Number(stageNum)||1));
+  if(STORY_BOSS_STAGES.has(st)){
+    G.currentStoryEncounter={
+      stageNumber:st,
+      isBoss:true,
+      budget:0,
+      birdKeys: st===STORY_DUKE_STAGE ? ['dukeBlakiston'] : []
+    };
+  }else{
+    const keys=Array.isArray(owBirdKeys)?owBirdKeys.filter(Boolean):[];
+    const budget=(typeof getStoryStageBudget==='function'?getStoryStageBudget(st):0)+
+      (typeof getPlayerThreatBudgetAdjustment==='function'?getPlayerThreatBudgetAdjustment(st, playerBirdKey||''):0);
+    G.currentStoryEncounter={
+      stageNumber:st,
+      isBoss:false,
+      budget,
+      birdKeys: keys.slice()
+    };
+  }
+  try{ if(typeof window!=='undefined') window.currentStageEncounter=G.currentStoryEncounter; }catch(_){}
+}
+
 /** Linear story (and shared save state): two bird enemies per non-boss stage, threat sum matches budget when possible. */
 function syncStoryEncounterBirdQueue(encounterStage){
   if(G.endlessMode) return;
@@ -7108,6 +7138,7 @@ function syncStoryEncounterBirdQueue(encounterStage){
   if(STORY_BOSS_STAGES.has(st)){
     if(_isOverworldRun() && Array.isArray(G._owStageEnemies) && G._owStageEnemies.length>0){
       G._owEnemyCount=Math.max(G._owEnemyCount||0,G._owStageEnemies.length);
+      commitStoryEncounterMeta(st, G.player?.birdKey, G._owStageEnemies);
       return;
     }
     G._owStageEnemies=null;
@@ -7118,10 +7149,12 @@ function syncStoryEncounterBirdQueue(encounterStage){
     G._owEncounterDraftsSig=null;
     G._owEncounterMaterialized=null;
     G._owEncounterMaterializedSig=null;
+    commitStoryEncounterMeta(st, G.player?.birdKey, G._owStageEnemies);
     return;
   }
   if(_isOverworldRun() && Array.isArray(G._owStageEnemies) && G._owStageEnemies.length>0){
     G._owEnemyCount=Math.max(G._owEnemyCount||0,G._owStageEnemies.length);
+    commitStoryEncounterMeta(st, G.player?.birdKey, G._owStageEnemies);
     return;
   }
   const idx=G._owEnemyIndex||0;
@@ -7133,6 +7166,7 @@ function syncStoryEncounterBirdQueue(encounterStage){
   G._owEnemyIndex=0;
   G._owEnemyCount=Math.max(2,G._owStageEnemies?.length||2);
   G._owEncounterRollStage=st;
+  commitStoryEncounterMeta(st, G.player?.birdKey, G._owStageEnemies);
 }
 
 /**
@@ -7164,29 +7198,19 @@ function handleOverworldReturn() {
     G._battleTerrain = (typeof intent.terrain === 'string' && intent.terrain.trim()) ? intent.terrain.trim() : null;
     G._owSequenceShiny = 0;
     const stageNum=G._owPendingBattleStage;
-    // Story non-boss: prefer overworld nav enemies when present; else roll from generateStoryStageEnemyKeys. Bosses use nav list.
+    const pbk=save?.player?.birdKey;
     if(!G.endlessMode && !STORY_BOSS_STAGES.has(stageNum)){
-      const navEnemies = Array.isArray(intent.enemies) ? intent.enemies.filter(Boolean) : [];
-      if (navEnemies.length > 0) {
-        G._owStageEnemies = normalizeOwEnemyListForBattle(navEnemies);
-        G._owEnemyIndex   = 0;
-        G._owEnemyCount = G._owStageEnemies.length || 2;
-        G._owEncounterRollStage = stageNum;
-      } else {
-        const rolled=generateStoryStageEnemyKeys(stageNum, save?.player?.birdKey);
-        G._owStageEnemies = normalizeOwEnemyListForBattle(rolled);
-        G._owEnemyIndex   = 0;
-        G._owEnemyCount = G._owStageEnemies.length || 2;
-        G._owEncounterRollStage = stageNum;
-      }
-    } else if (Array.isArray(intent.enemies) && intent.enemies.length > 0) {
-      G._owStageEnemies = normalizeOwEnemyListForBattle(intent.enemies);
+      const rolled=generateStoryStageEnemyKeys(stageNum, pbk);
+      G._owStageEnemies = normalizeOwEnemyListForBattle(rolled);
       G._owEnemyIndex   = 0;
-      G._owEnemyCount = G._owStageEnemies.length || 1;
+      G._owEnemyCount = G._owStageEnemies.length || 2;
+      G._owEncounterRollStage = stageNum;
+      commitStoryEncounterMeta(stageNum, pbk, G._owStageEnemies);
     } else {
       G._owStageEnemies = null;
       G._owEnemyIndex   = 0;
       G._owEnemyCount = 1;
+      commitStoryEncounterMeta(stageNum, pbk, null);
     }
     try{
       continueRun(); // restores state; continueRun ends with loadStage()
