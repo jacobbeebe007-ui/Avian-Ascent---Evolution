@@ -9584,7 +9584,16 @@ function renderActions() {
     const shortDesc=(((ab.levels&&ab.levels[(ab.level||1)-1]?.desc)||ab.desc||'')+getAbilityDamageScalingHintForUI(ab)).replace(/<[^>]+>/g,'').slice(0,100);
     const _tmplUI=getAbilityTemplateForUI(ab);
     const _dmgEst=estimateSkillDamageRange(ab,_tmplUI,G.player);
-    const dmgChip=(_dmgEst.isDamaging&&_dmgEst.dmgLow!=null)?`<span class="btn-dmg-est" title="Estimated damage after enemy DEF/M.DEF (approx.; your buffs included)">~${_dmgEst.dmgLow}–${_dmgEst.dmgHigh}</span>`:'';
+    let dmgChip='';
+    if(_dmgEst.isDamaging&&_dmgEst.dmgLow!=null){
+      if(_dmgEst.hybridSplit){
+        const h=_dmgEst.hybridSplit;
+        dmgChip=`<span class="btn-dmg-hybrid" title="Hybrid: ATK-scaling half (red) and M.ATK-scaling half (purple); combat averages the two after DEF/M.DEF.">
+          <span class="btn-dmg-atk">ATK ~${h.atkLow}–${h.atkHigh}</span>
+          <span class="btn-dmg-matk">MATK ~${h.matkLow}–${h.matkHigh}</span>
+        </span>`;
+      }else dmgChip=`<span class="btn-dmg-est" title="Estimated damage after enemy DEF/M.DEF (approx.; your buffs included)">~${_dmgEst.dmgLow}–${_dmgEst.dmgHigh}</span>`;
+    }
     const _escMini=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const _statPrev=getSkillStatPreviewLines(ab,_tmplUI);
     const statPrevChip=_statPrev.length?`<span class="btn-stat-preview">${_statPrev.map(l=>_escMini(l)).join(' · ')}</span>`:'';
@@ -9732,6 +9741,99 @@ function getStrikePreviewMultiplierForAbility(abilityId, lv, attacker){
   return Number.isFinite(Number(v))?Number(v):null;
 }
 
+/** Hybrid = (physical half + matk half) / 2 in combat; spec matches each family's formula. */
+function getHybridPreviewSpec(ab, lv){
+  const id=ab?.id;
+  if(!id) return null;
+  const canon=(typeof resolveAbilityAliasSourceId==='function')?resolveAbilityAliasSourceId(id):id;
+  const fn=ACTIONS[canon]||ACTIONS[id];
+  if(typeof fn!=='function') return null;
+  const s=Function.prototype.toString.call(fn);
+  const hybridM=s.match(/\bhybrid\s*:\s*(\[[0-9.,\s]+\])/);
+  let hybridLv=false;
+  if(hybridM){
+    try{
+      const arr=JSON.parse(hybridM[1]);
+      const i=Math.max(0,Math.min((lv||1)-1,arr.length-1));
+      hybridLv=!!Number(arr[i]);
+    }catch(_){}
+  }
+  const kindH=/damageKind\s*:\s*['"]hybrid['"]/.test(s);
+  if(!hybridLv && !kindH) return null;
+  if(/executeCrowStrikeAction/.test(s) && kindH) return {phys:'plain',m0:0.75,m1:0.9};
+  if(/executeBlackbirdPeckAction/.test(s) && kindH) return {phys:'plain',m0:0.8,m1:0.9};
+  if(/executeBlackbirdSpellAction/.test(s) && kindH) return {phys:'plain',m0:0.8,m1:0.92};
+  if(/executeSnowyOwlTalonStrike/.test(s) && hybridLv) return {phys:'plain',m0:0.55,m1:0.5};
+  if(/executeSnowyOwlDiveStrike|executePeregrineDiveStrike|executeHummingbirdDashStrike/.test(s) && hybridLv) return {phys:'scaling',m0:0.55,m1:0.52};
+  if(hybridLv) return {phys:'scaling',m0:0.55,m1:0.52};
+  if(kindH) return {phys:'plain',m0:0.75,m1:0.9};
+  return null;
+}
+
+function estimateHybridSplitBands(tmpl,ab,physMult,multCore,lv,spec,opts,pendingMatkAdd){
+  opts=opts||{};
+  const applyMit=opts.applyMitigation!==false;
+  const scaleStat=getEffectivePlayerAtkForDamagePreview();
+  let atkLo, atkHi;
+  if(spec.phys==='scaling' && tmpl?.damageScaling && G?.player){
+    const sc=tmpl.damageScaling;
+    let baseLo=Math.max(1,Math.floor(scaleStat*0.8*physMult));
+    let baseHi=Math.max(1,Math.floor(scaleStat*1.2*physMult));
+    let secLo=0, secHi=0;
+    if(sc.secondaryScaler&&Number(sc.secondaryScaleValue)>0){
+      const pstats=G.player.stats||{};
+      const scn=String(sc.secondaryScaler).toUpperCase();
+      let statv=0;
+      if(scn==='SPD') statv=Number(pstats.spd||0);
+      else if(scn==='DEF') statv=Number(pstats.def||0);
+      else if(scn==='MATK'||scn==='MATT') statv=Number(pstats.matk||0);
+      const core=Math.max(0,statv-4)*Number(sc.secondaryScaleValue)*physMult;
+      secLo=Math.max(0,Math.floor(core*0.82));
+      secHi=Math.max(0,Math.floor(core*1.18));
+    }
+    atkLo=applyConditionalPhysicalDamageMultipliers(baseLo+secLo, sc.conditionalBonuses);
+    atkHi=applyConditionalPhysicalDamageMultipliers(baseHi+secHi, sc.conditionalBonuses);
+  }else{
+    atkLo=Math.max(1,Math.floor(scaleStat*0.8*physMult));
+    atkHi=Math.max(atkLo,Math.floor(scaleStat*1.2*physMult));
+  }
+  if((G?.playerStatus?.weaken||0)>0){
+    atkLo=Math.max(1,Math.floor(atkLo*0.75));
+    atkHi=Math.max(1,Math.floor(atkHi*0.75));
+  }
+  if(applyMit&&G?.enemy){
+    const en=G.enemy.stats||G.enemy;
+    const pierce=getPlayerPiercePctForAbility(ab);
+    const enemyDef=Number(en.def||0);
+    const effDef=Math.floor(enemyDef*(1-pierce));
+    const mul=calcDefenseMultiplier(effDef);
+    atkLo=Math.max(1,Math.floor(atkLo*mul));
+    atkHi=Math.max(1,Math.floor(atkHi*mul));
+    const tPierce=(tmpl?.pierceDef||0)+(lv>=2?5:0)+(lv>=3?5:0);
+    const evoP=(typeof getPassiveEvolutionBonuses==='function')?(getPassiveEvolutionBonuses(G.player).piercePct||0):0;
+    const baseAtkPierce=Number(G.player.stats?.atk||0);
+    const pierceBonus=Math.floor(baseAtkPierce*(tPierce+evoP)/100);
+    if(pierceBonus>0){ atkLo+=pierceBonus; atkHi+=pierceBonus; }
+  }
+  let mInner=Math.max(spec.m0, multCore*spec.m1);
+  if(pendingMatkAdd) mInner+=pendingMatkAdd;
+  const matkS=Number(G.player.stats?.matk||8);
+  const mdef=Number(G.enemy.stats?.mdef??8);
+  const adjust=(matkS-mdef)*0.015;
+  let mLo=Math.max(1,Math.floor(matkS*0.8));
+  let mHi=Math.max(1,Math.floor(matkS*1.2));
+  if((G?.playerStatus?.weaken||0)>0){ mLo=Math.max(1,Math.floor(mLo*0.75)); mHi=Math.max(1,Math.floor(mHi*0.75)); }
+  const smult=mInner+adjust;
+  let matkLo=Math.max(1,Math.floor(mLo*smult));
+  let matkHi=Math.max(matkLo,Math.floor(mHi*smult));
+  if(applyMit&&G?.enemy){
+    const mul=calcDefenseMultiplier(Number(G.enemy.stats.mdef??8));
+    matkLo=Math.max(1,Math.floor(matkLo*mul));
+    matkHi=Math.max(1,Math.floor(matkHi*mul));
+  }
+  return {atkLow:atkLo, atkHigh:atkHi, matkLow:matkLo, matkHigh:matkHi};
+}
+
 /**
  * Rough damage band for UI. Player preview: matches pdmg() buffs, pending strike mult, weaken, enemy DEF/MDEF, and template pierce bonus.
  * Pass attacker as {stats:{atk,matk}} for enemies; opts.isPlayerCombatPreview false skips player-only modifiers.
@@ -9747,7 +9849,7 @@ function estimateSkillDamageRange(ab,tmpl,attacker,opts){
     pAtk=getEffectivePlayerAtkForDamagePreview();
     pMatk=Number(G.player.stats?.matk||8);
   }
-  if(!tmpl) return {isDamaging:false,dmgLow:null,dmgHigh:null,btnType:''};
+  if(!tmpl) return {isDamaging:false,dmgLow:null,dmgHigh:null,btnType:'',hybridSplit:null};
   const btnType=String(tmpl.btnType||tmpl.type||ab?.btnType||ab?.type||'').toLowerCase();
   const isDamaging=['physical','ranged','spell'].includes(btnType);
   const scaleStat=(btnType==='spell')?pMatk:pAtk;
@@ -9758,15 +9860,30 @@ function estimateSkillDamageRange(ab,tmpl,attacker,opts){
   if(!(dmgMult>0)){
     dmgMult=estimateMultiplierFromSkillDescription(lvData?.desc||'')??estimateMultiplierFromSkillDescription(tmpl?.desc||'');
   }
-  if(!(dmgMult>0)) return {isDamaging,dmgLow:null,dmgHigh:null,btnType,lv,lvData};
+  if(!(dmgMult>0)) return {isDamaging,dmgLow:null,dmgHigh:null,btnType,lv,lvData,hybridSplit:null};
   const strikePrev=getStrikePreviewMultiplierForAbility(ab?.id,lv,p);
   if(strikePrev!=null) dmgMult=strikePrev;
+  const multCore=dmgMult;
+  let physMult=multCore;
+  let pendingMatkAdd=0;
   if(isPlayerCombat&&G?._pendingStrikeActionMods){
     const add=Number(G._pendingStrikeActionMods.multAdd)||0;
+    const mAdd=G._pendingStrikeActionMods.matkMultAdd!=null?Number(G._pendingStrikeActionMods.matkMultAdd):add;
+    pendingMatkAdd=mAdd;
     if(btnType==='spell'){
-      const mAdd=G._pendingStrikeActionMods.matkMultAdd!=null?Number(G._pendingStrikeActionMods.matkMultAdd):add;
-      dmgMult+=mAdd;
-    }else dmgMult+=add;
+      dmgMult=multCore+mAdd;
+      physMult=multCore+add;
+    }else{
+      dmgMult=multCore+add;
+      physMult=dmgMult;
+    }
+  }
+  const hySpec=(isPlayerCombat&&G?.player&&G?.enemy)?getHybridPreviewSpec(ab,lv):null;
+  if(hySpec&&isDamaging&&isPlayerCombat&&G?.player&&G?.enemy){
+    const hb=estimateHybridSplitBands(tmpl,ab,physMult,multCore,lv,hySpec,opts,pendingMatkAdd);
+    const combinedL=Math.max(1,Math.floor((hb.atkLow+hb.matkLow)/2));
+    const combinedH=Math.max(combinedL,Math.floor((hb.atkHigh+hb.matkHigh)/2));
+    return {isDamaging,dmgLow:combinedL,dmgHigh:combinedH,btnType,lv,lvData,hybridSplit:hb};
   }
   let dmgLow=null,dmgHigh=null;
   if(isDamaging){
@@ -9831,7 +9948,7 @@ function estimateSkillDamageRange(ab,tmpl,attacker,opts){
       }
     }
   }
-  return {isDamaging,dmgLow,dmgHigh,btnType,lv,lvData};
+  return {isDamaging,dmgLow,dmgHigh,btnType,lv,lvData,hybridSplit:null};
 }
 
 function snowyOwlEyeStatPreviewLines(ab){
@@ -10127,7 +10244,7 @@ function buildActionTooltipHTML(ab){
   const hitClass=hit===null?'':(hit>=80?'tt-hit-great':hit>=55?'tt-hit-good':'tt-hit-bad');
   const energy=getEnergyCost(ab);
   const cooldown=getTemplateCooldown(ab);
-  const {isDamaging,dmgLow,dmgHigh,btnType}=estimateSkillDamageRange(ab,tmpl,G.player);
+  const {isDamaging,dmgLow,dmgHigh,btnType,hybridSplit}=estimateSkillDamageRange(ab,tmpl,G.player);
   const effectList=(ab.ailmentIds||[]).length?ab.ailmentIds.map(a=>a.replace(/_/g,' ')).join(', '):'—';
 
   let html=`<div class="tt-name">${tmpl.name}</div><div class="tt-type">${tmpl.type} · Lv${ab.level}</div>`;
@@ -10135,7 +10252,11 @@ function buildActionTooltipHTML(ab){
   html+=`<div class="tt-row"><span class="tt-lbl">Cooldown</span><span class="tt-val">${cooldown>0?cooldown+' turn'+(cooldown>1?'s':''):'None'}</span></div>`;
   if (hit!==null) html+=`<div class="tt-row"><span class="tt-lbl">Hit</span><span class="tt-val ${hitClass}">${hit}%</span></div>`;
   if (isDamaging) {
-    html+=`<div class="tt-row"><span class="tt-lbl">Damage (est.)</span><span class="tt-val">${dmgLow!==null?`${dmgLow}–${dmgHigh}`:'Varies'}</span></div>`;
+    if(hybridSplit){
+      html+=`<div class="tt-row"><span class="tt-lbl">ATK half (est.)</span><span class="tt-val tt-dmg-atk">${hybridSplit.atkLow}–${hybridSplit.atkHigh}</span></div>`;
+      html+=`<div class="tt-row"><span class="tt-lbl">M.ATK half (est.)</span><span class="tt-val tt-dmg-matk">${hybridSplit.matkLow}–${hybridSplit.matkHigh}</span></div>`;
+      html+=`<div class="tt-row"><span class="tt-lbl">Combined (avg.)</span><span class="tt-val">${dmgLow!==null?`${dmgLow}–${dmgHigh}`:'Varies'}</span></div>`;
+    }else html+=`<div class="tt-row"><span class="tt-lbl">Damage (est.)</span><span class="tt-val">${dmgLow!==null?`${dmgLow}–${dmgHigh}`:'Varies'}</span></div>`;
   }
   html+=`<div class="tt-row"><span class="tt-lbl">Effects</span><span class="tt-val">${effectList}</span></div>`;
   const statLines=getSkillStatPreviewLines(ab,tmpl);
