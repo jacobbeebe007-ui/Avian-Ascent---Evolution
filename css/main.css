@@ -1617,6 +1617,9 @@ header p{color:var(--text-dim);font-style:italic;font-size:1rem;margin-top:4px;}
 .btn-type{font-size:.69rem;}
 .btn-cost{font-size:.72rem;color:var(--text-dim);}
 .btn-dmg-est{font-size:.68rem;color:var(--gold);opacity:.92;line-height:1.2;white-space:nowrap;}
+.btn-dmg-hybrid{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:.62rem;line-height:1.25;max-width:100%;}
+.btn-dmg-atk{color:#ff8c70;font-weight:600;white-space:nowrap;}
+.btn-dmg-matk{color:#c9a0ff;font-weight:600;white-space:nowrap;}
 .btn-stat-preview{display:block;font-size:.6rem;color:#92a8bc;line-height:1.25;margin-top:3px;opacity:.94;}
 body.ui-mobile-mode #screen-battle .btn-dmg-est{font-size:.6rem;}
 .action-btn.physical .btn-type{color:var(--red-light);}
@@ -1806,6 +1809,8 @@ body.ui-mobile-mode #screen-battle .level-badge{font-size:.7rem;}
 .tt-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px;}
 .tt-lbl{color:var(--text-dim);font-size:.8rem;}.tt-val{color:var(--text);font-weight:bold;font-size:.83rem;}
 .tt-hit-great{color:#6ab89a;}.tt-hit-good{color:#e8c96a;}.tt-hit-bad{color:#e87070;}
+.tt-dmg-atk{color:#ff8c70;font-weight:600;}
+.tt-dmg-matk{color:#c9a0ff;font-weight:600;}
 .tt-desc{color:var(--silver);font-size:.79rem;margin-top:5px;padding-top:5px;border-top:1px solid var(--border);line-height:1.45;}
 .tt-divider{border-top:1px solid var(--border);margin:6px 0;}
 .tt-ail-row{display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:1px;}
@@ -2777,6 +2782,8 @@ img{image-rendering:pixelated;image-rendering:crisp-edges;}
 .btn-cost{font-size:.72rem;}
 .btn-desc{font-size:.63rem;color:#b8c7d8;line-height:1.2;display:block;min-height:28px;}
 #screen-battle .btn-stat-preview{font-size:.57rem;margin-top:2px;}
+#screen-battle .btn-dmg-hybrid{font-size:.55rem;gap:3px 6px;}
+#screen-battle .btn-dmg-atk,#screen-battle .btn-dmg-matk{font-size:.54rem;}
 
 .battle-support-area{display:grid;grid-template-columns:1fr;gap:10px;align-items:start;}
 .battle-log-section{display:flex;flex-direction:column;gap:6px;min-width:0;}
