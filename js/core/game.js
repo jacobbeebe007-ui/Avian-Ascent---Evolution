@@ -1371,29 +1371,39 @@ const ENEMIES = [
   makeEnemy('Sky Sovereign','👑',200,35,18,6,'berserker',true,'👑 Final Boss',{acc:90,dodge:12,size:'xl',abilities:['eRage','eStun','ePoison','eFear','eShield','eBurn'],portraitKey:'baldEagle'}),
 ];
 
-// Birds that can appear as enemy combatants (adds variety). Set enemyClass for singer/tank/trickster; matk/mdef/mdodge feed scaling.
-// Combat kits come from family skill slots + ABILITY_TEMPLATES (buildEdFromBirdEnemyTemplate). Penguin/emu have no family catalog yet — legacy abilities only.
-// Tier bands: keep aligned with js/world/ow_enemy_population.js OW_POOL_BY_BAND (overworld seeded packs).
-const BIRD_ENEMIES = [
-  {name:'Wild Sparrow',emoji:'',birdKey:'sparrow',tier:[1,2],hp:30,atk:6,def:2,matk:6,mdef:7,spd:9,acc:82,dodge:32,mdodge:28,enemyClass:'bruiser',size:'tiny',aiStyle:'berserker'},
-  {name:'Grove Cantor',emoji:'🎵',birdKey:'blackbird',tier:[1,2],hp:30,atk:5,def:3,matk:12,mdef:9,spd:7,acc:78,dodge:22,mdodge:18,enemyClass:'singer',size:'small',aiStyle:'cautious'},
-  {name:'Glitter Thief',emoji:'✨',birdKey:'magpie',tier:[1,2],hp:34,atk:7,def:4,matk:9,mdef:8,spd:8,acc:86,dodge:28,mdodge:22,enemyClass:'trickster',size:'medium',aiStyle:'aggressive'},
-  {name:'Rogue Crow',emoji:'‍⬛',birdKey:'crow',tier:[2,3],hp:38,atk:8,def:5,matk:8,mdef:9,spd:5,acc:88,dodge:14,mdodge:12,enemyClass:'trickster',size:'medium',aiStyle:'aggressive'},
-  {name:'Savage Kookaburra',emoji:'',birdKey:'kookaburra',tier:[2,3],hp:48,atk:10,def:5,matk:8,mdef:9,spd:7,acc:80,dodge:20,mdodge:16,enemyClass:'bruiser',size:'medium',aiStyle:'aggressive'},
-  {name:'Marsh Chorus',emoji:'🦩',birdKey:'flamingo',tier:[2,3],hp:46,atk:7,def:5,matk:11,mdef:11,spd:5,acc:76,dodge:14,mdodge:12,enemyClass:'singer',size:'large',aiStyle:'cautious'},
-  {name:'Frost Chanter',emoji:'🦉',birdKey:'snowyOwl',tier:[2,3],hp:34,atk:6,def:5,matk:13,mdef:9,spd:8,acc:84,dodge:22,mdodge:18,enemyClass:'singer',size:'small',aiStyle:'cautious'},
-  {name:'Feral Toucan',emoji:'',birdKey:'toucan',tier:[3,4],hp:48,atk:9,def:7,matk:10,mdef:9,spd:4,acc:74,dodge:10,mdodge:10,enemyClass:'tank',size:'large',aiStyle:'cautious'},
-  {name:'Outcast Goose',emoji:'',birdKey:'goose',tier:[3,4],hp:62,atk:11,def:8,matk:5,mdef:12,spd:2,acc:70,dodge:5,mdodge:8,enemyClass:'tank',size:'xl',aiStyle:'berserker'},
-  {name:'Shadow Raven',emoji:'',birdKey:'raven',tier:[3,4],hp:40,atk:8,def:4,matk:12,mdef:8,spd:7,acc:80,dodge:20,mdodge:16,enemyClass:'singer',size:'medium',aiStyle:'aggressive'},
-  {name:'Macaw Hexer',emoji:'🦜',birdKey:'macaw',tier:[3,4],hp:38,atk:6,def:4,matk:14,mdef:9,spd:9,acc:82,dodge:26,mdodge:20,enemyClass:'singer',size:'small',aiStyle:'cautious'},
-  {name:'Lyre Mimic',emoji:'🪶',birdKey:'lyrebird',tier:[3,4],hp:40,atk:6,def:5,matk:15,mdef:10,spd:6,acc:82,dodge:20,mdodge:16,enemyClass:'singer',size:'medium',aiStyle:'cautious'},
-  {name:'Pit Sentinel',emoji:'🐧',birdKey:'penguin',tier:[3,4],hp:66,atk:8,def:10,matk:5,mdef:14,spd:3,acc:75,dodge:12,mdodge:12,enemyClass:'tank',size:'xl',aiStyle:'defensive',abilities:['eShield','eWeaken']},
-  {name:'Apex Peregrine',emoji:'',birdKey:'peregrine',tier:[4],hp:36,atk:12,def:4,matk:7,mdef:7,spd:11,acc:90,dodge:26,mdodge:20,enemyClass:'predator',size:'small',aiStyle:'berserker'},
-  {name:'Storm Swan',emoji:'',birdKey:'swan',tier:[4],hp:50,atk:10,def:6,matk:11,mdef:10,spd:6,acc:82,dodge:18,mdodge:14,enemyClass:'tank',size:'large',aiStyle:'cautious'},
-  {name:'Iron Stork',emoji:'',birdKey:'shoebill',tier:[4],hp:72,atk:9,def:12,matk:6,mdef:16,spd:2,acc:72,dodge:5,mdodge:8,enemyClass:'tank',size:'xl',aiStyle:'defensive'},
-  {name:'Dust Bulwark',emoji:'',birdKey:'emu',tier:[4],hp:78,atk:11,def:11,matk:4,mdef:10,spd:2,acc:72,dodge:10,mdodge:10,enemyClass:'tank',size:'xl',aiStyle:'defensive',abilities:['eRage','eWeaken']},
-  {name:'War Harpy',emoji:'',birdKey:'harpy',tier:[4],hp:65,atk:14,def:7,matk:6,mdef:8,spd:5,acc:78,dodge:8,mdodge:8,enemyClass:'predator',size:'xl',aiStyle:'berserker'},
-];
+// Birds that can appear as enemy combatants (adds variety).
+// Derived from MASTER_BIRD_REGISTRY so enemy roster stays aligned with the player roster source-of-truth.
+const BIRD_ENEMIES = (()=>{
+  const TIER_BY_SIZE = { tiny:[1,2], small:[1,2,3], medium:[2,3], large:[3,4], xl:[4] };
+  const AI_BY_CLASS = { striker:'aggressive', bruiser:'berserker', tank:'defensive', trickster:'trickster', predator:'aggressive', singer:'cautious' };
+  const OVERRIDES = {
+    dukeBlakiston:{ tier:[4], aiStyle:'cautious' },
+  };
+  return Object.entries(MASTER_BIRD_REGISTRY).map(([birdKey, bd])=>{
+    const stats = bd.stats||{};
+    const size = String(bd.size||'medium').toLowerCase();
+    const cls = resolveFinalClass(bd.class||'', birdKey);
+    const ov = OVERRIDES[birdKey]||{};
+    return {
+      name:`Wild ${bd.name}`,
+      emoji:'',
+      birdKey,
+      tier:Array.isArray(ov.tier) ? ov.tier.slice() : ((TIER_BY_SIZE[size]||[2,3]).slice()),
+      hp:Math.max(1, Math.floor((stats.hp||30) * 1.05)),
+      atk:Math.max(1, Math.floor(stats.atk||6)),
+      def:Math.max(0, Math.floor(stats.def||3)),
+      matk:Math.max(1, Math.floor(stats.matk||6)),
+      mdef:Math.max(0, Math.floor(stats.mdef||8)),
+      spd:Math.max(1, Math.floor(stats.spd||6)),
+      acc:Math.max(60, Math.floor(stats.acc||78)),
+      dodge:Math.max(0, Math.floor(stats.dodge||10)),
+      mdodge:Math.max(0, Math.floor((stats.mdodge ?? stats.dodge ?? 10) * 0.85)),
+      enemyClass:cls||'singer',
+      size,
+      aiStyle:ov.aiStyle || AI_BY_CLASS[cls] || 'tactical',
+    };
+  });
+})();
 
 // ===================== BIOMES =====================
 const BIOMES = [
@@ -21991,12 +22001,14 @@ const ABILITIES_REFERENCE = {
   bleakBeak:{desc:'Singer spell/basic hybrid.',effect:'Reliable low-cost spell chip and setup.'},
 };
 
-const ENEMY_BIRD_DATA = [
-  {name:'Crow', hp:45, atk:8, def:5, type:'striker'},
-  {name:'Hawk', hp:55, atk:10, def:6, type:'predator'},
-  {name:'Emu', hp:120, atk:12, def:10, type:'bruiser'},
-  {name:'Blakiston Owl', hp:300, atk:18, def:15, type:'boss'},
-];
+const ENEMY_BIRD_DATA = Object.entries(MASTER_BIRD_REGISTRY).map(([key, bird])=>({
+  key,
+  name:bird.name,
+  hp:bird.stats?.hp || 1,
+  atk:bird.stats?.atk || 1,
+  def:bird.stats?.def || 0,
+  type:bird.class,
+}));
 
 function openRefGuideModal() {
   const m = document.getElementById('ref-guide-modal');
