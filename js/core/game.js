@@ -22049,7 +22049,7 @@ const STATUS_REWORK_GUIDE = Object.freeze({
   bleed:'Non-stacking, refresh only. Healing received/effects reduced by 30%.',
   delayed:'Non-stacking. Stored damage detonates at end of target\'s next turn; reapply refreshes/replaces.',
 });
-const STRIKER_SKILL_FAMILY_TREES = Object.freeze({
+const SKILL_FAMILY_TREES = Object.freeze({
   sparrow:[
     {slot:1,family:'Multi Peck',base:'2 hits of Base 2 + 45% ATK each; 15% DEF ignore; can miss',branches:[
       {theme:'Power',lv3:'Razor Multi Peck',lv6:'Cyclone Multi Peck',lv9:'Tempest Multi Peck'},
@@ -22425,10 +22425,10 @@ function buildRefGuide() {
   }).join('');
   const arts=artsByTier || (showLocked?card('???','Find rewards in runs to fill this section.',false,'locked'):'' );
 
-  const strikerTrees = Object.entries(STRIKER_SKILL_FAMILY_TREES).map(([birdKey,slots])=>{
+  const strikerTrees = Object.entries(SKILL_FAMILY_TREES).map(([birdKey,slots])=>{
     const birdName = MASTER_BIRD_REGISTRY?.[birdKey]?.name || birdKey;
     const lines = slots.map(s=>`Slot ${s.slot} ${s.family}: ${s.branches.map(b=>`${b.theme} [Lv3 ${b.lv3} → Lv6 ${b.lv6} → Lv9 ${b.lv9}]`).join(' · ')}`).join('<br>');
-    return card(`${birdName} — Striker Family Tree`, lines, true, 'lv3/lv6/lv9');
+    return card(`${birdName} — Skill Family Tree`, lines, true, 'lv3/lv6/lv9');
   }).join('');
   const mechanics=`<div class="ref-skills-grid">
     ${card('Energy & Cooldowns','Main attacks are free unless spells. Abilities spend energy and many skills have cooldowns.',true,'core')}
