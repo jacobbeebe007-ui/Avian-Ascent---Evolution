@@ -53,37 +53,39 @@ const PORTRAITS = {
 const AILMENTS = {
   chilled:{
     id:'chilled', name:'Chilled', icon:'❄', color:'#7fd6ff',
-    desc:'Speed reduced by cold. Stacks. 2 turns.',
-    spdMult:0.9,
+    desc:'Stacks to 5. Each stack reduces SPD by 8%. At 5 stacks, becomes Frozen.',
+    spdMult:0.92,
   },
 
   poison:{
     id:'poison', name:'Poison', icon:'☣', color:'#4cb44c',
-    desc:'Damage over time. Stacks. 3 turns. Deals 1 damage per stack each tick.',
-    tick(who, stacks){ return stacks; }, // dmg per turn = stacks
+    desc:'Stacks to 5. Deals 2 damage per stack at end of both turns.',
+    tick(who, stacks){ return stacks*2; },
   },
   bleed:{
     id:'bleed', name:'Bleed', icon:'🩸', color:'#be384c',
-    desc:'Physical damage over time. Stacks. 3 turns. Deals ~1.5 damage per stack each tick.',
+    desc:'Non-stacking. Healing received/effects reduced by 30%. Refresh only.',
   },
   weaken:{
-    id:'weaken', name:'Chicken Pox', icon:'🐔', color:'#c9a840',
-    desc:'Reduces Dodge by 40% and damage by 25%. 3 turns.',
+    id:'weaken', name:'Weaken', icon:'🐔', color:'#c9a840',
+    desc:'Refresh only. Reduces damage by 25% and Dodge by 40%.',
     dodgeMult: 0.6, dmgMult: 0.75,
   },
-  paralyzed:{
-    id:'paralyzed', name:'Paralysis', icon:'⚡', color:'#c8c840',
-    desc:'20% chance to skip turn each round. 3 turns.',
-    skipChance: 20,
+  feared:{
+    id:'feared', name:'Fear', icon:'💀', color:'#8a5a40',
+    desc:'Refresh only. Control/disruption status.',
   },
   burning:{
-    id:'burning', name:'Feather Disease', icon:'🔥', color:'#dc641e',
-    desc:'+20% hit chance and +20% crit chance on attacker. 3 turns.',
-    hitBonus: 20, critBonus: 20,
+    id:'burning', name:'Burning', icon:'🔥', color:'#dc641e',
+    desc:'Non-stacking. 7 flat damage at end of enemy turn; -20% DEF and -20% MDEF while active.',
+  },
+  frozen:{
+    id:'frozen', name:'Frozen', icon:'🧊', color:'#9ad8ff',
+    desc:'Refresh only. Active skills cost +1 EN for 1 turn; then Chilled resets to 0.',
   },
   delayed:{
-    id:'delayed', name:'Resonance', icon:'🎵', color:'#c850c8',
-    desc:'Blackbird delayed damage detonates next turn.',
+    id:'delayed', name:'Delayed', icon:'🎵', color:'#c850c8',
+    desc:'Non-stacking. Stored damage detonates at end of target\'s next turn. Reapply refreshes/replaces.',
   }
 };
 
@@ -1111,6 +1113,10 @@ const MASTER_BIRD_REGISTRY = Object.freeze({
 });
 
 function applyMasterBirdRegistry(birds, master){
+  const birdwatchingLockedKeys = new Set([
+    'wren','fairywren','firecrest','wagtail','galah','bluejay','cardinal',
+    'bushturkey','vulture','barnowl','bustard','goldeneagle','pelican','marabou',
+  ]);
   Object.entries(master).forEach(([key, src])=>{
     const current = birds[key] || { color:'#8899aa', portraitKey:key, passive:{id:`${key}Instinct`, name:'Bird Instinct', desc:'No passive effect yet.'} };
     const stats = Object.assign({}, current.stats||{}, src.stats||{});
@@ -1124,6 +1130,10 @@ function applyMasterBirdRegistry(birds, master){
       stats,
       startAbilities: Array.isArray(src.startAbilities) ? src.startAbilities.slice() : (current.startAbilities||[]),
     });
+    if(birdwatchingLockedKeys.has(key)){
+      birds[key].unlockRequires = 'birdwatching';
+      birds[key].unlockHint = 'Enter code "birdwatching" on the selection screen.';
+    }
   });
 }
 
@@ -11946,24 +11956,31 @@ function applyAilment(target,ailId,stacks=1) {
     if(ailId==='confused'&& p&&p.immuneConfused){ spawnFloat('player','🛡 Confuse Immune!','fn-status'); return false; }
     if(ailId==='paralyzed'&&(p&&p.immuneStun||G.player.immuneParalyze))   { spawnFloat('player','🛡 Stun Immune!','fn-status'); return false; }
   }
-  if (ailId==='poison' || ailId==='bleed') {
-    const key = ailId==='bleed' ? 'bleed' : 'poison';
-    if (!status[key]) status[key]={stacks:0,turns:3};
-    const cap = G.player ? (G.player.poisonCap||5) : 5;
+  if (ailId==='poison') {
+    if (!status.poison) status.poison={stacks:0,turns:3};
+    const cap = 5;
     const biomeBonus=(target==='player' && (G.biomeMod?.enemyPoisonPlus||0)>0)?G.biomeMod.enemyPoisonPlus:0;
-    const fromPlayer=(target==='enemy');
-    const extraStacks=(fromPlayer&&key==='bleed')?(G.player?.bleedBonusStacks||0):0;
-    status[key].stacks=Math.min((status[key].stacks||0)+stacks+extraStacks+biomeBonus, cap);
-    const extraTurns=(fromPlayer&&key==='poison')?(G.player?.poisonExtraTurns||0):0;
-    status[key].turns=3+extraTurns;
+    status.poison.stacks=Math.min((status.poison.stacks||0)+stacks+biomeBonus, cap);
+    status.poison.turns=Math.max(status.poison.turns||0,3);
+  } else if (ailId==='bleed') {
+    status.bleed={turns:3,healReduction:0.30};
   } else if (ailId==='weaken') {
-    status.weaken=3;
+    status.weaken=Math.max(status.weaken||0,3);
   } else if (ailId==='paralyzed') {
-    status.paralyzed=3;
+    status.feared=Math.max(status.feared||0,3);
   } else if (ailId==='burning') {
-    status.burning=3;
+    const who = target==='player' ? G.player : G.enemy;
+    if(!status.burning || typeof status.burning!=='object'){
+      status.burning={turns:3,defDebuffApplied:false,mdefDebuffApplied:false};
+    }
+    status.burning.turns=Math.max(status.burning.turns||0,3);
+    if(who?.stats && !status.burning.defDebuffApplied){
+      who.stats.def=Math.max(0,Math.floor((who.stats.def||0)*0.8));
+      who.stats.mdef=Math.max(0,Math.floor((who.stats.mdef||0)*0.8));
+      status.burning.defDebuffApplied=true;
+      status.burning.mdefDebuffApplied=true;
+    }
   } else if (ailId==='chilled') {
-    if(target!=='enemy') return false;
     const baseTurns=2;
     const extraTurns=(G.player?.chillExtraTurns||0);
     if(!status.chilled) status.chilled={stacks:0,turns:0,spdLost:0};
@@ -11974,18 +11991,22 @@ function applyAilment(target,ailId,stacks=1) {
     const delta=next-prev;
     status.chilled.stacks=next;
     status.chilled.turns=Math.max(status.chilled.turns||0,baseTurns+extraTurns);
-    if(delta>0 && G.enemy?.stats){
-      let cur=Math.max(1,Number(G.enemy.stats.spd)||1);
+    const targetUnit = target==='player' ? G.player : G.enemy;
+    if(delta>0 && targetUnit?.stats){
+      let cur=Math.max(1,Number(targetUnit.stats.spd)||1);
       let spdDrop=0;
       for(let i=0;i<delta;i++){ if(cur<=1) break; cur-=1; spdDrop++; }
       if(spdDrop>0){
-        G.enemy.stats.spd=cur;
+        targetUnit.stats.spd=cur;
         status.chilled.spdLost=(status.chilled.spdLost||0)+spdDrop;
       }
     }
+    if(status.chilled.stacks>=5){
+      status.frozen=Math.max(status.frozen||0,1);
+      status.chilled={stacks:0,turns:0,spdLost:0};
+    }
   } else if (ailId==='feared') {
-    const extra=((target==='enemy')&&G.player?.mutDarkChorus)?1:0;
-    status.feared=(status.feared||0)+stacks+extra;
+    status.feared=Math.max(status.feared||0,Math.max(1,stacks));
   } else if (ailId==='delayed') {
     // set by caller with specific dmg
   }
@@ -12030,7 +12051,7 @@ async function tickDoTs(who) {
     const ownerBonus = who==='enemy';
     const tickMult = ownerBonus ? (G.player?.poisonTickMult||1) : 1;
     const flatBonus = ownerBonus ? ((G.player?.poisonFlatBonus||0)+(G.player?.perkPoisonTickBonus||0)+(G.player?.relVenomLedger?1:0)) : 0;
-    const dmg=Math.max(1, Math.floor(status.poison.stacks * tickMult)+flatBonus);
+    const dmg=Math.max(1, Math.floor((status.poison.stacks*2) * tickMult)+flatBonus);
     stats.hp-=dmg;
     spawnFloat(who,`☣ -${dmg}`,'fn-poison');
     setHpBar(who,stats.hp,stats.maxHp);
@@ -12041,21 +12062,9 @@ async function tickDoTs(who) {
     if (status.poison.turns<=0) { delete status.poison; }
     await delay(500);
   }
-  if (status.bleed&&status.bleed.stacks>0&&status.bleed.turns>0) {
-    let dmg=Math.max(1,Math.floor(status.bleed.stacks*1.5));
-    if(who==='player' && G.player?.mutBloodMoon) dmg*=2;
-    stats.hp-=dmg;
-    spawnFloat(who,`🩸 -${dmg}`,'fn-dmg');
-    setHpBar(who,stats.hp,stats.maxHp);
-    logMsg(`🩸 Bleed deals ${dmg} damage to ${who==='player'?G.player.name:G.enemy.name}!`,'poison-tick');
-    if(who==='enemy') { BS.dmgDealt+=dmg; }
-    status.bleed.turns--;
-    if (status.bleed.turns<=0) { delete status.bleed; }
-    await delay(500);
-  }
-  if (status.burning && ((typeof status.burning==='number'&&status.burning>0) || (typeof status.burning==='object'&&status.burning.turns>0))) {
+  if (status.burning && ((typeof status.burning==='number'&&status.burning>0) || (typeof status.burning==='object'&&status.burning.turns>0)) && who==='enemy') {
     const turns = typeof status.burning==='number' ? status.burning : status.burning.turns;
-    const dmg=Math.max(1,Math.floor((stats.maxHp||1)*0.04));
+    const dmg=7;
     stats.hp-=dmg;
     spawnFloat(who,`🔥 -${dmg}`,'fn-burn');
     setHpBar(who,stats.hp,stats.maxHp);
@@ -12086,8 +12095,20 @@ function tickStatuses(who) {
   const keys=Object.keys(s);
   const owner=who==='player'?G.player:G.enemy;
   keys.forEach(k=>{
-    if (k==='poison' || k==='bleed') { /* handled by tickDoTs */ }
+    if (k==='poison') { /* handled by tickDoTs */ }
+    else if (k==='bleed' && typeof s.bleed==='object') {
+      s.bleed.turns = Math.max(0,(s.bleed.turns||0)-1);
+      if(s.bleed.turns<=0) delete s.bleed;
+    }
     else if (k==='delayed') { /* handled by tickDoTs */ }
+    else if (k==='burning' && typeof s.burning==='object') {
+      if((s.burning.turns||0)<=0){
+        const defRestore = 1/0.8;
+        owner.stats.def=Math.max(0,Math.floor((owner.stats.def||0)*defRestore));
+        owner.stats.mdef=Math.max(0,Math.floor((owner.stats.mdef||0)*defRestore));
+        delete s.burning;
+      }
+    }
     else if (k==='defBoost' && typeof s[k]==='object') {
       s[k].turns--;
       if(s[k].turns<=0){
@@ -18919,6 +18940,7 @@ function getAbilityEnergyCost(ab, player){
   if(isSpell && !G._firstSpellUsed && p?.firstSpellFree) cost=0;
   if(isSpell && !G._firstSpellUsed && (p?.augFirstSpellCostDown||0)>0) cost=Math.max(0,cost-p.augFirstSpellCostDown);
   if(isSpell && p?.mutArcOverload) cost+=1;
+  if((p===G.player ? (G.playerStatus?.frozen||0) : (G.enemyStatus?.frozen||0))>0 && cost>0) cost+=1;
 
   if(cost===1 && isMultiHitAbility(ab) && !isMainAttackAbility(ab)) cost += 1;
 
@@ -22009,6 +22031,24 @@ const ENEMY_BIRD_DATA = Object.entries(MASTER_BIRD_REGISTRY).map(([key, bird])=>
   def:bird.stats?.def || 0,
   type:bird.class,
 }));
+const CLASS_REWORK_GUIDE = Object.freeze({
+  trickster:'1 mixed ATK+MATK skill, 1 debuff song/call, 1 physical attack, 1 utility (guide).',
+  singer:'1 main song/call, 1 heavier song/call, 1 physical attack, 1 utility (guide).',
+  tank:'2 physical attacks (1 EN + 2 EN), 1 defense utility, 1 Max HP% heal utility.',
+  striker:'1 multi-attack, 1 premium precision, 1 dodge/mdodge utility, 1 speed/setup utility.',
+  bruiser:'2 physical attacks, 1 defense utility, 1 debuff utility/call.',
+  predator:'3 physical attacks + 1 utility; large/XL finishers adapt to 2 EN.',
+});
+const STATUS_REWORK_GUIDE = Object.freeze({
+  fear:'Refresh only. Control/disruption. Replaces Paralyzed.',
+  weaken:'Refresh only. -25% damage and -40% Dodge. Reserved for songs/calls.',
+  chilled:'Stacks to 5. -8% SPD per stack. At 5 stacks becomes Frozen.',
+  frozen:'Refresh only. Active skills cost +1 EN for 1 turn; then Chilled resets.',
+  poison:'Stacks to 5. 2 damage per stack, ticks on both turn ends.',
+  burning:'Non-stacking. 7 damage at end of enemy turn. -20% DEF and -20% MDEF while active.',
+  bleed:'Non-stacking, refresh only. Healing received/effects reduced by 30%.',
+  delayed:'Non-stacking. Stored damage detonates at end of target\'s next turn; reapply refreshes/replaces.',
+});
 
 function openRefGuideModal() {
   const m = document.getElementById('ref-guide-modal');
@@ -22112,15 +22152,15 @@ function buildRefGuide() {
     const u=!!G.codex?.enemies?.[id]?.seen;
     if(!u&&!showLocked) return '';
     const ai=mapAiStyleToType(e.aiStyle||'aggressive');
-    return card(e.name, `HP ${e.hp||0} · ATK ${e.atk||0} · AI: ${ai}`,u,ai);
+    return card(e.name, `HP ${e.hp||0} · ATK ${e.atk||0} · Class: ${(e.enemyClass||'').toUpperCase()} · Size: ${(e.size||'').toUpperCase()} · AI: ${ai}`,u,ai);
   }).join('');
 
   const packStatusGlossary = G.dataPacks?.abilityPassiveUpgrade?.STATUS_GLOSSARY || {};
-  const statusIds=[...new Set([...Object.keys(AILMENTS||{}), ...Object.keys(packStatusGlossary), ...Object.keys(G.codex?.statuses||{})])];
+  const statusIds=[...new Set([...Object.keys(STATUS_REWORK_GUIDE), ...Object.keys(AILMENTS||{}), ...Object.keys(packStatusGlossary), ...Object.keys(G.codex?.statuses||{})])];
   const statuses=statusIds.filter(id=>isMatch(id)).map(id=>{
     const u=!!G.codex?.statuses?.[id]?.seen;
     if(!u&&!showLocked) return '';
-    const d=(packStatusGlossary[id]||AILMENTS[id]?.desc)||'Status effect.';
+    const d=(STATUS_REWORK_GUIDE[id]||packStatusGlossary[id]||AILMENTS[id]?.desc)||'Status effect.';
     return card(id[0].toUpperCase()+id.slice(1),d,u,'status');
   }).join('');
 
@@ -22143,6 +22183,8 @@ function buildRefGuide() {
   const mechanics=`<div class="ref-skills-grid">
     ${card('Energy & Cooldowns','Main attacks are free unless spells. Abilities spend energy and many skills have cooldowns.',true,'core')}
     ${card('Role Taxonomy','Birds are grouped by roles: Striker, Bruiser, Tank, Trickster, Predator, Singer.',true,'roles')}
+    ${Object.entries(CLASS_REWORK_GUIDE).map(([role,text])=>card(`${role[0].toUpperCase()+role.slice(1)} Skill Shape`,text,true,'class')).join('')}
+    ${card('Upgrade Structure','Each base skill evolves once into 1 of 3 branch options; later upgrades stay within the chosen branch.',true,'upgrade')}
     ${card('Passive Evolution (Endless)','In Endless mode, passives evolve at milestones with offensive vs utility choices.',true,'endless')}
     ${card('Enemy AI Profiles','Enemy personalities (aggressive, tactical, control, tank, predator, etc.) bias action planning.',true,'ai')}
     ${card('Codex Unlocks','Entries unlock when seen/used during runs. Use search and Show Locked to browse all.',true,'codex')}
@@ -22542,10 +22584,11 @@ function unlockAllCodexEntries(){
 function checkDevCode(val) {
   const msg = document.getElementById('dev-code-msg');
   const code=(val||'').trim().toLowerCase();
-  const allUnlockIds=['stage20','stage40','crit100Run','buff250Run','debuff250Run','fletchlingWin','juvenileWin','predatorWin','easyWin','normalWin','hardWin','unlock_hummingbird','unlock_shoebill','unlock_secretary','unlock_magpie','unlock_kookaburra','unlock_peregrine','unlock_harpy','unlock_ostrich','unlock_kiwi','unlock_lyrebird','unlock_toucan','unlock_penguin','unlock_emu','unlock_swan','unlock_flamingo','unlock_seagull','unlock_albatross','unlock_duke_blakiston'];
+  const allUnlockIds=['stage20','stage40','crit100Run','buff250Run','debuff250Run','fletchlingWin','juvenileWin','predatorWin','easyWin','normalWin','hardWin','unlock_hummingbird','unlock_shoebill','unlock_secretary','unlock_magpie','unlock_kookaburra','unlock_peregrine','unlock_harpy','unlock_ostrich','unlock_kiwi','unlock_lyrebird','unlock_toucan','unlock_penguin','unlock_emu','unlock_swan','unlock_flamingo','unlock_seagull','unlock_albatross','unlock_duke_blakiston','birdwatching'];
   if (code === 'birdwatching') {
     const u = getUnlocks();
     allUnlockIds.forEach(id => { u[id] = true; });
+    u.birdwatching = true;
     localStorage.setItem(UNLOCK_KEY, JSON.stringify(u));
     const input = document.getElementById('dev-code-input');
     if (input) input.value = '';
@@ -22555,7 +22598,8 @@ function checkDevCode(val) {
     return;
   }
   if (code === 'headinghome') {
-    localStorage.setItem(UNLOCK_KEY, JSON.stringify({}));
+    const reset = {};
+    localStorage.setItem(UNLOCK_KEY, JSON.stringify(reset));
     const input = document.getElementById('dev-code-input');
     if (input) input.value = '';
     if (msg) { msg.textContent = '🔒 Headinghome: unlockable birds locked again.'; msg.style.color = 'var(--red-light)'; }
