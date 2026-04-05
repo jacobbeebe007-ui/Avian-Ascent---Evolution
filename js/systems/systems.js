@@ -1,10 +1,10 @@
 // ===== 17_script_17.js =====
 
 /* ===== Aviant polish systems patch =====
- * Script load order (index.html): game.js -> content.js -> systems.js -> shop.js ->
- * fixes.js -> ui.js -> sprites.js. Later files wrap globals registered earlier.
- * Consolidated here (vs content.js): dealDamage, edmg, afterEnemyTurn.
- * getUpgradePool: ui.js wraps game.js (normalize upgrade apply + audit in one place).
+ * Script load order (index.html): see index.html comment — data + combat/* attach globals,
+ * then game.js, then content.js -> systems.js -> shop.js -> fixes.js -> ui.js -> sprites.js.
+ * Later files wrap globals registered earlier.
+ * Enemy damage helpers: js/combat/enemy-damage.js (edmg, etc.). getUpgradePool: js/data/rewards-upgrades.js.
  * refreshBattleUI / renderEnemyPlan: stacked in sprites.js, ui.js, systems.js, content.js (Duke), game.js.
  */
 (function(){

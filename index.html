@@ -530,8 +530,35 @@
 
 
 
-<!-- Patch order: each later script may wrap globals from earlier (see systems.js / ui.js headers). -->
-<script src="js/data/skill_passive_upgrade_pack.js"></script><script src="js/data/story_enemy_registry.js"></script><script src="js/data/skills.js"></script><script src="js/data/biomes.js"></script><script src="js/core/game.js"></script><script src="js/data/content.js"></script><script src="js/systems/systems.js"></script><script src="js/systems/shop.js"></script><script src="js/systems/fixes.js"></script><script src="js/ui/ui.js"></script><script src="js/ui/sprites.js"></script>
+<!--
+  Script load order (plain scripts = dependency order; later files may wrap earlier globals):
+  skill_passive_upgrade_pack → story_enemy_registry → skills → biomes →
+  birds → enemies → skill-families → rewards-upgrades →
+  combat/damage-math (roll, calcHitChance, calcDefenseMultiplier) →
+  game (G, dealDamage, screens) →
+  combat/enemy-damage → combat/status → combat/turn-loop → combat/ai-enemy (stub) →
+  content → systems → shop → fixes → ui → sprites
+-->
+<script src="js/data/skill_passive_upgrade_pack.js"></script>
+<script src="js/data/story_enemy_registry.js"></script>
+<script src="js/data/skills.js"></script>
+<script src="js/data/biomes.js"></script>
+<script src="js/data/birds.js"></script>
+<script src="js/data/enemies.js"></script>
+<script src="js/data/skill-families.js"></script>
+<script src="js/data/rewards-upgrades.js"></script>
+<script src="js/combat/damage-math.js"></script>
+<script src="js/core/game.js"></script>
+<script src="js/combat/enemy-damage.js"></script>
+<script src="js/combat/status.js"></script>
+<script src="js/combat/turn-loop.js"></script>
+<script src="js/combat/ai-enemy.js"></script>
+<script src="js/data/content.js"></script>
+<script src="js/systems/systems.js"></script>
+<script src="js/systems/shop.js"></script>
+<script src="js/systems/fixes.js"></script>
+<script src="js/ui/ui.js"></script>
+<script src="js/ui/sprites.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
