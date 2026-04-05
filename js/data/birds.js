@@ -1,10 +1,6 @@
-// js/data/birds.js — playable bird definitions (loaded before js/core/game.js)
-// Default skill slots: canonical table in js/data/bird_skill_roster.js (BIRD_SKILL_ROSTER).
-// ============================================================
-//  BIRD DEFINITIONS
-// ============================================================
+﻿// Playable bird definitions (legacy 76ac60f)
 const BIRDS = {
-  // ── TINY ────────────────────────────────────────────────────
+  // ÔöÇÔöÇ TINY ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   sparrow:{
     name:'Sparrow', portraitKey:'sparrow', tagline:'Swift as wind, strikes like needles.',
     size:'tiny', class:'striker',
@@ -31,14 +27,14 @@ const BIRDS = {
       onCrit(p){p.stats.hp=Math.min(p.stats.hp+Math.floor(p.stats.maxHp*.1),p.stats.maxHp);}},
   },
 
-  // ── SMALL ───────────────────────────────────────────────────
+  // ÔöÇÔöÇ SMALL ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   blackbird:{
     name:'Blackbird', portraitKey:'phainopepla', tagline:'Songs that shatter minds. Eyes like embers.',
     size:'small', class:'singer',
     stats:{hp:38,maxHp:38,atk:6,def:3,spd:7,dodge:25,acc:80,mdef:8,matk:14},
     statBars:{HP:38/50,ATK:6/15,SPD:7/10,Dodge:.5,ACC:.8}, color:'#9a6ae8',
     startAbilities:['dark_song','shadow_peck','gloom_wing','grim_sign'],
-    mainAttackId:'dark_song',
+    mainAttackId:'shadow_peck',
     passive:{id:'songResilient',name:'Song Resilient',desc:'Every successful spell cast, restore 2 HP.',
       onSpell(p){p.stats.hp=Math.min(p.stats.hp+2,p.stats.maxHp);}},
   },
@@ -107,7 +103,7 @@ const BIRDS = {
       get _boomMdefPierce(){return 0.10;}},
   },
 
-  // ── MEDIUM ──────────────────────────────────────────────────
+  // ÔöÇÔöÇ MEDIUM ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   crow:{
     name:'Crow', portraitKey:'crow', tagline:'Clever. Coordinated. Unsettling.',
     size:'medium', class:'trickster',
@@ -131,7 +127,7 @@ const BIRDS = {
       immuneFear:true, immuneConfused:true,
       get _laughMdefPierce(){return 0.08;},
       onBattleStart(p){p.firstAttackAlwaysCrit=true;},
-      onBossKill(p){p.firstAttackAlwaysCrit=true;spawnFloat('player','🪶 Perch Ready!','fn-status');}},
+      onBossKill(p){p.firstAttackAlwaysCrit=true;spawnFloat('player','­ƒ¬Â Perch Ready!','fn-status');}},
   },
   lyrebird:{
     name:'Lyrebird', portraitKey:'lyrebird', tagline:'The great deceiver. Master of all songs.',
@@ -164,19 +160,19 @@ const BIRDS = {
     mainAttackId:'beak_jab',
     startAbilities:['beak_jab','omen_call','dark_watch','fate_mark'],
     passive:{id:'omen',name:'Omen of Dread',
-      desc:'+12% damage vs Feared enemies. At battle start, a random blessing and a random curse ripple across the fight — neither side is spared the sign.',
+      desc:'+12% damage vs Feared enemies. At battle start, a random blessing and a random curse ripple across the fight ÔÇö neither side is spared the sign.',
       onBattleStart(p){
         const blessings=[
-          ()=>{p.stats.atk+=4;logMsg('☠ Omen Blessing: +4 ATK!','crit');},
-          ()=>{p.stats.dodge=Math.min(p.stats.dodge+15,70);logMsg('☠ Omen Blessing: +15% Dodge!','crit');},
-          ()=>{G.player.goldCritMult=Math.min(2.5,Math.max(G.player.goldCritMult||1.5,2.5));logMsg('☠ Omen Blessing: Crit →2.5×!','crit');},
-          ()=>{p.stats.hp=Math.min(p.stats.hp+Math.floor(p.stats.maxHp*.25),p.stats.maxHp);logMsg('☠ Omen Blessing: +25% HP!','exp-gain');},
+          ()=>{p.stats.atk+=4;logMsg('Ôÿá Omen Blessing: +4 ATK!','crit');},
+          ()=>{p.stats.dodge=Math.min(p.stats.dodge+15,70);logMsg('Ôÿá Omen Blessing: +15% Dodge!','crit');},
+          ()=>{G.player.goldCritMult=Math.min(2.5,Math.max(G.player.goldCritMult||1.5,2.5));logMsg('Ôÿá Omen Blessing: Crit ÔåÆ2.5├ù!','crit');},
+          ()=>{p.stats.hp=Math.min(p.stats.hp+Math.floor(p.stats.maxHp*.25),p.stats.maxHp);logMsg('Ôÿá Omen Blessing: +25% HP!','exp-gain');},
         ];
         const curses=[
-          ()=>{G.enemyStatus.weaken=4;logMsg('☠ Omen Curse on enemy: Chicken Pox!','system');},
-          ()=>{G.enemyStatus.poison={stacks:3,turns:4};logMsg('☠ Omen Curse on enemy: Poison!','system');},
-          ()=>{G.enemyStatus.confused={turns:2,skipChance:40};logMsg('☠ Omen Curse on enemy: Confused!','system');},
-          ()=>{G.enemy.stats.atk=Math.max(1,Math.floor(G.enemy.stats.atk*.7));logMsg('☠ Omen Curse on enemy: ATK −30%!','system');},
+          ()=>{G.enemyStatus.weaken=4;logMsg('Ôÿá Omen Curse on enemy: Chicken Pox!','system');},
+          ()=>{G.enemyStatus.poison={stacks:3,turns:4};logMsg('Ôÿá Omen Curse on enemy: Poison!','system');},
+          ()=>{G.enemyStatus.confused={turns:2,skipChance:40};logMsg('Ôÿá Omen Curse on enemy: Confused!','system');},
+          ()=>{G.enemy.stats.atk=Math.max(1,Math.floor(G.enemy.stats.atk*.7));logMsg('Ôÿá Omen Curse on enemy: ATK ÔêÆ30%!','system');},
         ];
         blessings[Math.floor(Math.random()*blessings.length)]();
         curses[Math.floor(Math.random()*curses.length)]();
@@ -219,7 +215,7 @@ const BIRDS = {
       onBattleStart(){}},
   },
 
-  // ── LARGE ───────────────────────────────────────────────────
+  // ÔöÇÔöÇ LARGE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   toucan:{
     name:'Toucan', portraitKey:'toucan', tagline:'Oversized bill, vivid pressure, odd reach.',
     size:'large', class:'striker',
@@ -227,7 +223,7 @@ const BIRDS = {
     unlockHint:'Enter: "Ahh Ahh Eee Eee Tookie Tookie"',
     stats:{hp:46,maxHp:46,atk:8,def:5,spd:5,dodge:14,acc:82,mdef:9,matk:9,critChance:6},
     statBars:{HP:46/50,ATK:8/15,SPD:5/10,Dodge:.28,ACC:.82}, color:'#60c840',
-    /* Neutral beak slot uses id toucan_beak_jab (display "Beak Jab"): global beak_jab is Kiwi/Raven → probeStrike. */
+    /* Neutral beak slot uses id toucan_beak_jab (display "Beak Jab"): global beak_jab is Kiwi/Raven ÔåÆ probeStrike. */
     mainAttackId:'toucan_beak_jab',
     startAbilities:['toucan_beak_jab','beak_slam','fruit_toss','color_mark'],
     passive:{id:'vividReach',name:'Vivid Reach',desc:'Your attacks deal +6% damage vs enemies who are confused, weakened, slowed, or exposed.',
@@ -253,7 +249,6 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 30 with any Striker.',
     stats:{hp:48,maxHp:48,atk:8,def:4,spd:6,dodge:18,acc:80,mdef:12,matk:8},
     color:'#e8609a',
-    mainAttackId:'leg_jab',
     startAbilities:['leg_jab','marsh_sweep','balance_pose','mire_mark'],
     passive:{id:'marshPoise',name:'Marsh Poise',
       desc:'Your attacks deal +6% damage vs slowed or weakened foes, +4% more vs enemies with heavy accuracy loss (10+). Delayed wake damage you trigger is +12% stronger.',
@@ -266,7 +261,6 @@ const BIRDS = {
     unlockHint:'Defeat Stage 10 with Crow.',
     stats:{hp:48,maxHp:48,atk:9,def:6,spd:5,dodge:10,acc:80,critChance:8,mdef:10,matk:6},
     statBars:{HP:48/50,ATK:9/15,SPD:5/10,Dodge:.2,ACC:.8}, color:'#e0a060',
-    mainAttackId:'sec_leg_jab',
     startAbilities:['sec_leg_jab','sec_crushing_kick','hunter_stride','prey_mark'],
     passive:{id:'stiltVerdict',name:'Stilt Verdict',
       desc:'Physical attacks deal +6% vs paralyzed foes, +5% vs slowed foes, and +5% vs enemies below 45% HP. Immune to Poison.',
@@ -288,7 +282,7 @@ const BIRDS = {
   },
 
   seagull:{
-    name:'Seagull', portraitKey:'seagull', tagline:'Coastal pest. Harrying swoops, noisy cries, scavenger’s payoff.',
+    name:'Seagull', portraitKey:'seagull', tagline:'Coastal pest. Harrying swoops, noisy cries, scavengerÔÇÖs payoff.',
     size:'medium', class:'trickster',
     unlockRequires:'unlock_seagull',
     unlockHint:'Reach level 21 in Endless mode with any Trickster.',
@@ -301,7 +295,7 @@ const BIRDS = {
       onBattleStart(p){p._scavengeStacks=0;}},
   },
 
-  // ── XL ──────────────────────────────────────────────────────
+  // ÔöÇÔöÇ XL ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   goose:{
     name:'Goose', portraitKey:'goose', tagline:'Territorial bruiser. Honk, check, refuse to yield.',
     size:'xl', class:'tank',
@@ -311,7 +305,7 @@ const BIRDS = {
     mainAttackId:'gos_beak_snap',
     passive:{id:'bruisedHide',name:'Bruised Hide',desc:'Every 20 HP taken = +1 ATK until battle ends. Takes 20% reduced physical damage.',
       physicalResist:0.20,
-      onDamage(p,dmg){if(!p._bruiseAcc)p._bruiseAcc=0;p._bruiseAcc+=dmg;while(p._bruiseAcc>=20){p._bruiseAcc-=20;G.player.stats.atk++;spawnFloat('player','💢+ATK','fn-status');}}},
+      onDamage(p,dmg){if(!p._bruiseAcc)p._bruiseAcc=0;p._bruiseAcc+=dmg;while(p._bruiseAcc>=20){p._bruiseAcc-=20;G.player.stats.atk++;spawnFloat('player','­ƒÆó+ATK','fn-status');}}},
   },
   shoebill:{
     name:'Shoebill Stork', portraitKey:'shoebill', tagline:'Ancient. Patient. Inevitable.',
@@ -338,7 +332,7 @@ const BIRDS = {
     abilityPool:['physical'],
     passive:{id:'warlordsPath',name:'Talon Apex',desc:'+18% damage vs enemies below 40% HP. Every boss kill permanently raises ATK by 3. Takes 15% reduced magic damage.',
       magicResist:0.15,
-      onBossKill(p){p.stats.atk+=3;spawnFloat('player','⚔+3 ATK','fn-crit');}},
+      onBossKill(p){p.stats.atk+=3;spawnFloat('player','ÔÜö+3 ATK','fn-crit');}},
   },
   baldEagle:{
     name:'Bald Eagle', portraitKey:'baldEagle', tagline:'Unbreakable. Undying. Undefeated.',
@@ -347,7 +341,6 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 on Normal mode to unlock.',
     stats:{hp:60,maxHp:60,atk:11,def:7,spd:4,dodge:10,acc:78,mdef:10,matk:6},
     color:'#e8e4d8',
-    mainAttackId:'skyTalon',
     startAbilities:['skyTalon','guard','predatorMark','freedomCry'],
     passive:{id:'lastStand',name:'Last Stand',
       desc:'First time per battle you would die, survive at 1 HP and gain +5 ATK for 3 turns. Immune to Paralysis.',
@@ -362,9 +355,8 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 30 with any Tank.',
     stats:{hp:65,maxHp:65,atk:9,def:9,spd:3,dodge:12,acc:75,mdef:14,matk:5},
     color:'#3a5878',
-    mainAttackId:'icebreakerHonk',
     startAbilities:['icebreakerHonk','snowWall','guard','tundraCall'],
-    passive:{id:'blubberCoat',name:'Blubber Coat',desc:'Reduces all magic damage by 25–40% (scales with missing HP). Waddle applies Lullaby (15% skip/turn) on attack.',
+    passive:{id:'blubberCoat',name:'Blubber Coat',desc:'Reduces all magic damage by 25ÔÇô40% (scales with missing HP). Waddle applies Lullaby (15% skip/turn) on attack.',
       get _baseMagicReduce(){return 0.25;},
       onMagicHit(p,dmg){const hpPct=p.stats.hp/p.stats.maxHp;return Math.floor(dmg*(1-(0.25+(1-hpPct)*0.15)));},
     },
@@ -376,9 +368,8 @@ const BIRDS = {
     unlockHint:'Defeat Stage 20 with Shoebill.',
     stats:{hp:72,maxHp:72,atk:12,def:8,spd:1,dodge:5,acc:70,mdef:10,matk:4},
     color:'#b89060',
-    mainAttackId:'powerKick',
     startAbilities:['powerKick','stampedeStrike','sandKick','momentumCharge'],
-    passive:{id:'rageCharge',name:'Desert Strider',desc:'Dodging grants +2 SPD for 2 turns. Heavy attacks charge over 2–3 turns (+50% dmg/turn). Misses reset charge. Immune to Slow.',
+    passive:{id:'rageCharge',name:'Desert Strider',desc:'Dodging grants +2 SPD for 2 turns. Heavy attacks charge over 2ÔÇô3 turns (+50% dmg/turn). Misses reset charge. Immune to Slow.',
       immuneSlow:true,
       onBattleStart(p){p._rageCharge=0;},
       onDodge(p){
@@ -400,7 +391,7 @@ const BIRDS = {
     passive:{id:'jungleBulwark',name:'Jungle Bulwark',desc:'Takes 10% reduced physical damage. First heavy hit each battle applies Fear 2t.',
       physicalResist:0.10,
       onBattleStart(p){p._cassFearUsed=false;},
-      onPhysicalHit(p,G){if(!p._cassFearUsed){p._cassFearUsed=true;G.enemyStatus.feared=Math.max(G.enemyStatus.feared||0,2);spawnFloat('enemy','💀 Fear!','fn-status');}}},
+      onPhysicalHit(p,G){if(!p._cassFearUsed){p._cassFearUsed=true;G.enemyStatus.feared=Math.max(G.enemyStatus.feared||0,2);spawnFloat('enemy','­ƒÆÇ Fear!','fn-status');}}},
   },
   emu:{
     name:'Emu', portraitKey:'emu', tagline:'Flightless brute. Kicks and stomps with terrifying force.',
@@ -409,12 +400,11 @@ const BIRDS = {
     unlockHint:'Reach Endless Stage 40 with any Tank.',
     stats:{hp:80,maxHp:80,atk:14,def:10,spd:2,dodge:20,acc:72,mdef:10,matk:4},
     color:'#7a6040',
-    mainAttackId:'headWhip',
     startAbilities:['headWhip','warCharge','sandKick','momentumStrike'],
     passive:{id:'rumbleStrike',name:'Rumble Strike',desc:'+20% max HP. Counter-attacks on block for 30% ATK. Immune to Stun.',
       immuneStun:true,
       onBattleStart(p){if(!p._emuHPBoosted){p._emuHPBoosted=true;p.stats.maxHp=Math.floor(p.stats.maxHp*1.20);p.stats.hp=p.stats.maxHp;}},
-      onBlock(p){const ctr=Math.floor(p.stats.atk*.3);G.enemy.stats.hp-=ctr;spawnFloat('enemy',`⚡-${ctr}`,'fn-dmg');}}
+      onBlock(p){const ctr=Math.floor(p.stats.atk*.3);G.enemy.stats.hp-=ctr;spawnFloat('enemy',`ÔÜí-${ctr}`,'fn-dmg');}}
   },
   dukeBlakiston:{
     name:'Duke Blakiston', portraitKey:'duke_blakiston', tagline:'Lord of the court. Commanding, relentless, imperial.',
@@ -423,7 +413,6 @@ const BIRDS = {
     unlockHint:"Enter code 'Blakiston' on the selection screen.",
     stats:{hp:68,maxHp:68,atk:11,def:9,spd:6,dodge:12,acc:84,mdef:14,matk:14,critChance:8},
     color:'#6f88c2',
-    mainAttackId:'nightTalon',
     startAbilities:['nightTalon','nightfallCall','courtSummon','verdict'],
     passive:{id:'imperialEdict',name:'Imperial Edict',desc:'Casting a spell grants +1 MATK (max +4). Defending restores 2 HP.',
       onBattleStart(p){p._dukeMatk=0;},
@@ -434,21 +423,6 @@ const BIRDS = {
 
 BIRDS.blackbird.extraAbilities = (BIRDS.blackbird.extraAbilities||[]).filter(x=>x!=='mimic');
 
-function validateBirdSkillRosterAgainstBIRDS(){
-  if(typeof BIRD_SKILL_ROSTER==='undefined') return;
-  Object.entries(BIRD_SKILL_ROSTER).forEach(([key, kit])=>{
-    const b=BIRDS[key];
-    if(!b){ try{ console.warn('[bird-skill-roster] roster references unknown bird:', key); }catch(_){ } return; }
-    if(b.mainAttackId!==kit.mainAttackId){
-      try{ console.warn(`[bird-skill-roster] ${key}: mainAttackId "${b.mainAttackId}" ≠ roster "${kit.mainAttackId}"`); }catch(_){ }
-    }
-    const sb=b.startAbilities, exp=[...kit.startAbilities];
-    if(!Array.isArray(sb)||sb.length!==exp.length||exp.some((id,i)=>sb[i]!==id)){
-      try{ console.warn(`[bird-skill-roster] ${key}: startAbilities mismatch`, sb, 'expected', exp); }catch(_){ }
-    }
-  });
-}
-validateBirdSkillRosterAgainstBIRDS();
 
 function runPassiveIntegrityAudit(){
   const IMM_MAP=[

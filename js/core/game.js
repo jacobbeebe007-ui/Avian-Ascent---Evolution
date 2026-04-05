@@ -16997,12 +16997,11 @@ function ensureMainAttackAndLoadoutRules(){
   if(isMagic){
     const isBlackbird = (G.player?.birdKey==='blackbird');
     if(isBlackbird){
-      const bbMain = bd.mainAttackId || 'dark_song';
-      G.player.mainAttackId = bbMain;
-      mainAb = G.player.skills.find(a=>a.id===bbMain) || null;
+      G.player.mainAttackId='shadow_peck';
+      mainAb=G.player.skills.find(a=>a.id==='shadow_peck') || null;
       G.player.skills=G.player.skills.filter(a=>a.id!=='mainAttack');
       if(!mainAb){
-        mainAb={...(ABILITY_TEMPLATES[bbMain]||{}), id:bbMain, level:1};
+        mainAb={...(ABILITY_TEMPLATES.shadow_peck||{}), id:'shadow_peck', level:1};
         G.player.skills.unshift(mainAb);
       }
     }else{
