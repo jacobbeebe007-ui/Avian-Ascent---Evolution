@@ -10,6 +10,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const GAME_JS = path.join(ROOT, 'js', 'core', 'game.js');
+const REWARDS_JS = path.join(ROOT, 'js', 'data', 'rewards-upgrades.js');
 const PASSIVE_PACK = path.join(ROOT, 'js', 'data', 'skill_passive_upgrade_pack.js');
 
 function extractArrayBodyAfterMarker(src, marker) {
@@ -443,17 +444,18 @@ function main() {
   const wantCsv = args.includes('--csv');
 
   const gameSrc = fs.readFileSync(GAME_JS, 'utf8');
+  const rewardSrc = fs.readFileSync(REWARDS_JS, 'utf8');
   const packSrc = fs.readFileSync(PASSIVE_PACK, 'utf8');
 
-  const markers = [
-    ['stork_card', 'const UPGRADE_CARDS_REWORK = ['],
+  const storkBody = extractArrayBodyAfterMarker(rewardSrc, 'const UPGRADE_CARDS_REWORK = [');
+  let rows = parseArrayUpgradeObjects('stork_card', 'js/data/rewards-upgrades.js', storkBody);
+
+  const endlessMarkers = [
     ['endless_augment', 'const ENDLESS_SKILL_AUGMENTS = ['],
     ['endless_relic', 'const ENDLESS_RELICS = ['],
     ['endless_mutation', 'const ENDLESS_MUTATIONS = ['],
   ];
-
-  let rows = [];
-  for (const [cat, marker] of markers) {
+  for (const [cat, marker] of endlessMarkers) {
     const body = extractArrayBodyAfterMarker(gameSrc, marker);
     rows = rows.concat(parseArrayUpgradeObjects(cat, 'js/core/game.js', body));
   }
