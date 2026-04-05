@@ -533,7 +533,7 @@
 <!--
   Script load order (plain scripts = dependency order; later files may wrap earlier globals):
   skill_passive_upgrade_pack → story_enemy_registry → skills → biomes →
-  birds → enemies → skill-families → rewards-upgrades →
+  bird_skill_roster (canonical slot ids) → birds → enemies → skill-families → rewards-upgrades →
   combat/damage-math (roll, calcHitChance, calcDefenseMultiplier) →
   game (G, dealDamage, screens) →
   combat/enemy-damage → combat/status → combat/turn-loop → combat/ai-enemy (stub) →
@@ -543,6 +543,7 @@
 <script src="js/data/story_enemy_registry.js"></script>
 <script src="js/data/skills.js"></script>
 <script src="js/data/biomes.js"></script>
+<script src="js/data/bird_skill_roster.js"></script>
 <script src="js/data/birds.js"></script>
 <script src="js/data/enemies.js"></script>
 <script src="js/data/skill-families.js"></script>

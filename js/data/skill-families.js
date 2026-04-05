@@ -1,4 +1,4 @@
-﻿// Skill family / evolution tables (legacy 76ac60f)
+// js/data/skill-families.js — per-bird family layouts + FAMILY_EVOLUTION_BIRD_DATA (after birds.js, before game.js)
 const SKILL_EVOLUTION_LEVEL_INTERVAL = 3;
 const FAMILY_EVOLUTION_STATE_VERSION = 12;
 const SPARROW_SKILL_SLOT_LAYOUT = Object.freeze([
@@ -344,7 +344,7 @@ const HUMMINGBIRD_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Sting',3:'Flurry'},
     masteries:[
       {id:'power', name:'Glass Beak', desc:'+8% Needle-line damage.'},
-      {id:'precision', name:'Thread the Needle', desc:'Needle-line attacks gain ÔêÆ3% miss and +4 pierce.'},
+      {id:'precision', name:'Thread the Needle', desc:'Needle-line attacks gain −3% miss and +4 pierce.'},
       {id:'control', name:'Toxic Pressure', desc:'Needle-line Bleed/Poison riders gain +8%.'},
     ],
     paths:{
@@ -409,7 +409,7 @@ const ROBIN_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Nip',2:'Tap',3:'Burst'},
     masteries:[
       {id:'power', name:'Field Edge', desc:'+8% Peck-line damage.'},
-      {id:'precision', name:'Clean Aim', desc:'Peck-line ÔêÆ3% miss; pierce route +4 pierce.'},
+      {id:'precision', name:'Clean Aim', desc:'Peck-line −3% miss; pierce route +4 pierce.'},
       {id:'control', name:'Redbreast Pressure', desc:'Bleed riders +8%; expose route +4% vs compromised.'},
     ],
     paths:{
@@ -463,8 +463,8 @@ const ROBIN_SKILL_FAMILIES = Object.freeze({
 });
 
 /**
- * PreÔÇôfamily-evolution Bowerbird flat-kit and misplaced-generic ids (save migration ONLY).
- * Not registered as live ability aliases ÔÇö `migrateBowerbirdLegacyFamilySkillSlots` + `legacyBaseAbilityIds` rewrite slots to family bases.
+ * Pre–family-evolution Bowerbird flat-kit and misplaced-generic ids (save migration ONLY).
+ * Not registered as live ability aliases — `migrateBowerbirdLegacyFamilySkillSlots` + `legacyBaseAbilityIds` rewrite slots to family bases.
  */
 const LEGACY_BOWERBIRD_FLAT_SKILL_FOR_MIGRATION = Object.freeze(new Set([
   'decorate','inspireSong','charmDisplay','focusCall',
@@ -549,7 +549,7 @@ const TOUCAN_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Lance',3:'Skewer'},
     masteries:[
       {id:'power', name:'Reach Weight', desc:'+6% Beak-line damage; pierce route +4% vs high DEF.'},
-      {id:'precision', name:'Bill Geometry', desc:'Beak-line ÔêÆ3% miss and +4 pierce.'},
+      {id:'precision', name:'Bill Geometry', desc:'Beak-line −3% miss and +4 pierce.'},
       {id:'control', name:'Vivid Pierce', desc:'Bleed route +8% rider; expose route +4% vs compromised.'},
     ],
     paths:{
@@ -614,7 +614,7 @@ const SWAN_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Lunge',3:'Pierce'},
     masteries:[
       {id:'power', name:'Royal Pierce', desc:'Pierce route +5% vs high DEF; +4 pierce.'},
-      {id:'precision', name:'Still Water', desc:'Neck-line ÔêÆ3% miss; bleed route +6% rider.'},
+      {id:'precision', name:'Still Water', desc:'Neck-line −3% miss; bleed route +6% rider.'},
       {id:'control', name:'Opening Stroke', desc:'Expose route +5% compromised payoff.'},
     ],
     paths:{
@@ -679,7 +679,7 @@ const FLAMINGO_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Sweep',3:'Pierce'},
     masteries:[
       {id:'power', name:'Straight Piercing', desc:'Pierce route +5% vs high DEF; +4 pierce.'},
-      {id:'precision', name:'Pink Line', desc:'Leg-line ÔêÆ3% miss; bleed route +6% bleed rider.'},
+      {id:'precision', name:'Pink Line', desc:'Leg-line −3% miss; bleed route +6% bleed rider.'},
       {id:'control', name:'Marsh Reader', desc:'Expose route +5% compromised payoff.'},
     ],
     paths:{
@@ -744,7 +744,7 @@ const SECRETARY_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Strike',3:'Pierce'},
     masteries:[
       {id:'power', name:'Stilt Pierce', desc:'Pierce route +5% vs high DEF; +4 pierce.'},
-      {id:'precision', name:'Measured Reach', desc:'Leg-line ÔêÆ3% miss; bleed route +6% bleed rider.'},
+      {id:'precision', name:'Measured Reach', desc:'Leg-line −3% miss; bleed route +6% bleed rider.'},
       {id:'control', name:'Dulling Line', desc:'Weaken route +8% rider; compromised payoff +3%.'},
     ],
     paths:{
@@ -809,7 +809,7 @@ const ALBATROSS_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Sweep',3:'Arc'},
     masteries:[
       {id:'power', name:'Long Reach', desc:'Pierce route +5% vs high DEF; +4 pierce.'},
-      {id:'precision', name:'Open Sky', desc:'Wing-line ÔêÆ3% miss; bleed route +6% bleed rider.'},
+      {id:'precision', name:'Open Sky', desc:'Wing-line −3% miss; bleed route +6% bleed rider.'},
       {id:'control', name:'Surface Reader', desc:'Expose route +5% compromised payoff.'},
     ],
     paths:{
@@ -874,7 +874,7 @@ const SEAGULL_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Snap',2:'Bite',3:'Rip'},
     masteries:[
       {id:'power', name:'Salt Jaw', desc:'Bleed route +6% bleed rider; pierce route +4 pierce.'},
-      {id:'precision', name:'Hook Eye', desc:'Snap-line ÔêÆ3% miss; expose route +5% compromised payoff.'},
+      {id:'precision', name:'Hook Eye', desc:'Snap-line −3% miss; expose route +5% compromised payoff.'},
       {id:'control', name:'Beach Raider', desc:'Expose durations +1 turn when Control mastered.'},
     ],
     paths:{
@@ -939,7 +939,7 @@ const SHOEBILL_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Chop',2:'Break',3:'Cleave'},
     masteries:[
       {id:'power', name:'Swamp Weight', desc:'Beak-line damage +4%; pierce route +3 pierce.'},
-      {id:'precision', name:'Hook Aim', desc:'Beak-line ÔêÆ3% miss; bleed route +5% bleed odds.'},
+      {id:'precision', name:'Hook Aim', desc:'Beak-line −3% miss; bleed route +5% bleed odds.'},
       {id:'control', name:'Crushing Patience', desc:'Weaken-route riders +6%; wounded-target payoff +4%.'},
     ],
     paths:{
@@ -1004,7 +1004,7 @@ const HARPY_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Clutch',2:'Rend',3:'Rip'},
     masteries:[
       {id:'power', name:'Crown Talons', desc:'Talon-line damage +4%; pierce route +3 pierce.'},
-      {id:'precision', name:'Canopy Aim', desc:'Talon-line ÔêÆ3% miss; bleed route +5% bleed odds.'},
+      {id:'precision', name:'Canopy Aim', desc:'Talon-line −3% miss; bleed route +5% bleed odds.'},
       {id:'control', name:'Crushing Grip', desc:'Weaken-route riders +6%; wounded-target payoff +4%.'},
     ],
     paths:{
@@ -1134,7 +1134,7 @@ const KIWI_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Drive',3:'Flurry'},
     masteries:[
       {id:'power', name:'Burrow Pressure', desc:'+8% Beak-line damage.'},
-      {id:'precision', name:'Bill Geometry', desc:'Beak-line attacks gain ÔêÆ3% miss and +4 pierce.'},
+      {id:'precision', name:'Bill Geometry', desc:'Beak-line attacks gain −3% miss and +4 pierce.'},
       {id:'control', name:'Carrion Habit', desc:'Beak-line Bleed/Hex riders gain +8%.'},
     ],
     paths:{
@@ -1148,7 +1148,7 @@ const KIWI_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Probe',2:'Plunge',3:'Burrow'},
     masteries:[
       {id:'power', name:'Night Weight', desc:'+7% Probe-line damage.'},
-      {id:'precision', name:'Echo Strike', desc:'Probe-line miss ÔêÆ2%.'},
+      {id:'precision', name:'Echo Strike', desc:'Probe-line miss −2%.'},
       {id:'control', name:'Ground Shock', desc:'Probe-line Burn riders +8%.'},
     ],
     paths:{
@@ -1264,7 +1264,7 @@ const MACAW_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Note',2:'Echo',3:'Refrain'},
     masteries:[
       {id:'power', name:'Bright Cadence', desc:'+8% Echo-line spell damage.'},
-      {id:'precision', name:'Pitch Perfect', desc:'Echo-line spells gain ÔêÆ3% spell miss chance.'},
+      {id:'precision', name:'Pitch Perfect', desc:'Echo-line spells gain −3% spell miss chance.'},
       {id:'control', name:'Ringing Riders', desc:'Echo-line Burn/Confuse chances gain +8%.'},
     ],
     paths:{
@@ -1329,7 +1329,7 @@ const LYREBIRD_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Trill',2:'Layer',3:'Cadenza'},
     masteries:[
       {id:'power', name:'Silver Throat', desc:'+8% Echo-line spell damage.'},
-      {id:'precision', name:'Stage Pitch', desc:'Echo-line ÔêÆ3% spell miss.'},
+      {id:'precision', name:'Stage Pitch', desc:'Echo-line −3% spell miss.'},
       {id:'control', name:'Layered Song', desc:'Echo-line Burn/Confuse +8%.'},
     ],
     paths:{
@@ -1532,7 +1532,7 @@ const RAVEN_SKILL_FAMILIES = Object.freeze({
     tierNames:{1:'Jab',2:'Strike',3:'Rend'},
     masteries:[
       {id:'power', name:'Splinter Instinct', desc:'+8% Beak-line damage; splinter route +4% vs heavy armor.'},
-      {id:'precision', name:'Omen Geometry', desc:'Beak-line ÔêÆ3% miss and +4 pierce; doom route +4% vs compromised.'},
+      {id:'precision', name:'Omen Geometry', desc:'Beak-line −3% miss and +4 pierce; doom route +4% vs compromised.'},
       {id:'control', name:'Crushing Pressure', desc:'Weaken-route riders +8%; doom-route payoff +6% vs debuffed.'},
     ],
     paths:{
@@ -1680,7 +1680,7 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
     slotLayout:ROBIN_SKILL_SLOT_LAYOUT,
     families:ROBIN_SKILL_FAMILIES,
     abilityLookup:buildFamilySkillAbilityLookup(ROBIN_SKILL_SLOT_LAYOUT, ROBIN_SKILL_FAMILIES),
-    // legacy*: preÔÇôfamily-evolution flat kit ids ÔÇö save/load + migrateRobinLegacyFamilySkillSlots only; live Robin kit is quick_peck / dart_rush / bright_chirp / hop_step.
+    // legacy*: pre–family-evolution flat kit ids — save/load + migrateRobinLegacyFamilySkillSlots only; live Robin kit is quick_peck / dart_rush / bright_chirp / hop_step.
     legacyBaseAbilityIds:Object.freeze({
       peck:{legacy:['needleJab','nectarJab','rapidPeck','multiPeck','peck','headWhip'], current:'quick_peck'},
       dart:{legacy:['swoopCut','dart','swoop'], current:'dart_rush'},
@@ -1753,7 +1753,7 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
     slotLayout:BLACK_COCKATOO_SKILL_SLOT_LAYOUT,
     families:BLACK_COCKATOO_SKILL_FAMILIES,
     abilityLookup:buildFamilySkillAbilityLookup(BLACK_COCKATOO_SKILL_SLOT_LAYOUT, BLACK_COCKATOO_SKILL_FAMILIES),
-    // PreÔÇôfamily-evolution flat ids only (migrate tier-0 bases into slot-state skills).
+    // Pre–family-evolution flat ids only (migrate tier-0 bases into slot-state skills).
     legacyBaseAbilityIds:Object.freeze({
       beak:{legacy:['peck','piercingScreech','mainAttack'], current:'beak_crack'},
       boom:{legacy:['stormChorus','thunderScreech','sonicDirge','birdBrain'], current:'boom_call'},
@@ -1766,7 +1766,7 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
     slotLayout:KOOKABURRA_SKILL_SLOT_LAYOUT,
     families:KOOKABURRA_SKILL_FAMILIES,
     abilityLookup:buildFamilySkillAbilityLookup(KOOKABURRA_SKILL_SLOT_LAYOUT, KOOKABURRA_SKILL_FAMILIES),
-    // Save migration only: preÔÇôfamily-evolution Kookaburra flat ids ÔåÆ current tier-0 bases (not used for new runs).
+    // Save migration only: pre–family-evolution Kookaburra flat ids → current tier-0 bases (not used for new runs).
     legacyBaseAbilityIds:Object.freeze({
       beak:{legacy:['mockingPeck','peck','mainAttack'], current:'beak_chop'},
       laugh:{legacy:['laughingCall','echoLaugh','dizzyChorus'], current:'laugh_call'},
@@ -1897,7 +1897,4 @@ const FAMILY_EVOLUTION_BIRD_DATA = Object.freeze({
   },
 });
 
-try {
-  globalThis.SKILL_EVOLUTION_LEVEL_INTERVAL = SKILL_EVOLUTION_LEVEL_INTERVAL;
-  globalThis.FAMILY_EVOLUTION_BIRD_DATA = FAMILY_EVOLUTION_BIRD_DATA;
-} catch (_) {}
+globalThis.FAMILY_EVOLUTION_BIRD_DATA = FAMILY_EVOLUTION_BIRD_DATA;
