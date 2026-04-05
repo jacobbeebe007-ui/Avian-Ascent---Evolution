@@ -148,7 +148,7 @@ function runAbilityMetadataParityCheck(){
   }
 }
 
-['js/data/skills.js','js/data/biomes.js','js/data/skill_passive_upgrade_pack.js','js/data/birds.js','js/data/enemies.js','js/data/skill-families.js','js/data/rewards-upgrades.js','js/combat/damage-math.js','js/core/game.js','js/combat/ai-enemy.js','js/data/content.js','js/systems/systems.js','js/systems/shop.js'].forEach(f=>{
+['js/data/skills.js','js/data/biomes.js','js/data/skill_passive_upgrade_pack.js','js/core/game.js','js/data/content.js','js/systems/systems.js','js/systems/shop.js'].forEach(f=>{
   if(fs.existsSync(f)) parseJs(f);
 });
 
@@ -161,16 +161,11 @@ runAbilityInventoryAndWiringReport();
 
 function runBirdSkillTemplateRegistryCheck(){
   const gamePath = path.join('js', 'core', 'game.js');
-  const birdsPath = path.join('js', 'data', 'birds.js');
-  const familiesPath = path.join('js', 'data', 'skill-families.js');
   const gameSrc = fs.readFileSync(gamePath, 'utf8');
-  const birdsSrc = fs.existsSync(birdsPath) ? fs.readFileSync(birdsPath, 'utf8') : '';
-  const familiesSrc = fs.existsSync(familiesPath) ? fs.readFileSync(familiesPath, 'utf8') : '';
-  const birdHaystack = `${birdsSrc}\n${familiesSrc}\n${gameSrc}`;
   const { ids: templateIds, parseError } = getTemplateAbilityIds();
   if(parseError) return;
   const templateSet = new Set(templateIds);
-  const birdRefs = extractBirdAndFamilyReferencedSkillIds(birdHaystack);
+  const birdRefs = extractBirdAndFamilyReferencedSkillIds(gameSrc);
   const missing = birdRefs.filter((id) => !templateSet.has(id)).sort();
   const lines = [
     `Bird/family skill refs: ${birdRefs.length} heuristic ids, ${missing.length} missing from merged SKILL templates.`,

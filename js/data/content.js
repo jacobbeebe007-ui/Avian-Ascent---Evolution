@@ -387,7 +387,7 @@
 
 // ===== 14_script_14.js =====
 
-/* ===== Shop: sync energy UI after purchase (upgrade list: js/data/rewards-upgrades.js UPGRADE_CARDS_REWORK) ===== */
+/* ===== Shop: sync energy UI after purchase (upgrade list lives in game.js UPGRADE_CARDS_REWORK) ===== */
 (function(){
   function syncPlayerEnergyState(p){
     if(!p) return;
